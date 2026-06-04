@@ -2,7 +2,7 @@
 
 import { Suspense, useMemo } from "react";
 import { Canvas, useLoader } from "@react-three/fiber";
-import { Environment, OrbitControls, Stage, useGLTF } from "@react-three/drei";
+import { OrbitControls, Stage, useGLTF } from "@react-three/drei";
 import { OBJLoader } from "three-stdlib";
 
 function ObjModel({ url }: { url: string }) {

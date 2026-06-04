@@ -4,6 +4,8 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
+type SessionMetadata = { tenantId?: string };
+
 export async function createSizeGuide(data: {
   name: string;
   category: string;
@@ -17,7 +19,7 @@ export async function createSizeGuide(data: {
     return { success: false, error: "Unauthorized" };
   }
 
-  const tenantId = (sessionClaims?.metadata as any)?.tenantId as string;
+  const tenantId = (sessionClaims?.metadata as SessionMetadata | undefined)?.tenantId;
 
   if (!tenantId) {
     // Si no está en claims por alguna razón, lo buscamos
@@ -73,7 +75,7 @@ export async function deleteSizeGuide(id: string) {
     return { success: false, error: "Unauthorized" };
   }
 
-  const tenantId = (sessionClaims?.metadata as any)?.tenantId as string;
+  const tenantId = (sessionClaims?.metadata as SessionMetadata | undefined)?.tenantId;
   const finalTenantId = tenantId || (await db.membership.findFirst({
     where: { user: { clerkId: userId } }
   }))?.tenantId;
@@ -112,7 +114,7 @@ export async function updateSizeGuide(id: string, data: {
     return { success: false, error: "Unauthorized" };
   }
 
-  const tenantId = (sessionClaims?.metadata as any)?.tenantId as string;
+  const tenantId = (sessionClaims?.metadata as SessionMetadata | undefined)?.tenantId;
   const finalTenantId = tenantId || (await db.membership.findFirst({
     where: { user: { clerkId: userId } }
   }))?.tenantId;

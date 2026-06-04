@@ -4,7 +4,8 @@
     "contact": "Contacto",
     "dashboard": "Ir al Panel",
     "login": "Iniciar Sesión",
-    "signup": "Crear Cuenta"
+    "signup": "Crear Cuenta",
+    "switchingLanguage": "Cambiando idioma..."
   },
   "Footer": {
     "description": "Transformando el e-commerce con prueba de ropa virtual en 3D.",

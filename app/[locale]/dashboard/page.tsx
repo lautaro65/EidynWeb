@@ -1,4 +1,4 @@
-import { Shirt, Link as LinkIcon, Users, Ruler, ArrowUpRight, CheckCircle2, AlertCircle, BarChart3, Clock, Plus, Smartphone, Eye } from "lucide-react";
+import { Shirt, Link as LinkIcon, Users, Ruler, ArrowUpRight, CheckCircle2, AlertCircle, BarChart3, Smartphone, Eye } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { getTranslations } from "next-intl/server";
 

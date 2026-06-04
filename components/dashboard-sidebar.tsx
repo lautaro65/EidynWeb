@@ -9,7 +9,6 @@ import {
   Box, 
   BarChart3, 
   LogOut,
-  Sparkles,
   Ruler,
   Plug,
   CreditCard,

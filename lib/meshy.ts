@@ -59,13 +59,6 @@ export async function checkMeshyTaskStatus(taskId: string): Promise<MeshyStatusR
   if (USE_MOCK && taskId.startsWith("mock_task_")) {
     console.log("[MOCK] Consultando estado de la tarea:", taskId);
     
-    // Modelos GLB de prueba (públicos de ejemplo)
-    // Puedes reemplazar estas URLs por las de tus pantalones, remeras o buzos de prueba
-    const glbUrls = [
-      "https://modelviewer.dev/shared-assets/models/Astronaut.glb", // Placeholder genérico
-      "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Box/glTF-Binary/Box.glb" // Caja (muy liviano)
-    ];
-    
     // Devolvemos SUCCEEDED inmediatamente con un modelo de prueba
     return {
       id: taskId,

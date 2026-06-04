@@ -1,21 +1,42 @@
 "use client";
 
-import { useEffect } from "react";
-import { useLocale } from "next-intl";
+import { useCallback, useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { usePathname } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
+import toast from "react-hot-toast";
 
 const LOCALE_SYNC_KEY = "eidyn:locale-sync";
+const LOCALE_SWITCH_TOAST_ID = "locale-switch";
+const LOCALE_SWITCH_DELAY_MS = 220;
 
 export function LanguageToggle() {
   const locale = useLocale();
+  const t = useTranslations("Navigation");
   const pathname = usePathname();
+  const [isSwitching, setIsSwitching] = useState(false);
 
-  const buildLocalizedUrl = (targetLocale: string) => {
+  const switchingLabel = t("switchingLanguage");
+
+  const buildLocalizedUrl = useCallback((targetLocale: string) => {
     const searchParams = window.location.search;
     const hash = window.location.hash;
     return `/${targetLocale}${pathname === "/" ? "" : pathname}${searchParams}${hash}`;
-  };
+  }, [pathname]);
+
+  const startSwitchFeedback = useCallback(() => {
+    toast.loading(switchingLabel, {
+      id: LOCALE_SWITCH_TOAST_ID,
+      duration: 2500,
+      position: "top-center",
+    });
+  }, [switchingLabel]);
+
+  const navigateWithDelay = useCallback((targetLocale: string) => {
+    window.setTimeout(() => {
+      window.location.href = buildLocalizedUrl(targetLocale);
+    }, LOCALE_SWITCH_DELAY_MS);
+  }, [buildLocalizedUrl]);
 
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
@@ -27,7 +48,8 @@ export function LanguageToggle() {
 
         if (!nextLocale || nextLocale === locale) return;
 
-        window.location.href = buildLocalizedUrl(nextLocale);
+        startSwitchFeedback();
+        navigateWithDelay(nextLocale);
       } catch {
         // Ignore malformed payloads.
       }
@@ -35,10 +57,15 @@ export function LanguageToggle() {
 
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
-  }, [locale, pathname]);
+  }, [locale, navigateWithDelay, startSwitchFeedback]);
 
   const toggleLocale = () => {
+    if (isSwitching) return;
+
     const nextLocale = locale === "es" ? "en" : "es";
+    setIsSwitching(true);
+    startSwitchFeedback();
+
     // Utilizamos navegación dura (window.location) para evitar el error 
     // "Encountered a script tag" de next-themes con React 19 / Next 15.
     // Al forzar un refresco completo, evitamos que React intente inyectar
@@ -52,11 +79,17 @@ export function LanguageToggle() {
       // Ignore storage restrictions and continue with local navigation.
     }
 
-    window.location.href = buildLocalizedUrl(nextLocale);
+    navigateWithDelay(nextLocale);
   };
 
   return (
-    <Button variant="ghost" size="sm" onClick={toggleLocale} className="font-semibold text-primary hover:text-primary/80">
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={toggleLocale}
+      disabled={isSwitching}
+      className="font-semibold text-primary hover:text-primary/80 disabled:opacity-70"
+    >
       {locale === "es" ? "EN" : "ES"}
     </Button>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useMemo } from "react";
 import { ArrowLeft, Plus, Info, Save, X, LayoutGrid, Loader2 } from "lucide-react";
 import { Link, useRouter } from "@/i18n/routing";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -247,7 +247,6 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
   const t = useTranslations("SizeGuides");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [isDirty, setIsDirty] = useState(false);
 
   const [guideName, setGuideName] = useState(initialData?.name || "");
   const [category, setCategory] = useState(normalizeCategory(initialData?.category));
@@ -263,24 +262,26 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
   const [values, setValues] = useState<Record<string, string>>(initialData?.matrixValues || {});
   const [activePreset, setActivePreset] = useState<string>("");
 
-  useEffect(() => {
+  const isDirty = useMemo(() => {
     if (!isEditing || !initialData) {
-      setIsDirty(true);
-      return;
+      return true;
     }
+
     const currentData = {
       name: guideName,
-      category: category,
-      sizes: sizes,
-      matrixValues: values
+      category,
+      sizes,
+      matrixValues: values,
     };
+
     const initial = {
       name: initialData.name,
       category: normalizeCategory(initialData.category),
       sizes: initialData.sizes,
-      matrixValues: initialData.matrixValues
+      matrixValues: initialData.matrixValues,
     };
-    setIsDirty(JSON.stringify(currentData) !== JSON.stringify(initial));
+
+    return JSON.stringify(currentData) !== JSON.stringify(initial);
   }, [guideName, category, sizes, values, isEditing, initialData]);
 
   const applyPreset = (cat: string, presetId: string) => {
@@ -397,7 +398,7 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
         } else {
           toast.error(t("form.error"));
         }
-      } catch (error) {
+      } catch {
         toast.error(t("form.errorServer"));
       }
     });

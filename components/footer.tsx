@@ -7,21 +7,21 @@ export function Footer() {
   const t = useTranslations("Footer");
 
   return (
-    <footer className="relative w-full border-t border-border/40 bg-background overflow-hidden mt-auto pt-16 md:pt-24">
+    <footer className="relative w-full border-t border-border/40 bg-background overflow-hidden mt-auto pt-14 md:pt-24">
       {/* Decorative top gradient */}
       <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
       
-      <div className="container relative z-10 mx-auto px-6 max-w-6xl pb-20 md:pb-32">
+      <div className="container relative z-10 mx-auto px-4 sm:px-6 max-w-6xl pb-16 md:pb-32">
         {/* Pre-footer CTA */}
-        <div className="flex flex-col items-center text-center mb-14 md:mb-20 space-y-6">
-          <h3 className="text-3xl md:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70">
+        <div className="flex flex-col items-center text-center mb-12 md:mb-20 space-y-5 md:space-y-6">
+          <h3 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70">
             {t("ctaTitle")}
           </h3>
-          <p className="text-muted-foreground max-w-lg">
+          <p className="text-muted-foreground max-w-lg text-sm sm:text-base">
             {t("ctaDescription")}
           </p>
-          <Link href="/sign-up">
-            <Button size="lg" className="rounded-full px-8 shadow-[0_0_20px_-5px_var(--tw-shadow-color)] shadow-primary/40 hover:shadow-primary/60 transition-all duration-300">
+          <Link href="/sign-up" className="w-full sm:w-auto">
+            <Button size="lg" className="w-full sm:w-auto rounded-full px-8 shadow-[0_0_20px_-5px_var(--tw-shadow-color)] shadow-primary/40 hover:shadow-primary/60 transition-all duration-300">
               {t("ctaButton")}
             </Button>
           </Link>
@@ -72,15 +72,15 @@ export function Footer() {
       </div>
 
       {/* Giant Watermark Logo */}
-      <div className="absolute bottom-[-2rem] sm:bottom-[-4rem] md:bottom-[-6rem] inset-x-0 w-full flex justify-center overflow-hidden pointer-events-none select-none">
-        <span className="text-[18vw] font-black tracking-tighter leading-none text-foreground/5 dark:text-white/[0.02]">
+      <div className="absolute bottom-[-1rem] sm:bottom-[-4rem] md:bottom-[-6rem] inset-x-0 w-full flex justify-center overflow-hidden pointer-events-none select-none">
+        <span className="text-[22vw] sm:text-[18vw] font-black tracking-tighter leading-none text-foreground/5 dark:text-white/[0.02]">
           EIDYN
         </span>
       </div>
 
-      <div className="relative z-10 w-full border-t border-foreground/5 py-6 bg-background/50 backdrop-blur-md">
-        <div className="container mx-auto px-6 max-w-6xl flex justify-center">
-          <p className="text-xs text-muted-foreground/60 font-light tracking-wide">
+      <div className="relative z-10 w-full border-t border-foreground/5 py-5 sm:py-6 bg-background/50 backdrop-blur-md">
+        <div className="container mx-auto px-4 sm:px-6 max-w-6xl flex justify-center">
+          <p className="text-[11px] sm:text-xs text-muted-foreground/60 font-light tracking-wide text-center">
             &copy; {new Date().getFullYear()} Eidyn. {t("rights")}
           </p>
         </div>

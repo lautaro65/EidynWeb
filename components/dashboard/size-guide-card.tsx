@@ -21,6 +21,11 @@ type SizeGuide = {
   rawSizes?: { id: string; name: string }[];
 };
 
+type MatrixSize = {
+  id?: string;
+  name?: string;
+};
+
 type Props = {
   guide: SizeGuide;
 };
@@ -55,7 +60,7 @@ export function SizeGuideCard({ guide }: Props) {
     
     let matrixText = "";
     if (guide.rawSizes && guide.rawSizes.length > 0) {
-      matrixText = guide.rawSizes.map((sizeObj: any) => {
+      matrixText = guide.rawSizes.map((sizeObj: MatrixSize | string) => {
         const sizeName = typeof sizeObj === 'string' ? sizeObj : (sizeObj.name || t("card.notAvailable"));
         const sizeId = typeof sizeObj === 'string' ? sizeName : sizeObj.id;
         
@@ -273,8 +278,8 @@ export function SizeGuideCard({ guide }: Props) {
                         </tr>
                       </thead>
                       <tbody>
-                        {guide.rawSizes ? guide.rawSizes.map((sizeObj: any, index: number) => {
-                          const sizeId = typeof sizeObj === 'string' ? `fallback-${index}` : (sizeObj.id || `size-${index}`);
+                        {guide.rawSizes ? guide.rawSizes.map((sizeObj: MatrixSize | string) => {
+                          const sizeId = typeof sizeObj === 'string' ? `fallback-${sizeObj}` : (sizeObj.id || `size-${sizeObj.name || "unknown"}`);
                           const sizeName = typeof sizeObj === 'string' ? sizeObj : (sizeObj.name || t("card.notAvailable"));
                           
                           return (
@@ -295,7 +300,7 @@ export function SizeGuideCard({ guide }: Props) {
                               );
                             })}
                           </tr>
-                        )}) : guide.sizes.map((sizeName, index) => (
+                        )}) : guide.sizes.map((sizeName) => (
                           <tr key={sizeName} className="group transition-all">
                             <td className="px-6 py-4 bg-muted/40 dark:bg-white/5 group-hover:bg-muted/70 dark:group-hover:bg-white/10 border border-border/50 dark:border-white/5 border-r-0 rounded-l-2xl transition-colors">
                               <span className="inline-flex items-center justify-center bg-muted dark:bg-black/60 border border-border/60 dark:border-white/10 text-foreground font-bold uppercase w-12 h-12 rounded-xl shadow-inner text-lg">

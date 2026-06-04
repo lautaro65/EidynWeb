@@ -5,9 +5,17 @@ import { SizeGuidesToolbar } from "@/components/dashboard/size-guides-toolbar";
 import { SizeGuideCard } from "@/components/dashboard/size-guide-card";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
+import { redirect } from "next/navigation";
 
 type Props = {
   searchParams: Promise<{ status?: string; category?: string; search?: string }>;
+};
+
+type SessionMetadata = { tenantId?: string };
+type MatrixSize = { id?: string; name?: string };
+type SizeGuideMatrix = {
+  sizes?: MatrixSize[];
+  values?: Record<string, string>;
 };
 
 export default async function SizeGuidesPage({ searchParams }: Props) {
@@ -25,34 +33,77 @@ export default async function SizeGuidesPage({ searchParams }: Props) {
   };
 
   const { userId, sessionClaims } = await auth();
-  if (!userId) return null;
+  if (!userId) redirect("/sign-in");
 
-  let tenantId = (sessionClaims?.metadata as any)?.tenantId as string;
+  let tenantId = (sessionClaims?.metadata as SessionMetadata | undefined)?.tenantId;
   if (!tenantId) {
     const mem = await db.membership.findFirst({ where: { user: { clerkId: userId } } });
     tenantId = mem?.tenantId as string;
   }
 
-  if (!tenantId) return null;
+  if (!tenantId) {
+    return (
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="flex flex-col items-center justify-center py-20 border border-border/40 border-dashed rounded-[2rem] bg-background/30 backdrop-blur-md text-center shadow-sm">
+          <div className="h-20 w-20 rounded-full bg-muted/50 flex items-center justify-center mb-6 shadow-inner ring-1 ring-border/50">
+            <Ruler className="h-10 w-10 text-muted-foreground opacity-50" />
+          </div>
+          <h3 className="text-xl font-bold text-foreground">{t("noResults.title")}</h3>
+          <p className="text-muted-foreground max-w-sm mx-auto mt-2 font-light">
+            {t("noResults.desc")}
+          </p>
+          <Link href="/dashboard/onboarding" className="mt-6 rounded-xl bg-foreground text-background px-5 py-2.5 font-semibold">
+            Completar onboarding
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
-  const dbGuides = await db.sizeGuide.findMany({
-    where: { tenantId },
-    include: {
-      _count: {
-        select: { products: true }
-      }
-    },
-    orderBy: { updatedAt: "desc" }
-  });
+  const dbGuides = await db.sizeGuide
+    .findMany({
+      where: { tenantId },
+      include: {
+        _count: {
+          select: { products: true }
+        }
+      },
+      orderBy: { updatedAt: "desc" }
+    })
+    .catch(() => null);
+
+  if (!dbGuides) {
+    return (
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="flex flex-col items-center justify-center py-20 border border-destructive/30 border-dashed rounded-[2rem] bg-background/40 backdrop-blur-md text-center shadow-sm">
+          <div className="h-20 w-20 rounded-full bg-destructive/10 flex items-center justify-center mb-6 ring-1 ring-destructive/30">
+            <Ruler className="h-10 w-10 text-destructive/70" />
+          </div>
+          <h3 className="text-xl font-bold text-foreground">No pudimos cargar las guias</h3>
+          <p className="text-muted-foreground max-w-sm mx-auto mt-2 font-light">
+            Reintenta en unos segundos. Si el problema persiste, revisa la conexion a la base de datos.
+          </p>
+          <Link href="/dashboard/size-guides" className="mt-6 rounded-xl bg-foreground text-background px-5 py-2.5 font-semibold">
+            Reintentar
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const allSizeGuides = dbGuides.map(g => {
-    const matrix = g.matrix as any;
+    const matrix = (g.matrix ?? {}) as SizeGuideMatrix;
+    const normalizedRawSizes = (matrix.sizes || []).map((size, index) => ({
+      id: size.id || `size-${index}`,
+      name: size.name || "-",
+    }));
+
     return {
       id: g.id,
       name: g.name,
       category: normalizeCategory(g.category),
-      sizes: (matrix?.sizes || []).map((s: any) => s.name || s),
-      rawSizes: matrix?.sizes || [],
+      sizes: normalizedRawSizes.map((size) => size.name),
+      rawSizes: normalizedRawSizes,
       matrixValues: matrix?.values || {},
       linkedCount: g._count.products,
       status: g.status,
@@ -94,8 +145,8 @@ export default async function SizeGuidesPage({ searchParams }: Props) {
 
       {/* Grid de Guías */}
       {sizeGuides.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 border border-white/5 border-dashed rounded-[2rem] bg-background/30 backdrop-blur-md text-center shadow-sm">
-          <div className="h-20 w-20 rounded-full bg-white/5 flex items-center justify-center mb-6 shadow-inner ring-1 ring-white/10">
+        <div className="flex flex-col items-center justify-center py-20 border border-border/40 border-dashed rounded-[2rem] bg-background/30 backdrop-blur-md text-center shadow-sm">
+          <div className="h-20 w-20 rounded-full bg-muted/50 flex items-center justify-center mb-6 shadow-inner ring-1 ring-border/50">
             <Ruler className="h-10 w-10 text-muted-foreground opacity-40" />
           </div>
           <h3 className="text-xl font-bold text-foreground">{t("noResults.title")}</h3>

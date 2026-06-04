@@ -31,9 +31,9 @@ export function Navbar({ initialUserId }: { initialUserId?: string | null }) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
+  const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
-  }, [pathname]);
+  };
 
   const isAboutActive = pathname === "/about";
   const isContactActive = pathname === "/contact";
@@ -41,13 +41,13 @@ export function Navbar({ initialUserId }: { initialUserId?: string | null }) {
   return (
     <div className={cn(
       "fixed inset-x-0 z-50 flex justify-center w-full transition-all duration-500 pointer-events-none",
-      isScrolled ? "top-6 px-4" : "top-0 px-0"
+      isScrolled ? "top-3 sm:top-6 px-3 sm:px-4" : "top-0 px-0"
     )}>
       <header className={cn(
         "pointer-events-auto flex items-center justify-center transition-all duration-500",
         isScrolled 
-          ? "h-14 w-full max-w-4xl rounded-full border border-white/10 bg-background/40 px-6 backdrop-blur-xl shadow-[0_8px_32px_-8px_rgba(0,0,0,0.1)] hover:bg-background/50" 
-          : "h-20 w-full max-w-none rounded-none border-b border-transparent bg-transparent px-6 backdrop-blur-sm"
+          ? "h-14 sm:h-14 w-full max-w-4xl rounded-full border border-white/10 bg-background/40 px-3 sm:px-6 backdrop-blur-xl shadow-[0_8px_32px_-8px_rgba(0,0,0,0.1)] hover:bg-background/50" 
+          : "h-16 sm:h-20 w-full max-w-none rounded-none border-b border-transparent bg-transparent px-3 sm:px-6 backdrop-blur-sm"
       )}>
         <div className={cn(
           "grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 transition-all duration-500",
@@ -65,6 +65,7 @@ export function Navbar({ initialUserId }: { initialUserId?: string | null }) {
           <nav className="hidden md:flex items-center justify-center space-x-6 text-sm font-medium">
             <Link
               href="/about"
+              onClick={closeMobileMenu}
               className={cn(
                 "relative py-1 transition-colors group",
                 isAboutActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
@@ -80,6 +81,7 @@ export function Navbar({ initialUserId }: { initialUserId?: string | null }) {
             </Link>
             <Link
               href="/contact"
+              onClick={closeMobileMenu}
               className={cn(
                 "relative py-1 transition-colors group",
                 isContactActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
@@ -175,7 +177,7 @@ export function Navbar({ initialUserId }: { initialUserId?: string | null }) {
 
             <button
               onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-              className="md:hidden inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              className="md:hidden inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
               aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
             >
               {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -185,10 +187,11 @@ export function Navbar({ initialUserId }: { initialUserId?: string | null }) {
       </header>
 
       {isMobileMenuOpen && (
-        <div className="pointer-events-auto absolute top-full mt-3 w-[min(92vw,420px)] rounded-2xl border border-border/60 bg-background/95 backdrop-blur-2xl shadow-2xl p-3 md:hidden">
+        <div className="pointer-events-auto absolute top-full mt-2 w-[calc(100%-1rem)] max-w-[420px] rounded-2xl border border-border/60 bg-background/95 backdrop-blur-2xl shadow-2xl p-3 md:hidden animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200">
           <nav className="flex flex-col gap-1">
             <Link
               href="/about"
+              onClick={closeMobileMenu}
               className={cn(
                 "rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                 isAboutActive ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
@@ -198,6 +201,7 @@ export function Navbar({ initialUserId }: { initialUserId?: string | null }) {
             </Link>
             <Link
               href="/contact"
+              onClick={closeMobileMenu}
               className={cn(
                 "rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                 isContactActive ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
@@ -206,15 +210,26 @@ export function Navbar({ initialUserId }: { initialUserId?: string | null }) {
               {t("contact")}
             </Link>
             {!currentUserId ? (
-              <Link
-                href="/sign-up"
-                className="mt-2 rounded-xl bg-foreground px-3 py-2.5 text-center text-sm font-semibold text-background"
-              >
-                {t("signup")}
-              </Link>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <Link
+                  href="/sign-in"
+                  onClick={closeMobileMenu}
+                  className="rounded-xl border border-border/60 px-3 py-2.5 text-center text-sm font-semibold text-foreground"
+                >
+                  {t("login")}
+                </Link>
+                <Link
+                  href="/sign-up"
+                  onClick={closeMobileMenu}
+                  className="rounded-xl bg-foreground px-3 py-2.5 text-center text-sm font-semibold text-background"
+                >
+                  {t("signup")}
+                </Link>
+              </div>
             ) : (
               <Link
                 href="/dashboard"
+                onClick={closeMobileMenu}
                 className="mt-2 rounded-xl bg-foreground px-3 py-2.5 text-center text-sm font-semibold text-background"
               >
                 {t("dashboard")}

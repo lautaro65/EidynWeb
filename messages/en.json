@@ -4,7 +4,8 @@
     "contact": "Contact",
     "dashboard": "Dashboard",
     "login": "Sign In",
-    "signup": "Create Account"
+    "signup": "Create Account",
+    "switchingLanguage": "Switching language..."
   },
   "Footer": {
     "description": "Transforming e-commerce with 3D virtual clothing try-on.",
