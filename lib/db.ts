@@ -19,21 +19,25 @@ const normalizePgSslMode = (url: string) => {
 };
 
 const rawConnectionString = process.env.DATABASE_URL;
+const hasDatabaseUrl = Boolean(rawConnectionString);
 
-if (!rawConnectionString) {
-  throw new Error("DATABASE_URL is not set");
-}
+const connectionString = rawConnectionString
+  ? normalizePgSslMode(rawConnectionString)
+  : undefined;
 
-const connectionString = normalizePgSslMode(rawConnectionString);
+const pool = connectionString
+  ? new Pool({
+      connectionString,
+      ssl: true,
+    })
+  : undefined;
 
-const pool = new Pool({ 
-  connectionString,
-  ssl: true
-});
-const adapter = new PrismaPg(pool);
+const adapter = pool ? new PrismaPg(pool) : undefined;
 
 const prismaClientSingleton = () => {
-  return new PrismaClient({ adapter });
+  // Build environments may import modules without DB access (e.g. route analysis).
+  // In that case we create PrismaClient without adapter and defer failures to query time.
+  return adapter ? new PrismaClient({ adapter }) : new PrismaClient();
 };
 
 type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>;
