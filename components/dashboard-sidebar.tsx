@@ -12,6 +12,8 @@ import {
   Ruler,
   Plug,
   CreditCard,
+  User,
+  SlidersHorizontal,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -75,6 +77,8 @@ export function DashboardSidebar() {
       key: "account",
       label: t("sectionAccount"),
       items: [
+        { icon: User, label: t("accountInfo"), href: "#", disabled: true },
+        { icon: SlidersHorizontal, label: t("widgetConfig"), href: "#", disabled: true },
         { icon: CreditCard, label: t("billing"), href: "#", disabled: true },
       ],
     },

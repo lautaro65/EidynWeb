@@ -9,7 +9,6 @@ import { notFound } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ClerkProvider } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
 import { enUS, esES } from "@clerk/localizations";
 import { Toaster } from "react-hot-toast";
 
@@ -41,7 +40,6 @@ export default async function RootLayout({
   }
 
   const messages = await getMessages();
-  const { userId } = await auth();
 
   return (
     <ClerkProvider 
@@ -88,7 +86,7 @@ export default async function RootLayout({
               disableTransitionOnChange
             >
               <div className="flex min-h-screen flex-col">
-                <Navbar initialUserId={userId} />
+                <Navbar />
                 <main className="flex-1">{children}</main>
                 <Footer />
               </div>

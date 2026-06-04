@@ -110,6 +110,8 @@
     "garments": "3D Garments",
     "connections": "Connections",
     "apiKeys": "API Keys",
+    "accountInfo": "Account Information",
+    "widgetConfig": "Widget Configuration",
     "billing": "Plan & Billing",
     "upgradeToPro": "Upgrade to Pro",
     "upgradeDesc": "Unlock unlimited 3D generations and custom domains for your store.",

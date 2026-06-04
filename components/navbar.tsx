@@ -11,24 +11,39 @@ import { UserButton, useAuth } from "@clerk/nextjs";
 import { LayoutDashboard, Menu, X } from "lucide-react";
 import { BrandLogo } from "./brand-logo";
 
-export function Navbar({ initialUserId }: { initialUserId?: string | null }) {
+export function Navbar() {
   const t = useTranslations("Navigation");
   const pathname = usePathname();
   const { isLoaded, userId } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Use client-side userId if loaded, otherwise fall back to server-provided initialUserId
-  // This completely eliminates layout shift during hydration/language-switch
-  const currentUserId = isLoaded ? userId : initialUserId;
+  const isAuthReady = isLoaded;
+  const isSignedIn = Boolean(userId);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+    let frameId = 0;
+
+    const updateScrolled = () => {
+      const nextIsScrolled = window.scrollY > 20;
+      setIsScrolled((prev) => (prev === nextIsScrolled ? prev : nextIsScrolled));
+      frameId = 0;
     };
-    handleScroll();
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    const handleScroll = () => {
+      if (frameId) return;
+      frameId = window.requestAnimationFrame(updateScrolled);
+    };
+
+    updateScrolled();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      if (frameId) {
+        window.cancelAnimationFrame(frameId);
+      }
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   const closeMobileMenu = () => {
@@ -104,7 +119,9 @@ export function Navbar({ initialUserId }: { initialUserId?: string | null }) {
             </div>
 
             <div className="sm:hidden">
-              {!currentUserId ? (
+              {!isAuthReady ? (
+                <div className="h-7 w-16 rounded-full border border-border/60 bg-muted/50 animate-pulse" />
+              ) : !isSignedIn ? (
                 <Link
                   href="/sign-in"
                   className="rounded-full border border-border/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
@@ -131,7 +148,9 @@ export function Navbar({ initialUserId }: { initialUserId?: string | null }) {
             </div>
             
             <div className="hidden sm:flex items-center space-x-2 justify-end">
-              {!currentUserId ? (
+              {!isAuthReady ? (
+                <div className="h-9 w-[140px] rounded-full bg-muted/50 animate-pulse" />
+              ) : !isSignedIn ? (
                 <>
                   <Link 
                     href="/sign-in"
@@ -209,7 +228,9 @@ export function Navbar({ initialUserId }: { initialUserId?: string | null }) {
             >
               {t("contact")}
             </Link>
-            {!currentUserId ? (
+            {!isAuthReady ? (
+              <div className="mt-2 h-10 w-full rounded-xl bg-muted/50 animate-pulse" />
+            ) : !isSignedIn ? (
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <Link
                   href="/sign-in"
