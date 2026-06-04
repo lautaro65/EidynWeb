@@ -35,9 +35,7 @@ const pool = connectionString
 const adapter = pool ? new PrismaPg(pool) : undefined;
 
 const prismaClientSingleton = () => {
-  // Build environments may import modules without DB access (e.g. route analysis).
-  // In that case we create PrismaClient without adapter and defer failures to query time.
-  return adapter ? new PrismaClient({ adapter }) : new PrismaClient();
+  return new PrismaClient({ adapter });
 };
 
 type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>;
@@ -46,6 +44,20 @@ const globalForPrisma = globalThis as unknown as {
   prisma_v2: PrismaClientSingleton | undefined;
 };
 
-export const db = globalForPrisma.prisma_v2 ?? prismaClientSingleton();
+const createMissingDbProxy = (): PrismaClientSingleton =>
+  new Proxy(
+    {},
+    {
+      get() {
+        throw new Error("DATABASE_URL is not set");
+      },
+    }
+  ) as PrismaClientSingleton;
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma_v2 = db;
+export const db = hasDatabaseUrl
+  ? globalForPrisma.prisma_v2 ?? prismaClientSingleton()
+  : createMissingDbProxy();
+
+if (hasDatabaseUrl && process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma_v2 = db;
+}
