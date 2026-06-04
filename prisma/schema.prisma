@@ -1,0 +1,727 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────
+// AUTH & USUARIOS FINALES
+// ─────────────────────────────────────────
+
+model User {
+  id             String    @id @default(uuid()) @db.Uuid
+  clerkId        String?   @unique @map("clerk_id")
+  email          String    @unique
+  googleId       String?   @unique @map("google_id")
+  passwordHash   String?   @map("password_hash")
+  emailVerified  Boolean   @default(false) @map("email_verified")
+  verifyToken    String?   @map("verify_token")
+  verifyExpires  DateTime? @map("verify_expires")
+  username       String?
+  imageUrl       String?   @map("image_url")
+
+  // Avatar activo del usuario (modelo 3D de sí mismo)
+  activeAvatarId String?   @unique @map("active_avatar_id") @db.Uuid
+
+  // Límite mensual de cambios de avatar (máx 2 por mes)
+  avatarMonthlyCount Int      @default(0) @map("avatar_monthly_count")
+  avatarMonthlyLimit Int      @default(2) @map("avatar_monthly_limit")
+  avatarCountResetAt DateTime @default(now()) @map("avatar_count_reset_at") // fecha en que se resetea el contador
+
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  memberships   Membership[]
+  addresses     Address[]
+  avatars       Avatar[]
+  activeAvatar  Avatar?        @relation("UserActiveAvatar", fields: [activeAvatarId], references: [id])
+  // Tiendas a las que el usuario les dio permiso de usar su avatar
+  shopConsents  ShopConsent[]
+  tryonSessions TryOnSession[]
+  carts         Cart[]
+  orders        Order[]
+  events        Event[]
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────
+// TENANTS (DUEÑOS DE TIENDA EN EIDYN)
+// ─────────────────────────────────────────
+
+model Tenant {
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String?
+  slug        String?   @unique
+  logoUrl     String?   @map("logo_url")
+  plan        String?
+  status      String?
+  isVerified  Boolean   @default(false) @map("is_verified")
+  verifiedBy  String?   @map("verified_by")
+  verifiedAt  DateTime? @map("verified_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  memberships       Membership[]
+  roles             Role[]
+  stores            Store[]
+  categories        Category[]
+  brands            Brand[]
+  products          Product[]
+  // Modelos 3D que este tenant creó (es owner)
+  ownedGarments     GarmentTemplate[]
+  // Accesos a modelos de otros tenants
+  garmentAccesses   GarmentAccess[]
+  carts             Cart[]
+  orders            Order[]
+  apiKeys           ApiKey[]
+  webhooks          Webhook[]
+  events            Event[]
+  jobs              Job[]
+  aiJobs            AiJob[]
+  shopConsents      ShopConsent[]
+  sizeGuides        SizeGuide[]
+
+  @@map("tenants")
+}
+
+model Membership {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  roleId    String   @map("role_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  @@map("memberships")
+}
+
+model Role {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  name      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant      Tenant           @relation(fields: [tenantId], references: [id])
+  memberships Membership[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String  @id @default(uuid()) @db.Uuid
+  key         String  @unique
+  description String?
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String @map("role_id") @db.Uuid
+  permissionId String @map("permission_id") @db.Uuid
+
+  role       Role       @relation(fields: [roleId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// ─────────────────────────────────────────
+// AVATAR / MODELO 3D DEL USUARIO FINAL
+// ─────────────────────────────────────────
+
+model Avatar {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  gender       String?
+  height       Decimal?
+  weight       Decimal?
+  bodygramData Json?    @map("bodygram_data")
+  measurements Json?    // chest, waist, hips, inseam, etc.
+  modelUrl     String?  @map("model_url")      // GLB en R2
+  previewUrl   String?  @map("preview_url")
+  status       String?  @default("pending")    // pending | processing | completed | failed
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user          User           @relation(fields: [userId], references: [id])
+  activeForUser User?          @relation("UserActiveAvatar")
+  tryonSessions TryOnSession[]
+
+  @@map("avatars")
+}
+
+// ─────────────────────────────────────────
+// CONSENTIMIENTO DEL USUARIO POR TIENDA
+// El usuario autoriza con su gmail que una tienda específica
+// pueda usar su avatar (modelo 3D) para el probador virtual.
+// ─────────────────────────────────────────
+
+model ShopConsent {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  granted   Boolean  @default(false)
+  grantedAt DateTime @default(now()) @map("granted_at")
+  revokedAt DateTime? @map("revoked_at") // null = consentimiento activo
+
+  user   User   @relation(fields: [userId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([userId, tenantId])
+  @@map("shop_consents")
+}
+
+// ─────────────────────────────────────────
+// MARCAS DE PRENDAS 3D
+// ─────────────────────────────────────────
+
+// Marca global de una prenda (Nike, Adidas, etc.)
+// Separada del Brand de tienda para que sea compartida entre tenants
+model GarmentBrand {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique               // "Nike", "Adidas", "Zara"
+  slug      String   @unique               // "nike", "adidas", "zara"
+  logoUrl   String?  @map("logo_url")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  garments GarmentTemplate[]
+
+  @@map("garment_brands")
+}
+
+// ─────────────────────────────────────────
+// CATÁLOGO COMPARTIDO DE PRENDAS 3D
+// ─────────────────────────────────────────
+
+// El modelo "master" de una prenda. Lo crea un tenant (owner).
+// Otras tiendas pueden usarlo sin duplicarlo.
+model GarmentTemplate {
+  id          String   @id @default(uuid()) @db.Uuid
+  ownerId     String?  @map("owner_id") @db.Uuid       // tenant que lo creó (null = modelo global de Eidyn)
+  brandId     String?  @map("brand_id") @db.Uuid       // marca (ej: Nike, Adidas)
+  sku         String   @unique                          // código universal (ej: "NIKE-AM90-001")
+  name        String?
+  category    String?                                   // shirt | pants | dress | shoes | etc.
+  gender      String?                                   // male | female | unisex
+  description String?
+  isPublic    Boolean  @default(false) @map("is_public") // si true, cualquier tienda puede usarlo
+  status      String   @default("pending") @map("status") // pending | active | rejected
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  owner    Tenant?           @relation(fields: [ownerId], references: [id])
+  brand    GarmentBrand?     @relation(fields: [brandId], references: [id])
+  variants GarmentVariant[]  // variantes por color y talle
+  accesses GarmentAccess[]   // qué tiendas tienen acceso
+  listings GarmentListing[]  // en qué tiendas está publicado
+
+  @@map("garment_templates")
+}
+
+// Cada combinación de color + talle tiene su propio modelo 3D
+model GarmentVariant {
+  id                String   @id @default(uuid()) @db.Uuid
+  garmentId         String   @map("garment_id") @db.Uuid
+  color             String?                          // "black" | "#000000" | "Negro"
+  colorHex          String?  @map("color_hex")       // "#1A1A1A"
+  size              String?                          // "XS" | "S" | "M" | "L" | "XL" | "XXL"
+  sizeSystem        String?  @map("size_system")     // "EU" | "US" | "UK" | "numeric"
+  
+  // Parámetros de escala y modelo base
+  scaleFactor       Float?   @map("scale_factor")
+  referenceVariantId String? @map("reference_variant_id") @db.Uuid
+  meshParams        Json?    @map("mesh_params")     // sleeveLength, chestWidth, neckWidth, etc.
+  
+  // Assets originales
+  sourceImageUrl    String?  @map("source_image_url")
+  sourceImageBackUrl String? @map("source_image_back_url")
+  
+  // Assets en R2
+  textureMapUrl     String?  @map("texture_map_url")
+  baseModelUrl      String?  @map("base_model_url")       // modelo base rigged
+  processedModelUrl String?  @map("processed_model_url")  // modelo final listo para render
+  previewImageUrl   String?  @map("preview_image_url")
+  
+  status            String?  @default("pending")    // pending | processing | completed | failed
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  garment       GarmentTemplate  @relation(fields: [garmentId], references: [id])
+  tryonSessions TryOnSession[]
+  aiJobs        AiJob[]
+
+  // Un mismo garment no puede tener dos variantes con el mismo color y talle
+  @@unique([garmentId, color, size])
+  @@map("garment_variants")
+}
+
+// Control de acceso: qué tiendas pueden usar modelos de otros owners
+// Útil si en el futuro querés cobrar por acceso o requerir aprobación
+model GarmentAccess {
+  id         String    @id @default(uuid()) @db.Uuid
+  garmentId  String    @map("garment_id") @db.Uuid
+  tenantId   String    @map("tenant_id") @db.Uuid   // tienda que tiene acceso
+  grantedBy  String?   @map("granted_by")            // "owner" | "admin" | "public"
+  grantedAt  DateTime  @default(now()) @map("granted_at")
+  expiresAt  DateTime? @map("expires_at")            // null = sin expiración
+
+  garment GarmentTemplate @relation(fields: [garmentId], references: [id])
+  tenant  Tenant          @relation(fields: [tenantId], references: [id])
+
+  @@unique([garmentId, tenantId])
+  @@map("garment_accesses")
+}
+
+// La conexión entre un GarmentTemplate y una tienda específica.
+// Una tienda puede usar un modelo 3D de otro owner sin re-escanearlo.
+// storeProductId es el ID del producto interno de esa tienda.
+model GarmentListing {
+  id             String   @id @default(uuid()) @db.Uuid
+  storeId        String   @map("store_id") @db.Uuid
+  garmentId      String   @map("garment_id") @db.Uuid       // modelo 3D base (puede ser de otro tenant)
+  storeProductId String?  @map("store_product_id") @db.Uuid // producto propio de la tienda que lo usa
+  customName     String?  @map("custom_name")               // la tienda puede poner su propio nombre
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  store   Store           @relation(fields: [storeId], references: [id])
+  garment GarmentTemplate @relation(fields: [garmentId], references: [id])
+  product Product?        @relation(fields: [storeProductId], references: [id])
+
+  @@unique([storeId, garmentId])
+  @@map("garment_listings")
+}
+
+// ─────────────────────────────────────────
+// TIENDAS, CATÁLOGO Y ÓRDENES
+// ─────────────────────────────────────────
+
+model Store {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  name        String?
+  slug        String?
+  description String?
+  currency    String?
+  country     String?
+  timezone    String?
+  status      String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  tenant           Tenant           @relation(fields: [tenantId], references: [id])
+  products         Product[]
+  inventory        Inventory[]
+  orders           Order[]
+  garmentListings  GarmentListing[]
+
+  @@map("stores")
+}
+
+model Category {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  parentId  String?  @map("parent_id") @db.Uuid
+  name      String?
+  slug      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant   Tenant     @relation(fields: [tenantId], references: [id])
+  parent   Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryToCategory")
+  products Product[]
+
+  @@map("categories")
+}
+
+model Brand {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  name      String?
+  slug      String?
+  logoUrl   String?  @map("logo_url")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+  products Product[]
+
+  @@map("brands")
+}
+
+model Product {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  storeId     String   @map("store_id") @db.Uuid
+  categoryId  String?  @map("category_id") @db.Uuid
+  brandId     String?  @map("brand_id") @db.Uuid
+  name        String?
+  slug        String?
+  description String?
+  status      String?
+  fitChest    Float    @default(1.0) @map("fit_chest")
+  fitSleeve   Float    @default(1.0) @map("fit_sleeve")
+  fitLength   Float    @default(1.0) @map("fit_length")
+  sizeGuideId String?  @map("size_guide_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tenant        Tenant           @relation(fields: [tenantId], references: [id])
+  store         Store            @relation(fields: [storeId], references: [id])
+  category      Category?        @relation(fields: [categoryId], references: [id])
+  brand         Brand?           @relation(fields: [brandId], references: [id])
+  variants      ProductVariant[]
+  assets        ProductAsset[]
+  tryonSessions TryOnSession[]
+  garmentListings GarmentListing[] // modelos 3D vinculados a este producto
+  sizeGuide       SizeGuide?       @relation(fields: [sizeGuideId], references: [id])
+
+  @@map("products")
+}
+
+model ProductVariant {
+  id           String   @id @default(uuid()) @db.Uuid
+  productId    String   @map("product_id") @db.Uuid
+  sku          String?  @unique
+  barcode      String?
+  price        Decimal?
+  comparePrice Decimal? @map("compare_price")
+  costPrice    Decimal? @map("cost_price")
+  weight       Decimal?
+  status       String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  product    Product            @relation(fields: [productId], references: [id])
+  attributes VariantAttribute[]
+  assets     ProductAsset[]
+  inventory  Inventory[]
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@map("product_variants")
+}
+
+model VariantAttribute {
+  id             String  @id @default(uuid()) @db.Uuid
+  variantId      String  @map("variant_id") @db.Uuid
+  attributeName  String? @map("attribute_name")
+  attributeValue String? @map("attribute_value")
+
+  variant ProductVariant @relation(fields: [variantId], references: [id])
+
+  @@map("variant_attributes")
+}
+
+model ProductAsset {
+  id        String   @id @default(uuid()) @db.Uuid
+  productId String   @map("product_id") @db.Uuid
+  variantId String?  @map("variant_id") @db.Uuid
+  type      String?
+  url       String?
+  mimeType  String?  @map("mime_type")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  product Product         @relation(fields: [productId], references: [id])
+  variant ProductVariant? @relation(fields: [variantId], references: [id])
+
+  @@map("product_assets")
+}
+
+model Inventory {
+  id                String   @id @default(uuid()) @db.Uuid
+  variantId         String   @map("variant_id") @db.Uuid
+  storeId           String   @map("store_id") @db.Uuid
+  quantity          Int      @default(0)
+  reservedQuantity  Int      @default(0) @map("reserved_quantity")
+  lowStockThreshold Int      @default(0) @map("low_stock_threshold")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  variant   ProductVariant      @relation(fields: [variantId], references: [id])
+  store     Store               @relation(fields: [storeId], references: [id])
+  movements InventoryMovement[]
+
+  @@map("inventory")
+}
+
+model InventoryMovement {
+  id            String   @id @default(uuid()) @db.Uuid
+  inventoryId   String   @map("inventory_id") @db.Uuid
+  type          String?
+  quantity      Int      @default(0)
+  reason        String?
+  referenceType String?  @map("reference_type")
+  referenceId   String?  @map("reference_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  inventory Inventory @relation(fields: [inventoryId], references: [id])
+
+  @@map("inventory_movements")
+}
+
+// ─────────────────────────────────────────
+// TRY-ON SESSION
+// ─────────────────────────────────────────
+
+model TryOnSession {
+  id               String    @id @default(uuid()) @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  avatarId         String    @map("avatar_id") @db.Uuid
+  productId        String    @map("product_id") @db.Uuid
+  garmentVariantId String?   @map("garment_variant_id") @db.Uuid  // variante específica usada
+  resultUrl        String?   @map("result_url")
+  signedUrl        String?   @map("signed_url")
+  signedUrlExpires DateTime? @map("signed_url_expires")            // expira en 1 hora
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  user           User            @relation(fields: [userId], references: [id])
+  avatar         Avatar          @relation(fields: [avatarId], references: [id])
+  product        Product         @relation(fields: [productId], references: [id])
+  garmentVariant GarmentVariant? @relation(fields: [garmentVariantId], references: [id])
+
+  @@map("tryon_sessions")
+}
+
+// ─────────────────────────────────────────
+// CART & ORDERS
+// ─────────────────────────────────────────
+
+model Cart {
+  id        String    @id @default(uuid()) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  userId    String?   @map("user_id") @db.Uuid
+  status    String?
+  expiresAt DateTime? @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  tenant Tenant     @relation(fields: [tenantId], references: [id])
+  user   User?      @relation(fields: [userId], references: [id])
+  items  CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id            String   @id @default(uuid()) @db.Uuid
+  cartId        String   @map("cart_id") @db.Uuid
+  variantId     String   @map("variant_id") @db.Uuid
+  quantity      Int      @default(1)
+  priceSnapshot Decimal? @map("price_snapshot")
+
+  cart    Cart           @relation(fields: [cartId], references: [id])
+  variant ProductVariant @relation(fields: [variantId], references: [id])
+
+  @@map("cart_items")
+}
+
+model Address {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  country    String?
+  state      String?
+  city       String?
+  postalCode String?  @map("postal_code")
+  street     String?
+  number     String?
+  apartment  String?
+  phone      String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user   User    @relation(fields: [userId], references: [id])
+  orders Order[]
+
+  @@map("addresses")
+}
+
+model Order {
+  id                String   @id @default(uuid()) @db.Uuid
+  tenantId          String   @map("tenant_id") @db.Uuid
+  storeId           String   @map("store_id") @db.Uuid
+  userId            String?  @map("user_id") @db.Uuid
+  addressId         String?  @map("address_id") @db.Uuid
+  status            String?
+  paymentStatus     String?  @map("payment_status")
+  fulfillmentStatus String?  @map("fulfillment_status")
+  currency          String?
+  subtotal          Decimal?
+  tax               Decimal?
+  shipping          Decimal?
+  discount          Decimal?
+  total             Decimal?
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  tenant   Tenant      @relation(fields: [tenantId], references: [id])
+  store    Store       @relation(fields: [storeId], references: [id])
+  user     User?       @relation(fields: [userId], references: [id])
+  address  Address?    @relation(fields: [addressId], references: [id])
+  items    OrderItem[]
+  payments Payment[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String   @id @default(uuid()) @db.Uuid
+  orderId    String   @map("order_id") @db.Uuid
+  variantId  String   @map("variant_id") @db.Uuid
+  quantity   Int      @default(1)
+  unitPrice  Decimal? @map("unit_price")
+  totalPrice Decimal? @map("total_price")
+
+  order   Order          @relation(fields: [orderId], references: [id])
+  variant ProductVariant @relation(fields: [variantId], references: [id])
+
+  @@map("order_items")
+}
+
+model Payment {
+  id                String    @id @default(uuid()) @db.Uuid
+  orderId           String    @map("order_id") @db.Uuid
+  provider          String?
+  providerPaymentId String?   @map("provider_payment_id")
+  status            String?
+  amount            Decimal?
+  currency          String?
+  paidAt            DateTime? @map("paid_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("payments")
+}
+
+// ─────────────────────────────────────────
+// API KEYS & WEBHOOKS
+// ─────────────────────────────────────────
+
+model ApiKey {
+  id         String    @id @default(uuid()) @db.Uuid
+  tenantId   String    @map("tenant_id") @db.Uuid
+  name       String?
+  publicKey  String    @unique @default(uuid()) @map("public_key")
+  keyHash    String?   @map("key_hash")
+  rateLimit  Int       @default(100) @map("rate_limit")
+  isActive   Boolean   @default(true) @map("is_active")
+  lastUsedAt DateTime? @map("last_used_at")
+  expiresAt  DateTime? @map("expires_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("api_keys")
+}
+
+model Webhook {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  url       String?
+  secret    String?
+  events    Json?
+  status    String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("webhooks")
+}
+
+// ─────────────────────────────────────────
+// EVENTOS, JOBS & IA
+// ─────────────────────────────────────────
+
+model Event {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  eventType String?  @map("event_type")
+  eventData Json?    @map("event_data")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  user   User?  @relation(fields: [userId], references: [id])
+
+  @@map("events")
+}
+
+model Job {
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  type        String?
+  status      String?
+  payload     Json?
+  attempts    Int       @default(0)
+  scheduledAt DateTime? @map("scheduled_at")
+  processedAt DateTime? @map("processed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("jobs")
+}
+
+model AiJob {
+  id               String    @id @default(uuid()) @db.Uuid
+  tenantId         String    @map("tenant_id") @db.Uuid
+  garmentVariantId String?   @map("garment_variant_id") @db.Uuid
+  type             String?   // garment_texture | garment_params | avatar_bodygram
+  provider         String?
+  status           String?
+  inputData        Json?     @map("input_data")
+  outputData       Json?     @map("output_data")
+  error            String?
+  startedAt        DateTime? @map("started_at")
+  completedAt      DateTime? @map("completed_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  tenant         Tenant          @relation(fields: [tenantId], references: [id])
+  garmentVariant GarmentVariant? @relation(fields: [garmentVariantId], references: [id])
+
+  @@map("ai_jobs")
+}
+
+model AiModel {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String?
+  provider  String?
+  version   String?
+  type      String?
+  config    Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("ai_models")
+}
+
+// ─────────────────────────────────────────
+// GUÍAS DE TALLES
+// ─────────────────────────────────────────
+
+model SizeGuide {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  name      String
+  category  String
+  status    String   @default("Active")
+  matrix    Json     // Guardará el mapeo de talles y medidas
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  products  Product[] 
+
+  @@map("size_guides")
+}

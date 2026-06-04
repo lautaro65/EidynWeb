@@ -1,0 +1,47 @@
+import { PrismaClient } from "./generated/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
+
+const normalizePgSslMode = (url: string) => {
+  try {
+    const parsedUrl = new URL(url);
+    const sslMode = parsedUrl.searchParams.get("sslmode")?.toLowerCase();
+
+    // Keep current effective behavior and avoid pg v8 warning noise.
+    if (sslMode && ["prefer", "require", "verify-ca"].includes(sslMode)) {
+      parsedUrl.searchParams.set("sslmode", "verify-full");
+    }
+
+    return parsedUrl.toString();
+  } catch {
+    return url;
+  }
+};
+
+const rawConnectionString = process.env.DATABASE_URL;
+
+if (!rawConnectionString) {
+  throw new Error("DATABASE_URL is not set");
+}
+
+const connectionString = normalizePgSslMode(rawConnectionString);
+
+const pool = new Pool({ 
+  connectionString,
+  ssl: true
+});
+const adapter = new PrismaPg(pool);
+
+const prismaClientSingleton = () => {
+  return new PrismaClient({ adapter });
+};
+
+type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>;
+
+const globalForPrisma = globalThis as unknown as {
+  prisma_v2: PrismaClientSingleton | undefined;
+};
+
+export const db = globalForPrisma.prisma_v2 ?? prismaClientSingleton();
+
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma_v2 = db;
