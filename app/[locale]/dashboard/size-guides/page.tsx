@@ -18,6 +18,28 @@ type SizeGuideMatrix = {
   values?: Record<string, string>;
 };
 
+type SizeGuideRow = {
+  id: string;
+  name: string;
+  category: string;
+  matrix: unknown;
+  _count: { products: number };
+  status: string;
+  updatedAt: Date;
+};
+
+type NormalizedSizeGuide = {
+  id: string;
+  name: string;
+  category: string;
+  sizes: string[];
+  rawSizes: { id: string; name: string }[];
+  matrixValues: Record<string, string>;
+  linkedCount: number;
+  status: string;
+  lastUpdated: string;
+};
+
 export default async function SizeGuidesPage({ searchParams }: Props) {
   const t = await getTranslations("SizeGuides");
   const params = await searchParams;
@@ -91,7 +113,7 @@ export default async function SizeGuidesPage({ searchParams }: Props) {
     );
   }
 
-  const allSizeGuides = dbGuides.map(g => {
+  const allSizeGuides: NormalizedSizeGuide[] = dbGuides.map((g: SizeGuideRow) => {
     const matrix = (g.matrix ?? {}) as SizeGuideMatrix;
     const normalizedRawSizes = (matrix.sizes || []).map((size, index) => ({
       id: size.id || `size-${index}`,
@@ -112,7 +134,7 @@ export default async function SizeGuidesPage({ searchParams }: Props) {
   });
 
   // Filtrado
-  const sizeGuides = allSizeGuides.filter(guide => {
+  const sizeGuides = allSizeGuides.filter((guide: NormalizedSizeGuide) => {
     if (params.status && params.status !== "all" && guide.status !== params.status) return false;
     if (params.category && params.category !== "all" && guide.category !== params.category) return false;
     if (params.search && !guide.name.toLowerCase().includes(params.search.toLowerCase())) return false;
