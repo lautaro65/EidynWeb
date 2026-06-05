@@ -61,7 +61,7 @@ export function DashboardSidebar() {
       key: "catalog",
       label: t("sectionCatalog"),
       items: [
-        { icon: Shirt, label: t("products"), href: "#", disabled: true },
+        { icon: Shirt, label: t("garments"), href: "/dashboard/garments" },
         { icon: Box, label: t("inventory"), href: "#", disabled: true },
       ],
     },

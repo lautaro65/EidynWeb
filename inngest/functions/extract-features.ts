@@ -39,7 +39,7 @@ export const extractFeatures = inngest.createFunction(
         where: { id: variantId },
         data: {
           colorHex: extractedColor,
-          textureMapUrl: extractedLogo // Guardamos el logo transparente extraído como textura principal/decal
+          textureUrl: extractedLogo // Guardamos el logo transparente extraído como textura principal/decal
         }
       });
     });

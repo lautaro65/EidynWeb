@@ -179,6 +179,22 @@
         "length": "Largo Total (cm)",
         "backBtn": "Atrás"
       }
+    },
+    "toolbar": {
+      "searchPlaceholder": "Buscar por nombre o SKU...",
+      "filters": "Filtros",
+      "category": "Categoría",
+      "categoryAll": "Todas"
+    },
+    "card": {
+      "like": "Me gusta",
+      "unlike": "Ya no me gusta",
+      "edit": "Editar",
+      "statusPublic": "Público",
+      "statusPrivate": "Privado",
+      "statusPending": "Pendiente",
+      "statusActive": "Activa",
+      "variants": "Variantes"
     }
   },
   "Overview": {

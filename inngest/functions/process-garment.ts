@@ -1,7 +1,12 @@
 import { inngest } from "../client";
 import { db as prisma } from "@/lib/db";
-import { createMeshyTask, checkMeshyTaskStatus } from "@/lib/meshy";
 import { uploadToR2 } from "@/lib/r2";
+import { NodeIO } from '@gltf-transform/core';
+import { simplify, draco } from '@gltf-transform/functions';
+import { KHRONOS_EXTENSIONS } from '@gltf-transform/extensions';
+// @ts-expect-error - No types available for draco3dgltf
+import draco3d from 'draco3dgltf';
+import { MeshoptSimplifier } from 'meshoptimizer';
 
 export const processGarment = inngest.createFunction(
   {
@@ -9,83 +14,86 @@ export const processGarment = inngest.createFunction(
     triggers: [{ event: "garment.process" }]
   },
   async ({ event, step }) => {
-    const { aiJobId, variantId, sourceImageUrl } = event.data;
+    const { aiJobId, templateId } = event.data;
 
-    // 1. Iniciar la tarea en Meshy
+    // 1. Iniciar la tarea (MOCK)
     const meshyTaskId = await step.run("start-meshy-task", async () => {
-      // Actualizamos estado a processing
       await prisma.aiJob.update({
         where: { id: aiJobId },
         data: { status: "processing", startedAt: new Date() }
       });
-      await prisma.garmentVariant.update({
-        where: { id: variantId },
+      await prisma.garmentTemplate.update({
+        where: { id: templateId },
         data: { status: "processing" }
       });
-
-      return await createMeshyTask(sourceImageUrl);
+      return "mock_task_id";
     });
 
-    // 2. Hacer polling con Inngest step.sleep (Evita timeouts de Vercel)
-    let isCompleted = false;
-    let statusData;
-    let attempts = 0;
-    
-    while (!isCompleted && attempts < 30) {
-      await step.sleep(`wait-for-meshy-${attempts}`, "15s"); // Esperamos 15s sin consumir CPU
-      
-      statusData = await step.run(`check-meshy-status-${attempts}`, async () => {
-        return await checkMeshyTaskStatus(meshyTaskId);
-      });
+    // 2. Simular espera (MOCK)
+    await step.sleep("wait-for-meshy", "2s");
 
-      if (statusData.status === "SUCCEEDED" || statusData.status === "FAILED" || statusData.status === "EXPIRED") {
-        isCompleted = true;
+    // 3. Descargar, Optimizar GLB y subir a R2
+    const finalUrls = await step.run("optimize-and-upload-r2", async () => {
+      // MOCK: En lugar de descargar de Meshy, leemos el modelo local
+      const path = await import("path");
+      const fs = await import("fs/promises");
+      const localGlbPath = path.join(process.cwd(), "public", "models", "remera.glb");
+      const localBuffer = await fs.readFile(localGlbPath);
+      const arrayBuffer = localBuffer.buffer.slice(localBuffer.byteOffset, localBuffer.byteOffset + localBuffer.byteLength);
+
+      // B. Optimización con gltf-transform
+      await MeshoptSimplifier.ready;
+      const io = new NodeIO()
+        .registerExtensions(KHRONOS_EXTENSIONS)
+        .registerDependencies({
+          'draco3d.decoder': await draco3d.createDecoderModule(),
+          'draco3d.encoder': await draco3d.createEncoderModule(),
+        });
+
+      // Leemos el GLB original
+      const document = await io.readBinary(new Uint8Array(arrayBuffer));
+
+      // Aplicamos compresión y decimación
+      await document.transform(
+        simplify({ simplifier: MeshoptSimplifier, ratio: 0.5, error: 0.01 }), // Reduce al 50% los polígonos
+        draco({ method: 'edgebreaker', quantizePosition: 14 }) // Compresión Draco
+      );
+
+      // Generamos el buffer optimizado
+      const optimizedGlb = await io.writeBinary(document);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let finalBuffer: any = Buffer.from(optimizedGlb);
+
+      // C. Auto-Rigging
+      const { autoRigGarment } = await import("@/lib/rigging");
+
+      try {
+        const prefabPath = path.join(process.cwd(), "public", "models", "prefab_base.glb");
+        // Verifica si existe el prefab
+        await fs.access(prefabPath);
+        const prefabBuffer = await fs.readFile(prefabPath);
+        
+        console.log("Prefab found. Starting auto-rigging process...");
+        finalBuffer = (await autoRigGarment(finalBuffer as unknown as Uint8Array, prefabBuffer as unknown as Uint8Array)) as unknown as Buffer;
+        console.log("Auto-rigging completed successfully.");
+      } catch (err) {
+        console.warn("Skipping auto-rigging. prefab_base.glb not found at public/models/prefab_base.glb or rigging failed.", err);
       }
-      attempts++;
-    }
-      
-    if (statusData?.status !== "SUCCEEDED") {
-      throw new Error(`Meshy task failed or timed out: ${statusData?.task_error?.message || "Unknown error"}`);
-    }
 
-    // 3. Descargar GLB y subir a R2
-    const finalUrls = await step.run("upload-to-r2", async () => {
-      const glbUrl = statusData.model_urls.glb;
-      
-      // Descargamos de Meshy
-      const response = await fetch(glbUrl);
-      if (!response.ok) throw new Error("Failed to download GLB from Meshy");
-      const arrayBuffer = await response.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-
-      // Obtenemos el variant para sacar el garmentId
-      const variant = await prisma.garmentVariant.findUnique({ where: { id: variantId } });
-      if (!variant) throw new Error("Variant not found");
-
-      const r2Key = `garments/${variant.garmentId}/base/model_${variantId}.glb`;
-      const uploadedUrl = await uploadToR2(buffer, r2Key, "model/gltf-binary");
+      // D. Subimos a R2
+      const r2Key = `garments/${templateId}/base/model.glb`;
+      const uploadedUrl = await uploadToR2(finalBuffer, r2Key, "model/gltf-binary");
 
       return { baseModelUrl: uploadedUrl };
     });
 
     // 4. Actualizar Base de Datos
     await step.run("update-database", async () => {
-      // Para el MVP extraemos medidas dummy, pero idealmente vendrían de otro AiJob (garment_params)
-      const meshParams = {
-        shoulders: 44,
-        chest: 96,
-        length: 70,
-        sleeve: 62,
-        sizeLabel: "M", // Suponiendo base
-        scaleReference: true
-      };
-
-      await prisma.garmentVariant.update({
-        where: { id: variantId },
+      await prisma.garmentTemplate.update({
+        where: { id: templateId },
         data: {
           baseModelUrl: finalUrls.baseModelUrl,
-          status: "completed",
-          meshParams
+          status: "base_ready"
         }
       });
 

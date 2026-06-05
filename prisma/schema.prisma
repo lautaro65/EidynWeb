@@ -16,27 +16,27 @@ datasource db {
 // ─────────────────────────────────────────
 
 model User {
-  id             String    @id @default(uuid()) @db.Uuid
-  clerkId        String?   @unique @map("clerk_id")
-  email          String    @unique
-  googleId       String?   @unique @map("google_id")
-  passwordHash   String?   @map("password_hash")
-  emailVerified  Boolean   @default(false) @map("email_verified")
-  verifyToken    String?   @map("verify_token")
-  verifyExpires  DateTime? @map("verify_expires")
-  username       String?
-  imageUrl       String?   @map("image_url")
+  id            String    @id @default(uuid()) @db.Uuid
+  clerkId       String?   @unique @map("clerk_id")
+  email         String    @unique
+  googleId      String?   @unique @map("google_id")
+  passwordHash  String?   @map("password_hash")
+  emailVerified Boolean   @default(false) @map("email_verified")
+  verifyToken   String?   @map("verify_token")
+  verifyExpires DateTime? @map("verify_expires")
+  username      String?
+  imageUrl      String?   @map("image_url")
 
   // Avatar activo del usuario (modelo 3D de sí mismo)
-  activeAvatarId String?   @unique @map("active_avatar_id") @db.Uuid
+  activeAvatarId String? @unique @map("active_avatar_id") @db.Uuid
 
   // Límite mensual de cambios de avatar (máx 2 por mes)
   avatarMonthlyCount Int      @default(0) @map("avatar_monthly_count")
   avatarMonthlyLimit Int      @default(2) @map("avatar_monthly_limit")
   avatarCountResetAt DateTime @default(now()) @map("avatar_count_reset_at") // fecha en que se resetea el contador
 
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   memberships   Membership[]
   addresses     Address[]
@@ -57,37 +57,38 @@ model User {
 // ─────────────────────────────────────────
 
 model Tenant {
-  id          String    @id @default(uuid()) @db.Uuid
-  name        String?
-  slug        String?   @unique
-  logoUrl     String?   @map("logo_url")
-  plan        String?
-  status      String?
-  isVerified  Boolean   @default(false) @map("is_verified")
-  verifiedBy  String?   @map("verified_by")
-  verifiedAt  DateTime? @map("verified_at")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id         String    @id @default(uuid()) @db.Uuid
+  name       String?
+  slug       String?   @unique
+  logoUrl    String?   @map("logo_url")
+  plan       String?
+  status     String?
+  isVerified Boolean   @default(false) @map("is_verified")
+  verifiedBy String?   @map("verified_by")
+  verifiedAt DateTime? @map("verified_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
 
-  memberships       Membership[]
-  roles             Role[]
-  stores            Store[]
-  categories        Category[]
-  brands            Brand[]
-  products          Product[]
+  memberships     Membership[]
+  roles           Role[]
+  stores          Store[]
+  categories      Category[]
+  brands          Brand[]
+  products        Product[]
   // Modelos 3D que este tenant creó (es owner)
-  ownedGarments     GarmentTemplate[]
+  ownedGarments   GarmentTemplate[]
   // Accesos a modelos de otros tenants
-  garmentAccesses   GarmentAccess[]
-  carts             Cart[]
-  orders            Order[]
-  apiKeys           ApiKey[]
-  webhooks          Webhook[]
-  events            Event[]
-  jobs              Job[]
-  aiJobs            AiJob[]
-  shopConsents      ShopConsent[]
-  sizeGuides        SizeGuide[]
+  garmentAccesses GarmentAccess[]
+  carts           Cart[]
+  orders          Order[]
+  apiKeys         ApiKey[]
+  webhooks        Webhook[]
+  events          Event[]
+  jobs            Job[]
+  aiJobs          AiJob[]
+  shopConsents    ShopConsent[]
+  sizeGuides      SizeGuide[]
+  garmentLikes    GarmentLike[]
 
   @@map("tenants")
 }
@@ -151,10 +152,10 @@ model Avatar {
   height       Decimal?
   weight       Decimal?
   bodygramData Json?    @map("bodygram_data")
-  measurements Json?    // chest, waist, hips, inseam, etc.
-  modelUrl     String?  @map("model_url")      // GLB en R2
+  measurements Json? // chest, waist, hips, inseam, etc.
+  modelUrl     String?  @map("model_url") // GLB en R2
   previewUrl   String?  @map("preview_url")
-  status       String?  @default("pending")    // pending | processing | completed | failed
+  status       String?  @default("pending") // pending | processing | completed | failed
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
@@ -172,11 +173,11 @@ model Avatar {
 // ─────────────────────────────────────────
 
 model ShopConsent {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @map("user_id") @db.Uuid
-  tenantId  String   @map("tenant_id") @db.Uuid
-  granted   Boolean  @default(false)
-  grantedAt DateTime @default(now()) @map("granted_at")
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  granted   Boolean   @default(false)
+  grantedAt DateTime  @default(now()) @map("granted_at")
   revokedAt DateTime? @map("revoked_at") // null = consentimiento activo
 
   user   User   @relation(fields: [userId], references: [id])
@@ -194,8 +195,8 @@ model ShopConsent {
 // Separada del Brand de tienda para que sea compartida entre tenants
 model GarmentBrand {
   id        String   @id @default(uuid()) @db.Uuid
-  name      String   @unique               // "Nike", "Adidas", "Zara"
-  slug      String   @unique               // "nike", "adidas", "zara"
+  name      String   @unique // "Nike", "Adidas", "Zara"
+  slug      String   @unique // "nike", "adidas", "zara"
   logoUrl   String?  @map("logo_url")
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -211,74 +212,128 @@ model GarmentBrand {
 // El modelo "master" de una prenda. Lo crea un tenant (owner).
 // Otras tiendas pueden usarlo sin duplicarlo.
 model GarmentTemplate {
-  id          String   @id @default(uuid()) @db.Uuid
-  ownerId     String?  @map("owner_id") @db.Uuid       // tenant que lo creó (null = modelo global de Eidyn)
-  brandId     String?  @map("brand_id") @db.Uuid       // marca (ej: Nike, Adidas)
-  sku         String   @unique                          // código universal (ej: "NIKE-AM90-001")
+  id          String  @id @default(uuid()) @db.Uuid
+  ownerId     String? @map("owner_id") @db.Uuid // tenant que lo creó (null = modelo global de Eidyn)
+  brandId     String? @map("brand_id") @db.Uuid // marca (ej: Nike, Adidas)
+  sku         String  @unique // código universal (ej: "NIKE-AM90-001")
   name        String?
-  category    String?                                   // shirt | pants | dress | shoes | etc.
-  gender      String?                                   // male | female | unisex
+  category    String? // shirt | pants | dress | shoes | etc.
+  gender      String? // male | female | unisex
   description String?
-  isPublic    Boolean  @default(false) @map("is_public") // si true, cualquier tienda puede usarlo
-  status      String   @default("pending") @map("status") // pending | active | rejected
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  isPublic    Boolean @default(false) @map("is_public") // si true, cualquier tienda puede usarlo
+  status      String  @default("pending") @map("status") // processing | base_ready | complete
 
-  owner    Tenant?           @relation(fields: [ownerId], references: [id])
-  brand    GarmentBrand?     @relation(fields: [brandId], references: [id])
-  variants GarmentVariant[]  // variantes por color y talle
-  accesses GarmentAccess[]   // qué tiendas tienen acceso
-  listings GarmentListing[]  // en qué tiendas está publicado
+  // Assets base y fotos para la IA
+  baseModelUrl       String? @map("base_model_url")
+  sourceImageUrl     String? @map("source_image_url")
+  sourceImageBackUrl String? @map("source_image_back_url")
+
+  likesCount Int @default(0) @map("likes_count")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  owner    Tenant?          @relation(fields: [ownerId], references: [id])
+  brand    GarmentBrand?    @relation(fields: [brandId], references: [id])
+  variants GarmentVariant[] // variantes de color/diseño
+  sizes    GarmentSize[] // talles definidos
+  likes    GarmentLike[]
+  accesses GarmentAccess[] // qué tiendas tienen acceso
+  listings GarmentListing[] // en qué tiendas está publicado
 
   @@map("garment_templates")
 }
 
-// Cada combinación de color + talle tiene su propio modelo 3D
+// Cada variante representa un Color o Diseño distinto
 model GarmentVariant {
-  id                String   @id @default(uuid()) @db.Uuid
-  garmentId         String   @map("garment_id") @db.Uuid
-  color             String?                          // "black" | "#000000" | "Negro"
-  colorHex          String?  @map("color_hex")       // "#1A1A1A"
-  size              String?                          // "XS" | "S" | "M" | "L" | "XL" | "XXL"
-  sizeSystem        String?  @map("size_system")     // "EU" | "US" | "UK" | "numeric"
-  
-  // Parámetros de escala y modelo base
-  scaleFactor       Float?   @map("scale_factor")
-  referenceVariantId String? @map("reference_variant_id") @db.Uuid
-  meshParams        Json?    @map("mesh_params")     // sleeveLength, chestWidth, neckWidth, etc.
-  
-  // Assets originales
-  sourceImageUrl    String?  @map("source_image_url")
-  sourceImageBackUrl String? @map("source_image_back_url")
-  
-  // Assets en R2
-  textureMapUrl     String?  @map("texture_map_url")
-  baseModelUrl      String?  @map("base_model_url")       // modelo base rigged
-  processedModelUrl String?  @map("processed_model_url")  // modelo final listo para render
-  previewImageUrl   String?  @map("preview_image_url")
-  
-  status            String?  @default("pending")    // pending | processing | completed | failed
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
+  id        String  @id @default(uuid()) @db.Uuid
+  garmentId String  @map("garment_id") @db.Uuid
+  name      String? // "Roja", "Estampado flores"
+  type      String? @default("color") // "color" | "design"
+  colorHex  String? @map("color_hex") // "#1A1A1A"
 
-  garment       GarmentTemplate  @relation(fields: [garmentId], references: [id])
+  // Textura en R2
+  textureUrl      String? @map("texture_url") // El PNG del diseño/color
+  previewImageUrl String? @map("preview_image_url")
+
+  status    String?  @default("pending") // pending | processing | completed | failed
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  garment       GarmentTemplate      @relation(fields: [garmentId], references: [id])
+  sizes         GarmentVariantSize[]
   tryonSessions TryOnSession[]
   aiJobs        AiJob[]
 
-  // Un mismo garment no puede tener dos variantes con el mismo color y talle
-  @@unique([garmentId, color, size])
   @@map("garment_variants")
+}
+
+// Cada talle representa las medidas físicas y el factor de escala
+model GarmentSize {
+  id        String  @id @default(uuid()) @db.Uuid
+  garmentId String  @map("garment_id") @db.Uuid
+  label     String // "S", "M", "L", "XL"
+  system    String? // "numeric", "EU", "alpha"
+
+  // Medidas reales
+  chest     Float?
+  shoulders Float?
+  length    Float?
+
+  // Factores calculados para Three.js (referencia = 1.0)
+  scaleX Float? @map("scale_x")
+  scaleY Float? @map("scale_y")
+  scaleZ Float? @map("scale_z")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  garment       GarmentTemplate      @relation(fields: [garmentId], references: [id])
+  variants      GarmentVariantSize[]
+  tryonSessions TryOnSession[]
+
+  @@map("garment_sizes")
+}
+
+// Cruce cartesiano de las variantes y los talles activados
+model GarmentVariantSize {
+  id        String   @id @default(uuid()) @db.Uuid
+  variantId String   @map("variant_id") @db.Uuid
+  sizeId    String   @map("size_id") @db.Uuid
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  variant GarmentVariant @relation(fields: [variantId], references: [id])
+  size    GarmentSize    @relation(fields: [sizeId], references: [id])
+
+  @@unique([variantId, sizeId])
+  @@map("garment_variant_sizes")
+}
+
+// Registro de Likes para los modelos comunitarios
+model GarmentLike {
+  id        String   @id @default(uuid()) @db.Uuid
+  garmentId String   @map("garment_id") @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  garment GarmentTemplate @relation(fields: [garmentId], references: [id])
+  tenant  Tenant          @relation(fields: [tenantId], references: [id])
+
+  @@unique([garmentId, tenantId])
+  @@map("garment_likes")
 }
 
 // Control de acceso: qué tiendas pueden usar modelos de otros owners
 // Útil si en el futuro querés cobrar por acceso o requerir aprobación
 model GarmentAccess {
-  id         String    @id @default(uuid()) @db.Uuid
-  garmentId  String    @map("garment_id") @db.Uuid
-  tenantId   String    @map("tenant_id") @db.Uuid   // tienda que tiene acceso
-  grantedBy  String?   @map("granted_by")            // "owner" | "admin" | "public"
-  grantedAt  DateTime  @default(now()) @map("granted_at")
-  expiresAt  DateTime? @map("expires_at")            // null = sin expiración
+  id        String    @id @default(uuid()) @db.Uuid
+  garmentId String    @map("garment_id") @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid // tienda que tiene acceso
+  grantedBy String?   @map("granted_by") // "owner" | "admin" | "public"
+  grantedAt DateTime  @default(now()) @map("granted_at")
+  expiresAt DateTime? @map("expires_at") // null = sin expiración
 
   garment GarmentTemplate @relation(fields: [garmentId], references: [id])
   tenant  Tenant          @relation(fields: [tenantId], references: [id])
@@ -293,9 +348,9 @@ model GarmentAccess {
 model GarmentListing {
   id             String   @id @default(uuid()) @db.Uuid
   storeId        String   @map("store_id") @db.Uuid
-  garmentId      String   @map("garment_id") @db.Uuid       // modelo 3D base (puede ser de otro tenant)
+  garmentId      String   @map("garment_id") @db.Uuid // modelo 3D base (puede ser de otro tenant)
   storeProductId String?  @map("store_product_id") @db.Uuid // producto propio de la tienda que lo usa
-  customName     String?  @map("custom_name")               // la tienda puede poner su propio nombre
+  customName     String?  @map("custom_name") // la tienda puede poner su propio nombre
   isActive       Boolean  @default(true) @map("is_active")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
@@ -324,11 +379,11 @@ model Store {
   status      String?
   createdAt   DateTime @default(now()) @map("created_at")
 
-  tenant           Tenant           @relation(fields: [tenantId], references: [id])
-  products         Product[]
-  inventory        Inventory[]
-  orders           Order[]
-  garmentListings  GarmentListing[]
+  tenant          Tenant           @relation(fields: [tenantId], references: [id])
+  products        Product[]
+  inventory       Inventory[]
+  orders          Order[]
+  garmentListings GarmentListing[]
 
   @@map("stores")
 }
@@ -380,13 +435,13 @@ model Product {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  tenant        Tenant           @relation(fields: [tenantId], references: [id])
-  store         Store            @relation(fields: [storeId], references: [id])
-  category      Category?        @relation(fields: [categoryId], references: [id])
-  brand         Brand?           @relation(fields: [brandId], references: [id])
-  variants      ProductVariant[]
-  assets        ProductAsset[]
-  tryonSessions TryOnSession[]
+  tenant          Tenant           @relation(fields: [tenantId], references: [id])
+  store           Store            @relation(fields: [storeId], references: [id])
+  category        Category?        @relation(fields: [categoryId], references: [id])
+  brand           Brand?           @relation(fields: [brandId], references: [id])
+  variants        ProductVariant[]
+  assets          ProductAsset[]
+  tryonSessions   TryOnSession[]
   garmentListings GarmentListing[] // modelos 3D vinculados a este producto
   sizeGuide       SizeGuide?       @relation(fields: [sizeGuideId], references: [id])
 
@@ -482,16 +537,18 @@ model TryOnSession {
   userId           String    @map("user_id") @db.Uuid
   avatarId         String    @map("avatar_id") @db.Uuid
   productId        String    @map("product_id") @db.Uuid
-  garmentVariantId String?   @map("garment_variant_id") @db.Uuid  // variante específica usada
+  garmentVariantId String?   @map("garment_variant_id") @db.Uuid // variante específica usada
+  garmentSizeId    String?   @map("garment_size_id") @db.Uuid // talle específico usado
   resultUrl        String?   @map("result_url")
   signedUrl        String?   @map("signed_url")
-  signedUrlExpires DateTime? @map("signed_url_expires")            // expira en 1 hora
+  signedUrlExpires DateTime? @map("signed_url_expires") // expira en 1 hora
   createdAt        DateTime  @default(now()) @map("created_at")
 
   user           User            @relation(fields: [userId], references: [id])
   avatar         Avatar          @relation(fields: [avatarId], references: [id])
   product        Product         @relation(fields: [productId], references: [id])
   garmentVariant GarmentVariant? @relation(fields: [garmentVariantId], references: [id])
+  garmentSize    GarmentSize?    @relation(fields: [garmentSizeId], references: [id])
 
   @@map("tryon_sessions")
 }
@@ -677,7 +734,7 @@ model AiJob {
   id               String    @id @default(uuid()) @db.Uuid
   tenantId         String    @map("tenant_id") @db.Uuid
   garmentVariantId String?   @map("garment_variant_id") @db.Uuid
-  type             String?   // garment_texture | garment_params | avatar_bodygram
+  type             String? // garment_texture | garment_params | avatar_bodygram
   provider         String?
   status           String?
   inputData        Json?     @map("input_data")
@@ -715,12 +772,12 @@ model SizeGuide {
   name      String
   category  String
   status    String   @default("Active")
-  matrix    Json     // Guardará el mapeo de talles y medidas
+  matrix    Json // Guardará el mapeo de talles y medidas
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  tenant    Tenant    @relation(fields: [tenantId], references: [id])
-  products  Product[] 
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+  products Product[]
 
   @@map("size_guides")
 }
