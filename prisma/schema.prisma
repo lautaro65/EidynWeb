@@ -280,6 +280,10 @@ model GarmentSize {
   chest     Float?
   shoulders Float?
   length    Float?
+  waist     Float?
+  hips      Float?
+  inseam    Float?
+  sleeve    Float?
 
   // Factores calculados para Three.js (referencia = 1.0)
   scaleX Float? @map("scale_x")

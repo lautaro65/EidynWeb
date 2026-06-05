@@ -21,11 +21,35 @@ interface VariantInput {
 
 interface SizeInput {
   label: string;
-  chest: number;
-  shoulders: number;
-  length: number;
   system: string;
+  chest?: number;
+  shoulders?: number;
+  length?: number;
+  waist?: number;
+  hips?: number;
+  inseam?: number;
+  sleeve?: number;
 }
+
+const CATEGORY_MEASUREMENTS: Record<string, { id: keyof Omit<SizeInput, 'label'|'system'>, label: string }[]> = {
+  remeras: [
+    { id: "chest", label: "Ancho Pecho" },
+    { id: "length", label: "Largo Total" },
+    { id: "shoulders", label: "Ancho Hombros" }
+  ],
+  pantalones: [
+    { id: "waist", label: "Ancho Cintura" },
+    { id: "hips", label: "Ancho Cadera" },
+    { id: "inseam", label: "Largo Entrepierna" },
+    { id: "length", label: "Largo Total" }
+  ],
+  abrigos: [
+    { id: "chest", label: "Ancho Pecho" },
+    { id: "length", label: "Largo Total" },
+    { id: "shoulders", label: "Ancho Hombros" },
+    { id: "sleeve", label: "Largo Manga" }
+  ]
+};
 
 interface DbVariant {
   id: string;
@@ -54,6 +78,7 @@ export function GarmentWizard() {
   const [isValidatingSku, setIsValidatingSku] = useState(false);
   const [skuError, setSkuError] = useState<string | null>(null);
   const [validatedSku, setValidatedSku] = useState<string | null>(null);
+  const [category, setCategory] = useState("remeras");
 
   // Step 2 State
   const [frontImage, setFrontImage] = useState<File | null>(null);
@@ -105,17 +130,18 @@ export function GarmentWizard() {
     setSizingSystem(isNumeric ? "numeric" : "alpha");
 
     const newSizes: SizeInput[] = m.sizes.map(s => {
-      const chestStr = m.values[`${s.id}_chest`] || m.values[`${s.id}-chest`] || m.values[`${s.id}_pecho`] || m.values[`${s.id}-pecho`] || "0";
-      const lengthStr = m.values[`${s.id}_length`] || m.values[`${s.id}-length`] || m.values[`${s.id}_largo`] || m.values[`${s.id}-largo`] || "0";
-      const shoulderStr = m.values[`${s.id}_shoulders`] || m.values[`${s.id}-shoulders`] || m.values[`${s.id}_hombros`] || m.values[`${s.id}-hombros`] || "0";
-
-      return {
+      const sizeObj: SizeInput = {
         label: s.name,
-        chest: parseFloat(chestStr) || 0,
-        length: parseFloat(lengthStr) || 0,
-        shoulders: parseFloat(shoulderStr) || 0,
         system: isNumeric ? "numeric" : "alpha"
       };
+      
+      const measurements = CATEGORY_MEASUREMENTS[guide.category] || CATEGORY_MEASUREMENTS["remeras"];
+      measurements.forEach(meas => {
+        const valStr = m.values[`${s.id}_${meas.id}`] || m.values[`${s.id}-${meas.id}`] || "0";
+        sizeObj[meas.id] = parseFloat(valStr) || 0;
+      });
+
+      return sizeObj;
     });
 
     setSizes(newSizes);
@@ -148,10 +174,10 @@ export function GarmentWizard() {
     }
   };
 
-  const isStep1Valid = name.trim().length > 0 && sku.trim().length > 0 && sku === validatedSku;
+  const isStep1Valid = name.trim().length > 0 && sku.trim().length > 0 && sku === validatedSku && category.trim().length > 0;
   const isStep2Valid = frontImage !== null && backImage !== null;
   const isStep3Valid = variants.length > 0 && variants.every(v => v.name.trim() !== "" && (v.type === "solid" || v.fileFront !== null));
-  const isStep4Valid = sizes.length > 0 && sizes.every(s => s.chest > 0 && s.shoulders > 0 && s.length > 0);
+  const isStep4Valid = sizes.length > 0 && sizes.every(s => CATEGORY_MEASUREMENTS[category].every(m => (s[m.id] || 0) > 0));
 
   const nextStep = () => setStep(s => s + 1);
 
@@ -177,8 +203,9 @@ export function GarmentWizard() {
       const formData = new FormData();
       formData.append("name", name);
       formData.append("sku", sku);
-      formData.append("frontImage", frontImage);
-      formData.append("backImage", backImage);
+      formData.append("category", category);
+      formData.append("frontImage", frontImage as Blob);
+      formData.append("backImage", backImage as Blob);
 
       const res = await createGarmentTemplateAction(formData);
       if (res.error) {
@@ -258,7 +285,12 @@ export function GarmentWizard() {
     setSizes(current => {
       const exists = current.find(s => s.label === label);
       if (exists) return current.filter(s => s.label !== label);
-      return [...current, { label, chest: 0, shoulders: 0, length: 0, system: sizingSystem }];
+      
+      const newSize: SizeInput = { label, system: sizingSystem };
+      CATEGORY_MEASUREMENTS[category].forEach(m => {
+        newSize[m.id] = 0;
+      });
+      return [...current, newSize];
     });
   };
 
@@ -412,6 +444,20 @@ export function GarmentWizard() {
                 <p className="text-sm text-muted-foreground/70 ml-1">
                   Este código debe coincidir con el SKU de tu producto en Shopify o WooCommerce.
                 </p>
+              </div>
+
+              <div className="space-y-3">
+                <Label htmlFor="category" className="text-sm font-semibold text-foreground/80 ml-1">Categoría</Label>
+                <Select value={category} onValueChange={(val) => setCategory(val || "remeras")}>
+                  <SelectTrigger className="h-14 pl-5 text-lg bg-background/50 border-white/10 focus-visible:ring-primary/50 rounded-xl shadow-inner transition-all">
+                    <SelectValue placeholder="Selecciona una categoría" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background/95 backdrop-blur-3xl border border-border/60 rounded-xl shadow-2xl p-1">
+                    <SelectItem value="remeras" className="py-2.5 px-4 font-bold">Remeras / T-Shirts</SelectItem>
+                    <SelectItem value="pantalones" className="py-2.5 px-4 font-bold">Pantalones</SelectItem>
+                    <SelectItem value="abrigos" className="py-2.5 px-4 font-bold">Abrigos</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -679,7 +725,9 @@ export function GarmentWizard() {
                   <Label className="text-primary font-bold mb-2 block">Autocompletar con Guía de Talles</Label>
                   <Select value={selectedGuideId} onValueChange={handleApplySizeGuide}>
                     <SelectTrigger className="w-full h-12 bg-background border border-primary/30 focus:ring-2 focus:ring-primary/50 transition-all rounded-xl shadow-inner">
-                      <SelectValue placeholder="Selecciona una guía guardada..." />
+                      <SelectValue placeholder="Selecciona una guía guardada...">
+                        {selectedGuideId === "none" ? "Ninguna (Limpiar)" : (availableSizeGuides.find(g => g.id === selectedGuideId)?.name ? `${availableSizeGuides.find(g => g.id === selectedGuideId)?.name} (${availableSizeGuides.find(g => g.id === selectedGuideId)?.category})` : "Selecciona una guía guardada...")}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-background/95 backdrop-blur-3xl border border-border/60 rounded-xl shadow-2xl p-1 max-h-[250px] overflow-y-auto">
                       <SelectItem value="none" className="py-2.5 px-4 font-semibold text-muted-foreground">Ninguna (Limpiar)</SelectItem>
@@ -706,7 +754,9 @@ export function GarmentWizard() {
                     }}
                   >
                     <SelectTrigger className="w-full h-12 bg-background border border-border focus:ring-2 focus:ring-primary/50 transition-all rounded-xl shadow-inner">
-                      <SelectValue placeholder="Sistema de Talles" />
+                      <SelectValue placeholder="Sistema de Talles">
+                        {sizingSystem === "alpha" ? "Alfanumérico (S, M, L, XL)" : sizingSystem === "numeric" ? "Numérico (38, 40, 42, 44)" : "Sistema de Talles"}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-background/95 backdrop-blur-3xl border border-border/60 rounded-xl shadow-2xl p-1">
                       <SelectItem value="alpha" className="py-2.5 px-4 font-bold">Alfanumérico (S, M, L, XL)</SelectItem>
@@ -719,7 +769,7 @@ export function GarmentWizard() {
                   <Label>Talles Disponibles</Label>
                   <div className="flex flex-wrap gap-3">
                     {sizingSystem === "alpha" 
-                      ? ["XS", "S", "M", "L", "XL", "XXL"].map(label => (
+                      ? ["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"].map(label => (
                           <button
                             key={label}
                             onClick={() => toggleSize(label)}
@@ -728,7 +778,7 @@ export function GarmentWizard() {
                             {label}
                           </button>
                         ))
-                      : ["36", "38", "40", "42", "44", "46"].map(label => (
+                      : ["34", "36", "38", "40", "42", "44", "46", "48", "50", "52", "54", "56", "58", "60"].map(label => (
                           <button
                             key={label}
                             onClick={() => toggleSize(label)}
@@ -747,38 +797,20 @@ export function GarmentWizard() {
                   <h3 className="text-xl font-bold">Medidas (en cm)</h3>
                   <div className="grid gap-4">
                     {sizes.map((s) => (
-                      <div key={s.label} className="grid grid-cols-4 items-center gap-4 bg-background/50 border border-border/50 p-4 rounded-xl">
+                      <div key={s.label} className="grid grid-cols-[100px_repeat(auto-fit,minmax(120px,1fr))] items-center gap-4 bg-background/50 border border-border/50 p-4 rounded-xl">
                         <div className="font-bold text-xl text-center text-primary">{s.label}</div>
-                        <div className="space-y-1">
-                          <Label className="text-xs text-muted-foreground">Ancho Pecho</Label>
-                          <Input 
-                            type="number" 
-                            placeholder="Ej: 52" 
-                            value={s.chest || ""} 
-                            onChange={(e) => updateSize(s.label, "chest", parseFloat(e.target.value))} 
-                            className="bg-background"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs text-muted-foreground">Largo Total</Label>
-                          <Input 
-                            type="number" 
-                            placeholder="Ej: 72" 
-                            value={s.length || ""} 
-                            onChange={(e) => updateSize(s.label, "length", parseFloat(e.target.value))} 
-                            className="bg-background"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs text-muted-foreground">Ancho Hombros</Label>
-                          <Input 
-                            type="number" 
-                            placeholder="Ej: 46" 
-                            value={s.shoulders || ""} 
-                            onChange={(e) => updateSize(s.label, "shoulders", parseFloat(e.target.value))} 
-                            className="bg-background"
-                          />
-                        </div>
+                        {CATEGORY_MEASUREMENTS[category].map(m => (
+                          <div key={m.id} className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">{m.label}</Label>
+                            <Input 
+                              type="number" 
+                              placeholder="Ej: 52" 
+                              value={s[m.id] || ""} 
+                              onChange={(e) => updateSize(s.label, m.id, parseFloat(e.target.value))} 
+                              className="bg-background"
+                            />
+                          </div>
+                        ))}
                       </div>
                     ))}
                   </div>

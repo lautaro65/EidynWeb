@@ -46,10 +46,11 @@ export async function createGarmentTemplateAction(formData: FormData) {
 
     const name = formData.get("name") as string;
     const sku = formData.get("sku") as string;
+    const category = formData.get("category") as string | null;
     const frontImage = formData.get("frontImage") as File;
     const backImage = formData.get("backImage") as File;
 
-    if (!name || !sku || !frontImage || !backImage) {
+    if (!name || !sku || !frontImage || !backImage || !category) {
       return { error: "Missing required fields" };
     }
 
@@ -70,6 +71,7 @@ export async function createGarmentTemplateAction(formData: FormData) {
         ownerId: tenantId,
         name,
         sku,
+        category,
         status: "processing",
         sourceImageUrl: frontUrl,
         sourceImageBackUrl: backUrl
@@ -157,7 +159,7 @@ export async function createGarmentVariantsAction(templateId: string, formData: 
   }
 }
 
-export async function createGarmentSizesAction(templateId: string, sizesData: { label: string; system: string; chest: number; shoulders: number; length: number }[]) {
+export async function createGarmentSizesAction(templateId: string, sizesData: { label: string; system: string; chest?: number; shoulders?: number; length?: number; waist?: number; hips?: number; inseam?: number; sleeve?: number }[]) {
   try {
     const { userId, sessionClaims } = await auth();
     if (!userId) return { error: "Unauthorized" };
@@ -185,18 +187,21 @@ export async function createGarmentSizesAction(templateId: string, sizesData: { 
     // Find the middle size index for scale reference
     const middleIndex = Math.floor(sizesData.length / 2);
     const refSize = sizesData[middleIndex];
-    const refChest = refSize.chest;
-    const refLength = refSize.length;
+    const refWidth = refSize.chest || refSize.waist || 1;
+    const refLength = refSize.length || refSize.inseam || 1;
 
     const createdSizes = [];
 
     for (const s of sizesData) {
       // Calculate scales
-      // X and Z scale proportionally to Chest
-      // Y scales proportionally to Length
-      const scaleX = s.chest / refChest;
-      const scaleZ = s.chest / refChest; // Usually chest depth scales with width
-      const scaleY = s.length / refLength;
+      // X and Z scale proportionally to Chest or Waist
+      // Y scales proportionally to Length or Inseam
+      const currentWidth = s.chest || s.waist || 1;
+      const currentLength = s.length || s.inseam || 1;
+      
+      const scaleX = currentWidth / refWidth;
+      const scaleZ = currentWidth / refWidth; // Usually depth scales with width
+      const scaleY = currentLength / refLength;
 
       const size = await db.garmentSize.create({
         data: {
@@ -206,6 +211,10 @@ export async function createGarmentSizesAction(templateId: string, sizesData: { 
           chest: s.chest,
           shoulders: s.shoulders,
           length: s.length,
+          waist: s.waist,
+          hips: s.hips,
+          inseam: s.inseam,
+          sleeve: s.sleeve,
           scaleX,
           scaleY,
           scaleZ,

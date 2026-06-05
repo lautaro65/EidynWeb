@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useMemo } from "react";
-import { ArrowLeft, Plus, Info, Save, X, LayoutGrid, Loader2 } from "lucide-react";
+import { ArrowLeft, Info, Save, X, LayoutGrid, Loader2 } from "lucide-react";
 import { Link, useRouter } from "@/i18n/routing";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import toast from "react-hot-toast";
@@ -28,15 +28,6 @@ const CATEGORY_MEASUREMENTS: Record<string, { id: string }[]> = {
   ]
 };
 
-const CATEGORY_SIZES: Record<string, string[]> = {
-  remeras: ["U", "XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"],
-  abrigos: ["U", "XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"],
-  pantalones: [
-    "34", "36", "38", "40", "42", "44", "46", "48", "50", "52", "54", "56", "58", "60",
-    "0", "1", "2", "3", "4", "5", "6", "7", "8",
-    "XS", "S", "M", "L", "XL", "XXL"
-  ]
-};
 
 const CATEGORY_DEFAULT_SIZES: Record<string, string[]> = {
   remeras: ["S", "M", "L"],
@@ -261,6 +252,10 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
   // Estado para los valores de la matriz { [sizeId_measurementId]: value }
   const [values, setValues] = useState<Record<string, string>>(initialData?.matrixValues || {});
   const [activePreset, setActivePreset] = useState<string>("");
+  
+  // Detectar sistema inicial
+  const initialIsNumeric = initialData?.sizes.some(s => !isNaN(Number(s.name)));
+  const [sizingSystem, setSizingSystem] = useState<"alpha" | "numeric">(initialIsNumeric ? "numeric" : "alpha");
 
   const isDirty = useMemo(() => {
     if (!isEditing || !initialData) {
@@ -349,9 +344,12 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
     setValues(prev => ({ ...prev, [`${sizeId}_${measurementId}`]: val }));
   };
 
-  const addSize = () => {
-    const newId = `s${Date.now()}`;
-    setSizes([...sizes, { id: newId, name: "XL" }]);
+  const toggleSize = (name: string) => {
+    setSizes(current => {
+      const exists = current.find(s => s.name === name);
+      if (exists) return current.filter(s => s.name !== name);
+      return [...current, { id: `s${Date.now()}`, name }];
+    });
   };
 
   const removeSize = (id: string) => {
@@ -359,7 +357,6 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
   };
 
   const currentMeasurements = category ? CATEGORY_MEASUREMENTS[category] : [];
-  const currentSizes = category ? CATEGORY_SIZES[category] : [];
 
   const isMatrixComplete = currentMeasurements.length > 0 && sizes.every(size => 
     currentMeasurements.every(m => {
@@ -509,7 +506,59 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
               </p>
             </div>
           ) : (
-            <div className="w-full overflow-x-auto relative z-10 pb-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="w-full relative z-10 pb-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-background/50 border border-border/50 p-6 rounded-2xl shadow-sm mb-8">
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider text-[10px]">Sistema de Talles</label>
+                  <Select 
+                    value={sizingSystem} 
+                    onValueChange={(val) => {
+                      setSizingSystem(val as "alpha" | "numeric" || "alpha");
+                      setSizes([]);
+                    }}
+                  >
+                    <SelectTrigger className="w-full bg-muted/50 dark:bg-black/20 border border-border/60 dark:border-white/10 focus:border-primary/50 rounded-xl px-4 py-6 text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all">
+                      <SelectValue placeholder="Sistema de Talles">
+                        {sizingSystem === "alpha" ? "Alfanumérico (S, M, L, XL)" : "Numérico (38, 40, 42, 44)"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="bg-background/95 backdrop-blur-3xl border border-border/60 rounded-xl shadow-2xl p-1">
+                      <SelectItem value="alpha" className="py-2.5 px-4 font-bold">Alfanumérico (S, M, L, XL)</SelectItem>
+                      <SelectItem value="numeric" className="py-2.5 px-4 font-bold">Numérico (38, 40, 42, 44)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider text-[10px]">Talles Disponibles</label>
+                  <div className="flex flex-wrap gap-3">
+                    {sizingSystem === "alpha" 
+                      ? ["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"].map(label => (
+                          <button
+                            key={label}
+                            onClick={() => toggleSize(label)}
+                            className={`w-12 h-12 rounded-xl font-bold border-2 transition-all ${sizes.some(s => s.name === label) ? "border-primary bg-primary/10 text-primary" : "border-border/50 text-muted-foreground hover:border-primary/50"}`}
+                          >
+                            {label}
+                          </button>
+                        ))
+                      : ["34", "36", "38", "40", "42", "44", "46", "48", "50", "52", "54", "56", "58", "60"].map(label => (
+                          <button
+                            key={label}
+                            onClick={() => toggleSize(label)}
+                            className={`w-12 h-12 rounded-xl font-bold border-2 transition-all ${sizes.some(s => s.name === label) ? "border-primary bg-primary/10 text-primary" : "border-border/50 text-muted-foreground hover:border-primary/50"}`}
+                          >
+                            {label}
+                          </button>
+                        ))
+                    }
+                  </div>
+                </div>
+              </div>
+
+              {sizes.length > 0 && (
+              <div className="w-full overflow-x-auto">
               <table className="w-full border-collapse min-w-[600px]">
                 <thead>
                   <tr>
@@ -528,16 +577,9 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
                     <tr key={size.id} className="group hover:bg-muted/40 dark:hover:bg-white/5 transition-colors border-b border-border/40 dark:border-white/5 last:border-0">
                       <td className="p-4">
                         <div className="flex items-center gap-2">
-                          <Select value={size.name} onValueChange={(val) => setSizes(sizes.map(x => x.id === size.id ? { ...x, name: val || "" } : x))}>
-                            <SelectTrigger className="w-20 bg-muted/60 dark:bg-black/30 border border-border/60 dark:border-white/10 rounded-lg px-2 py-2 text-sm font-bold text-center focus:outline-none focus:border-primary/50 uppercase [&>svg]:ml-0 [&>svg]:mr-0 [&>span]:w-full [&>span]:text-center">
-                              <SelectValue placeholder={t("form.size")} />
-                            </SelectTrigger>
-                            <SelectContent className="bg-background/95 backdrop-blur-3xl border border-border/60 dark:border-white/10 rounded-xl shadow-2xl p-1 max-h-[250px] overflow-y-auto">
-                              {currentSizes.map(s => (
-                                <SelectItem key={s} value={s} className="font-bold text-center uppercase py-2 justify-center">{s}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="w-20 bg-primary/10 border border-primary/20 rounded-lg px-2 py-2 text-sm font-bold text-center text-primary uppercase">
+                            {size.name}
+                          </div>
                           {sizes.length > 1 && (
                             <button onClick={() => removeSize(size.id)} className="opacity-0 group-hover:opacity-100 p-1.5 text-red-400 hover:bg-red-400/10 rounded-lg transition-all">
                               <X className="w-3.5 h-3.5" />
@@ -564,12 +606,8 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
                   ))}
                 </tbody>
               </table>
-              
-              <div className="mt-4 p-4">
-                <button onClick={addSize} className="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors w-full justify-center py-3 border border-primary/20 hover:border-primary/40 border-dashed rounded-xl bg-primary/5 hover:bg-primary/10">
-                  <Plus className="w-4 h-4" /> {t("form.addSize")}
-                </button>
               </div>
+              )}
             </div>
           )}
         </section>
