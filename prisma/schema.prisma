@@ -253,7 +253,8 @@ model GarmentVariant {
   colorHex  String? @map("color_hex") // "#1A1A1A"
 
   // Textura en R2
-  textureUrl      String? @map("texture_url") // El PNG del diseño/color
+  textureUrl      String? @map("texture_url") // El PNG del diseño/color (Frente)
+  backTextureUrl  String? @map("back_texture_url") // El PNG del diseño/color (Espalda)
   previewImageUrl String? @map("preview_image_url")
 
   status    String?  @default("pending") // pending | processing | completed | failed

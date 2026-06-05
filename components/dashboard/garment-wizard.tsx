@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Shirt, Tag, AlertCircle, ArrowRight, UploadCloud, Image as ImageIcon, Palette, Trash2, Plus, Ruler, CheckCircle2 } from "lucide-react";
 import { checkSkuUnique, createGarmentTemplateAction } from "@/app/[locale]/dashboard/garments/new/actions";
 
@@ -12,8 +13,10 @@ interface VariantInput {
   name: string;
   type: "solid" | "texture";
   colorHex: string;
-  file: File | null;
-  preview: string | null;
+  fileFront: File | null;
+  fileBack: File | null;
+  previewFront: string | null;
+  previewBack: string | null;
 }
 
 interface SizeInput {
@@ -50,6 +53,7 @@ export function GarmentWizard() {
   const [sku, setSku] = useState("");
   const [isValidatingSku, setIsValidatingSku] = useState(false);
   const [skuError, setSkuError] = useState<string | null>(null);
+  const [validatedSku, setValidatedSku] = useState<string | null>(null);
 
   // Step 2 State
   const [frontImage, setFrontImage] = useState<File | null>(null);
@@ -61,7 +65,7 @@ export function GarmentWizard() {
 
   // Step 3 State
   const [variants, setVariants] = useState<VariantInput[]>([
-    { id: "1", name: "", type: "solid", colorHex: "#ffffff", file: null, preview: null }
+    { id: "1", name: "", type: "solid", colorHex: "#ffffff", fileFront: null, fileBack: null, previewFront: null, previewBack: null }
   ]);
   const [isSubmittingStep3, setIsSubmittingStep3] = useState(false);
 
@@ -70,6 +74,7 @@ export function GarmentWizard() {
   const [sizes, setSizes] = useState<SizeInput[]>([]);
   const [isSubmittingStep4, setIsSubmittingStep4] = useState(false);
   const [availableSizeGuides, setAvailableSizeGuides] = useState<SizeGuidePreview[]>([]);
+  const [selectedGuideId, setSelectedGuideId] = useState<string>("none");
 
   // Fetch size guides when step 4 is reached
   useEffect(() => {
@@ -84,9 +89,10 @@ export function GarmentWizard() {
     }
   }, [step, availableSizeGuides.length]);
 
-  const handleApplySizeGuide = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const guideId = e.target.value;
-    if (!guideId) return;
+  const handleApplySizeGuide = (val: string | null) => {
+    const guideId = val || "none";
+    setSelectedGuideId(guideId);
+    if (!guideId || guideId === "none") return;
 
     const guide = availableSizeGuides.find(g => g.id === guideId);
     if (!guide || !guide.matrix) return;
@@ -99,9 +105,9 @@ export function GarmentWizard() {
     setSizingSystem(isNumeric ? "numeric" : "alpha");
 
     const newSizes: SizeInput[] = m.sizes.map(s => {
-      const chestStr = m.values[`${s.id}-chest`] || m.values[`${s.id}-pecho`] || "0";
-      const lengthStr = m.values[`${s.id}-length`] || m.values[`${s.id}-largo`] || "0";
-      const shoulderStr = m.values[`${s.id}-shoulders`] || m.values[`${s.id}-hombros`] || "0";
+      const chestStr = m.values[`${s.id}_chest`] || m.values[`${s.id}-chest`] || m.values[`${s.id}_pecho`] || m.values[`${s.id}-pecho`] || "0";
+      const lengthStr = m.values[`${s.id}_length`] || m.values[`${s.id}-length`] || m.values[`${s.id}_largo`] || m.values[`${s.id}-largo`] || "0";
+      const shoulderStr = m.values[`${s.id}_shoulders`] || m.values[`${s.id}-shoulders`] || m.values[`${s.id}_hombros`] || m.values[`${s.id}-hombros`] || "0";
 
       return {
         label: s.name,
@@ -127,19 +133,24 @@ export function GarmentWizard() {
       const res = await checkSkuUnique(sku);
       if (res.error) {
         setSkuError(res.error);
+        setValidatedSku(null);
       } else if (!res.isUnique) {
         setSkuError("This SKU already exists for your store. Please use a unique SKU.");
+        setValidatedSku(null);
+      } else {
+        setValidatedSku(sku);
       }
     } catch {
       setSkuError("Error validating SKU.");
+      setValidatedSku(null);
     } finally {
       setIsValidatingSku(false);
     }
   };
 
-  const isStep1Valid = name.trim().length > 0 && sku.trim().length > 0 && !skuError && !isValidatingSku;
+  const isStep1Valid = name.trim().length > 0 && sku.trim().length > 0 && sku === validatedSku;
   const isStep2Valid = frontImage !== null && backImage !== null;
-  const isStep3Valid = variants.length > 0 && variants.every(v => v.name.trim() !== "" && (v.type === "solid" || v.file !== null));
+  const isStep3Valid = variants.length > 0 && variants.every(v => v.name.trim() !== "" && (v.type === "solid" || v.fileFront !== null));
   const isStep4Valid = sizes.length > 0 && sizes.every(s => s.chest > 0 && s.shoulders > 0 && s.length > 0);
 
   const nextStep = () => setStep(s => s + 1);
@@ -188,7 +199,7 @@ export function GarmentWizard() {
 
   // Step 3 Actions
   const addVariant = () => {
-    setVariants(v => [...v, { id: Math.random().toString(), name: "", type: "solid", colorHex: "#ffffff", file: null, preview: null }]);
+    setVariants(v => [...v, { id: Math.random().toString(), name: "", type: "solid", colorHex: "#ffffff", fileFront: null, fileBack: null, previewFront: null, previewBack: null }]);
   };
 
   const removeVariant = (id: string) => {
@@ -199,11 +210,16 @@ export function GarmentWizard() {
     setVariants(v => v.map(va => va.id === id ? { ...va, [field]: value } : va));
   };
 
-  const handleVariantImage = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
+  const handleVariantImage = (e: React.ChangeEvent<HTMLInputElement>, id: string, side: "front" | "back") => {
     const file = e.target.files?.[0];
     if (file) {
-      updateVariant(id, "file", file);
-      updateVariant(id, "preview", URL.createObjectURL(file));
+      if (side === "front") {
+        updateVariant(id, "fileFront", file);
+        updateVariant(id, "previewFront", URL.createObjectURL(file));
+      } else {
+        updateVariant(id, "fileBack", file);
+        updateVariant(id, "previewBack", URL.createObjectURL(file));
+      }
     }
   };
 
@@ -217,7 +233,10 @@ export function GarmentWizard() {
         formData.append(`variant_${i}_name`, v.name);
         formData.append(`variant_${i}_type`, v.type);
         if (v.type === 'solid') formData.append(`variant_${i}_colorHex`, v.colorHex);
-        if (v.type === 'texture' && v.file) formData.append(`variant_${i}_file`, v.file);
+        if (v.type === 'texture') {
+          if (v.fileFront) formData.append(`variant_${i}_fileFront`, v.fileFront);
+          if (v.fileBack) formData.append(`variant_${i}_fileBack`, v.fileBack);
+        }
       });
 
       const { createGarmentVariantsAction } = await import("@/app/[locale]/dashboard/garments/new/actions");
@@ -369,6 +388,7 @@ export function GarmentWizard() {
                     value={sku}
                     onChange={(e) => {
                       setSku(e.target.value);
+                      setValidatedSku(null); // Invalidate when typing
                       if (skuError) setSkuError(null);
                     }}
                     onBlur={handleSkuBlur}
@@ -563,23 +583,45 @@ export function GarmentWizard() {
                         </div>
                       </div>
                     ) : (
-                      <div className="space-y-3">
-                        <Label>Sube la textura (PNG/JPG)</Label>
-                        <div className="relative h-32 border-2 border-dashed border-border/50 rounded-2xl bg-background/30 hover:bg-background/50 flex flex-col items-center justify-center overflow-hidden cursor-pointer group">
-                          <input 
-                            type="file" 
-                            accept="image/*"
-                            onChange={(e) => handleVariantImage(e, v.id)}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                          />
-                          {v.preview ? (
-                            <img src={v.preview} alt="Variant preview" className="w-full h-full object-cover" />
-                          ) : (
-                            <>
-                              <UploadCloud className="w-6 h-6 text-muted-foreground mb-2 group-hover:scale-110 transition-transform" />
-                              <p className="text-sm text-foreground">Haz clic para subir</p>
-                            </>
-                          )}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                          <Label>Textura (Frente)</Label>
+                          <div className="relative h-32 border-2 border-dashed border-border/50 rounded-2xl bg-background/30 hover:bg-background/50 flex flex-col items-center justify-center overflow-hidden cursor-pointer group">
+                            <input 
+                              type="file" 
+                              accept="image/*"
+                              onChange={(e) => handleVariantImage(e, v.id, "front")}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            />
+                            {v.previewFront ? (
+                              <img src={v.previewFront} alt="Variant front preview" className="w-full h-full object-cover" />
+                            ) : (
+                              <>
+                                <UploadCloud className="w-6 h-6 text-muted-foreground mb-2 group-hover:scale-110 transition-transform" />
+                                <p className="text-[10px] text-foreground font-semibold">Frente</p>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <Label>Textura (Espalda) <span className="text-muted-foreground font-normal text-xs">(Opcional)</span></Label>
+                          <div className="relative h-32 border-2 border-dashed border-border/50 rounded-2xl bg-background/30 hover:bg-background/50 flex flex-col items-center justify-center overflow-hidden cursor-pointer group">
+                            <input 
+                              type="file" 
+                              accept="image/*"
+                              onChange={(e) => handleVariantImage(e, v.id, "back")}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            />
+                            {v.previewBack ? (
+                              <img src={v.previewBack} alt="Variant back preview" className="w-full h-full object-cover" />
+                            ) : (
+                              <>
+                                <UploadCloud className="w-6 h-6 text-muted-foreground mb-2 group-hover:scale-110 transition-transform" />
+                                <p className="text-[10px] text-foreground font-semibold">Espalda</p>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
                     )}
@@ -635,15 +677,17 @@ export function GarmentWizard() {
               {availableSizeGuides.length > 0 && (
                 <div className="bg-primary/5 border border-primary/20 p-6 rounded-2xl shadow-sm mb-6">
                   <Label className="text-primary font-bold mb-2 block">Autocompletar con Guía de Talles</Label>
-                  <select 
-                    onChange={handleApplySizeGuide}
-                    className="w-full h-12 px-4 rounded-xl bg-background border border-primary/30 focus:ring-2 focus:ring-primary/50 outline-none transition-all"
-                  >
-                    <option value="">Selecciona una guía guardada...</option>
-                    {availableSizeGuides.map(g => (
-                      <option key={g.id} value={g.id}>{g.name} ({g.category})</option>
-                    ))}
-                  </select>
+                  <Select value={selectedGuideId} onValueChange={handleApplySizeGuide}>
+                    <SelectTrigger className="w-full h-12 bg-background border border-primary/30 focus:ring-2 focus:ring-primary/50 transition-all rounded-xl shadow-inner">
+                      <SelectValue placeholder="Selecciona una guía guardada..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background/95 backdrop-blur-3xl border border-border/60 rounded-xl shadow-2xl p-1 max-h-[250px] overflow-y-auto">
+                      <SelectItem value="none" className="py-2.5 px-4 font-semibold text-muted-foreground">Ninguna (Limpiar)</SelectItem>
+                      {availableSizeGuides.map(g => (
+                        <SelectItem key={g.id} value={g.id} className="py-2.5 px-4 font-bold">{g.name} ({g.category})</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <p className="text-sm text-muted-foreground mt-2">
                     Esto llenará automáticamente los talles y medidas. Puedes modificarlos luego.
                   </p>
@@ -653,14 +697,22 @@ export function GarmentWizard() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-background/50 border border-border/50 p-6 rounded-2xl shadow-sm">
                 <div className="space-y-3">
                   <Label>Sistema de Talles</Label>
-                  <select 
+                  <Select 
                     value={sizingSystem} 
-                    onChange={(e) => setSizingSystem(e.target.value)}
-                    className="w-full h-12 px-4 rounded-xl bg-background border border-border focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                    onValueChange={(val: string | null) => {
+                      setSizingSystem(val || "alpha");
+                      setSizes([]);
+                      setSelectedGuideId("none");
+                    }}
                   >
-                    <option value="alpha">Alfanumérico (S, M, L, XL)</option>
-                    <option value="numeric">Numérico (38, 40, 42, 44)</option>
-                  </select>
+                    <SelectTrigger className="w-full h-12 bg-background border border-border focus:ring-2 focus:ring-primary/50 transition-all rounded-xl shadow-inner">
+                      <SelectValue placeholder="Sistema de Talles" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background/95 backdrop-blur-3xl border border-border/60 rounded-xl shadow-2xl p-1">
+                      <SelectItem value="alpha" className="py-2.5 px-4 font-bold">Alfanumérico (S, M, L, XL)</SelectItem>
+                      <SelectItem value="numeric" className="py-2.5 px-4 font-bold">Numérico (38, 40, 42, 44)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-3">
