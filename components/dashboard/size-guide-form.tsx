@@ -279,40 +279,59 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
     return JSON.stringify(currentData) !== JSON.stringify(initial);
   }, [guideName, category, sizes, values, isEditing, initialData]);
 
-  const applyPreset = (cat: string, presetId: string) => {
+  const applyPreset = (cat: string, presetId: string, forceOverrideSystem: boolean = false) => {
     const preset = CATEGORY_PRESETS[cat]?.find(p => p.id === presetId);
     if (!preset) return;
     
     setActivePreset(preset.id);
     
-    // Obtener los nombres de los talles del preset (ej: ["S", "M"] o ["38", "40"])
-    const presetSizeNames = Object.keys(preset.values);
+    const presetRows = Object.values(preset.values);
     
-    // Auto-detect sizingSystem
-    const isNumeric = presetSizeNames.some(s => !isNaN(Number(s)));
-    setSizingSystem(isNumeric ? "numeric" : "alpha");
-    
-    // Crear la nueva lista de talles
-    const newSizes = presetSizeNames.map((sizeName, index) => ({
-      id: `s_${Date.now()}_${index}`,
-      name: sizeName
-    }));
-    
-    setSizes(newSizes);
-    
-    // Asignar los valores a los nuevos IDs
-    setValues(() => {
-      const newValues: Record<string, string> = {};
-      newSizes.forEach(sizeObj => {
-        const presetRow = preset.values[sizeObj.name];
-        if (presetRow) {
-          Object.entries(presetRow).forEach(([measurementId, val]) => {
-            newValues[`${sizeObj.id}_${measurementId}`] = val;
-          });
-        }
+    if (forceOverrideSystem || sizes.length === 0) {
+      // Obtener los nombres de los talles del preset (ej: ["S", "M"] o ["38", "40"])
+      const presetSizeNames = Object.keys(preset.values);
+      
+      // Auto-detect sizingSystem
+      const isNumeric = presetSizeNames.some(s => !isNaN(Number(s)));
+      setSizingSystem(isNumeric ? "numeric" : "alpha");
+      
+      // Crear la nueva lista de talles
+      const newSizes = presetSizeNames.map((sizeName, index) => ({
+        id: `s_${Date.now()}_${index}`,
+        name: sizeName
+      }));
+      
+      setSizes(newSizes);
+      
+      // Asignar los valores a los nuevos IDs
+      setValues(() => {
+        const newValues: Record<string, string> = {};
+        newSizes.forEach((sizeObj, index) => {
+          const row = presetRows[index];
+          if (row) {
+            Object.entries(row).forEach(([measurementId, val]) => {
+              newValues[`${sizeObj.id}_${measurementId}`] = val;
+            });
+          }
+        });
+        return newValues;
       });
-      return newValues;
-    });
+    } else {
+      // Mantener los talles actuales y solo aplicar los valores secuencialmente
+      setValues(() => {
+        const newValues: Record<string, string> = {};
+        sizes.forEach((sizeObj, index) => {
+          // Si hay más talles seleccionados que en el preset, repite la última fila del preset
+          const row = presetRows[Math.min(index, presetRows.length - 1)];
+          if (row) {
+            Object.entries(row).forEach(([measurementId, val]) => {
+              newValues[`${sizeObj.id}_${measurementId}`] = val;
+            });
+          }
+        });
+        return newValues;
+      });
+    }
   };
 
   const handleCategoryChange = (val: string | null) => {
@@ -322,7 +341,7 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
     if (newCat) {
       const presets = CATEGORY_PRESETS[newCat];
       if (presets && presets.length > 0) {
-        applyPreset(newCat, presets[0].id);
+        applyPreset(newCat, presets[0].id, true);
       } else {
         setActivePreset("");
         const defaultSizes = CATEGORY_DEFAULT_SIZES[newCat] || ["S", "M", "L"];
@@ -488,7 +507,7 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
                 {CATEGORY_PRESETS[category].map(preset => (
                   <button
                     key={preset.id}
-                    onClick={() => applyPreset(category, preset.id)}
+                    onClick={() => applyPreset(category, preset.id, false)}
                     className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
                       activePreset === preset.id 
                         ? "bg-primary text-primary-foreground border-primary" 
