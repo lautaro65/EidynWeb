@@ -288,6 +288,10 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
     // Obtener los nombres de los talles del preset (ej: ["S", "M"] o ["38", "40"])
     const presetSizeNames = Object.keys(preset.values);
     
+    // Auto-detect sizingSystem
+    const isNumeric = presetSizeNames.some(s => !isNaN(Number(s)));
+    setSizingSystem(isNumeric ? "numeric" : "alpha");
+    
     // Crear la nueva lista de talles
     const newSizes = presetSizeNames.map((sizeName, index) => ({
       id: `s_${Date.now()}_${index}`,
@@ -322,6 +326,8 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
       } else {
         setActivePreset("");
         const defaultSizes = CATEGORY_DEFAULT_SIZES[newCat] || ["S", "M", "L"];
+        const isNumeric = defaultSizes.some(s => !isNaN(Number(s)));
+        setSizingSystem(isNumeric ? "numeric" : "alpha");
         setSizes([
           { id: `s${Date.now()}_1`, name: defaultSizes[0] || "" },
           { id: `s${Date.now()}_2`, name: defaultSizes[1] || "" },
@@ -331,6 +337,7 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
       }
     } else {
       setActivePreset("");
+      setSizingSystem("alpha");
       setSizes([
         { id: "s1", name: "S" },
         { id: "s2", name: "M" },
