@@ -287,7 +287,7 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
     
     const presetRows = Object.values(preset.values);
     
-    if (forceOverrideSystem || sizes.length === 0) {
+    if (forceOverrideSystem) {
       // Obtener los nombres de los talles del preset (ej: ["S", "M"] o ["38", "40"])
       const presetSizeNames = Object.keys(preset.values);
       
@@ -317,10 +317,25 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
         return newValues;
       });
     } else {
-      // Mantener los talles actuales y solo aplicar los valores secuencialmente
+      let targetSizes = sizes;
+      // Si la lista está vacía (por ejemplo porque acaba de cambiar el sistema de talles manualmente)
+      if (sizes.length === 0) {
+        const defaultNames = sizingSystem === "numeric" 
+          ? ["36", "38", "40", "42", "44"] 
+          : ["XS", "S", "M", "L", "XL"];
+        // Generamos tantos talles como tenga el preset
+        const generatedNames = defaultNames.slice(0, presetRows.length);
+        targetSizes = generatedNames.map((name, index) => ({
+          id: `s_${Date.now()}_${index}`,
+          name
+        }));
+        setSizes(targetSizes);
+      }
+
+      // Mantener los talles actuales (o los recién generados) y solo aplicar los valores secuencialmente
       setValues(() => {
         const newValues: Record<string, string> = {};
-        sizes.forEach((sizeObj, index) => {
+        targetSizes.forEach((sizeObj, index) => {
           // Si hay más talles seleccionados que en el preset, repite la última fila del preset
           const row = presetRows[Math.min(index, presetRows.length - 1)];
           if (row) {
