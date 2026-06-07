@@ -162,7 +162,7 @@ export function GarmentCard({ garment, isCommunityView = false }: Props) {
 
       <div className="flex justify-between items-start mb-4 relative z-40">
         <div className="relative h-16 w-16 rounded-2xl bg-muted/50 dark:bg-white/5 flex items-center justify-center shadow-inner border border-border/50 dark:border-white/10 group-hover:scale-105 transition-transform duration-500 overflow-hidden">
-          {garment.previewUrl ? (
+          {garment.previewUrl && !garment.previewUrl.startsWith("r2://") ? (
             <Image src={garment.previewUrl} alt={garment.name} fill className="object-cover" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
           ) : (
             <Shirt className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -290,8 +290,8 @@ export function GarmentCard({ garment, isCommunityView = false }: Props) {
           )}
 
           {garment.baseModelUrl ? (
-            <GarmentViewer url={garment.baseModelUrl} />
-          ) : garment.previewUrl ? (
+            <GarmentViewer url={garment.baseModelUrl} className="min-h-[60vh] sm:min-h-[500px] border-none" />
+          ) : garment.previewUrl && !garment.previewUrl.startsWith("r2://") ? (
             <Image src={garment.previewUrl} alt={garment.name} fill className="object-contain p-8" />
           ) : (
             <div className="flex flex-col items-center justify-center text-muted-foreground gap-4">

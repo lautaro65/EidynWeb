@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 
 export async function checkSkuUnique(sku: string) {
   try {
@@ -65,16 +66,17 @@ export async function createGarmentTemplateAction(formData: FormData) {
     const frontUrl = await uploadToR2(frontBuffer, frontKey, frontImage.type);
     const backUrl = await uploadToR2(backBuffer, backKey, backImage.type);
 
-    // Create GarmentTemplate with status processing
+    // Create GarmentTemplate with mock model directly assigned
     const template = await db.garmentTemplate.create({
       data: {
         ownerId: tenantId,
         name,
         sku,
         category,
-        status: "processing",
+        status: "base_ready", // Set to ready since we provide the model immediately
         sourceImageUrl: frontUrl,
-        sourceImageBackUrl: backUrl
+        sourceImageBackUrl: backUrl,
+        baseModelUrl: "/models/remera.glb" // MOCK SYNCHRONOUSLY
       }
     });
 
@@ -98,6 +100,7 @@ export async function createGarmentTemplateAction(formData: FormData) {
       }
     });
 
+    revalidatePath("/dashboard/garments");
     return { success: true, templateId: template.id };
   } catch (error) {
     console.error("Error creating GarmentTemplate:", error);
