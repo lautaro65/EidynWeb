@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Shirt, Heart, Edit, Loader2, Trash2, MessageSquarePlus, Bell, Check, X } from "lucide-react";
+import { Shirt, Heart, Edit, Loader2, Trash2, MessageSquarePlus, Bell, Check, X, ChevronDown, ChevronUp, Settings2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
@@ -36,6 +36,7 @@ type GarmentPreview = {
     colorHex: string | null;
     previewImageUrl: string | null;
     textureUrl: string | null;
+    status: string | null;
   }[];
   sizes: {
     id: string;
@@ -61,6 +62,7 @@ export function GarmentCard({ garment, isCommunityView = false }: Props) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(garment.variants?.[0]?.id || null);
   const [selectedSizeId, setSelectedSizeId] = useState<string | null>(garment.sizes?.[0]?.id || null);
+  const [isVariationsMenuOpen, setIsVariationsMenuOpen] = useState(true);
 
   // Community Request State
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
@@ -308,49 +310,78 @@ export function GarmentCard({ garment, isCommunityView = false }: Props) {
 
           {/* Floating UI Panel for 3D Customization */}
           {garment.baseModelUrl && (garment.variants?.length > 0 || garment.sizes?.length > 0) && (
-            <div className="absolute top-6 left-6 z-50 bg-background/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl flex flex-col gap-4 min-w-[200px]">
-              {garment.variants?.length > 0 && (
-                <div>
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Variante</label>
-                  <div className="flex flex-wrap gap-2">
-                    {garment.variants.map((v) => (
-                      <button
-                        key={v.id}
-                        onClick={() => setSelectedVariantId(v.id)}
-                        title={v.name || "Sin nombre"}
-                        className={cn(
-                          "w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center overflow-hidden",
-                          selectedVariantId === v.id ? "border-primary scale-110 shadow-lg shadow-primary/30" : "border-transparent opacity-70 hover:opacity-100"
-                        )}
-                        style={v.type === "solid" && v.colorHex ? { backgroundColor: v.colorHex as string } : {}}
-                      >
-                        {v.type === "texture" && v.previewImageUrl && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={v.previewImageUrl} alt={v.name || "Preview"} className="w-full h-full object-cover" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
+            <div className={cn(
+              "absolute top-6 left-6 z-50 bg-background/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl flex flex-col transition-all duration-300",
+              isVariationsMenuOpen ? "min-w-[200px] gap-4" : "min-w-[140px] gap-0 cursor-pointer hover:bg-background/90"
+            )}>
+              <div 
+                className="flex items-center justify-between cursor-pointer group"
+                onClick={() => setIsVariationsMenuOpen(!isVariationsMenuOpen)}
+              >
+                <div className="flex items-center gap-2 text-foreground">
+                  <Settings2 className="w-4 h-4 text-primary" />
+                  <span className="font-bold text-sm tracking-wide">Opciones</span>
                 </div>
-              )}
+                <div className="p-1 rounded-full hover:bg-white/10 text-muted-foreground transition-colors">
+                  {isVariationsMenuOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </div>
+              </div>
               
-              {garment.sizes?.length > 0 && (
-                <div>
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Talle</label>
-                  <div className="flex flex-wrap gap-2">
-                    {garment.sizes.map((s) => (
-                      <button
-                        key={s.id}
-                        onClick={() => setSelectedSizeId(s.id)}
-                        className={cn(
-                          "px-3 py-1.5 rounded-lg text-sm font-bold border transition-all",
-                          selectedSizeId === s.id ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30" : "bg-muted/50 border-white/5 text-muted-foreground hover:bg-white/10 hover:text-foreground"
-                        )}
-                      >
-                        {s.label}
-                      </button>
-                    ))}
-                  </div>
+              {isVariationsMenuOpen && (
+                <div className="flex flex-col gap-4 mt-2 animate-in fade-in slide-in-from-top-2">
+                  {garment.variants?.length > 0 && (
+                    <div>
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Variante</label>
+                      <div className="flex flex-wrap gap-2">
+                        {garment.variants.map((v) => (
+                          <button
+                            key={v.id}
+                            onClick={() => {
+                              if (v.status !== "processing") setSelectedVariantId(v.id);
+                            }}
+                            title={v.status === "processing" ? "Procesando textura..." : v.name || "Sin nombre"}
+                            disabled={v.status === "processing"}
+                            className={cn(
+                              "w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center overflow-hidden relative",
+                              selectedVariantId === v.id ? "border-primary scale-110 shadow-lg shadow-primary/30" : "border-transparent opacity-70 hover:opacity-100",
+                              v.status === "processing" && "opacity-50 grayscale cursor-not-allowed border-dashed border-muted-foreground"
+                            )}
+                            style={v.type === "solid" && v.colorHex ? { backgroundColor: v.colorHex as string } : {}}
+                          >
+                            {v.type === "texture" && v.previewImageUrl && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={v.previewImageUrl} alt={v.name || "Preview"} className="w-full h-full object-cover" />
+                            )}
+                            {v.status === "processing" && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm z-10">
+                                <Loader2 className="w-4 h-4 animate-spin text-foreground" />
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {garment.sizes?.length > 0 && (
+                    <div>
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Talle</label>
+                      <div className="flex flex-wrap gap-2">
+                        {garment.sizes.map((s) => (
+                          <button
+                            key={s.id}
+                            onClick={() => setSelectedSizeId(s.id)}
+                            className={cn(
+                              "px-3 py-1.5 rounded-lg text-sm font-bold border transition-all",
+                              selectedSizeId === s.id ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30" : "bg-muted/50 border-white/5 text-muted-foreground hover:bg-white/10 hover:text-foreground"
+                            )}
+                          >
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
