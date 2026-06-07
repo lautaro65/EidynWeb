@@ -27,23 +27,27 @@ function Model({ url }: { url: string }) {
   return isObj ? <ObjModel url={absoluteUrl} /> : <GlbModel url={absoluteUrl} />;
 }
 
+import { ErrorBoundary } from "./ErrorBoundary";
+
 export function GarmentViewer({ url, className }: { url: string, className?: string }) {
   if (!url) return <div className={`h-full w-full flex items-center justify-center bg-white/5 rounded-3xl border border-dashed border-white/10 text-muted-foreground ${className || 'min-h-[500px]'}`}>Modelo 3D no disponible</div>;
 
   return (
-    <div className={`w-full h-full bg-gradient-to-b from-background/80 to-background/20 rounded-3xl overflow-hidden border border-white/10 relative shadow-2xl ${className || 'min-h-[500px]'}`}>
-      <Canvas shadows camera={{ position: [0, 0, 15], fov: 45 }}>
-        <Suspense fallback={null}>
-          <Stage environment="city" intensity={0.5} adjustCamera>
-            <Model url={url} />
-          </Stage>
-        </Suspense>
-        <OrbitControls makeDefault autoRotate autoRotateSpeed={1} />
-      </Canvas>
-      <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center px-6 py-3 bg-background/80 backdrop-blur-xl rounded-full border border-white/10 text-xs font-medium text-muted-foreground shadow-lg">
-        <span className="flex items-center gap-2"><span>🖱️</span> Arrastra para rotar</span>
-        <span className="flex items-center gap-2"><span>🔍</span> Rueda para zoom</span>
+    <ErrorBoundary>
+      <div className={`w-full h-full bg-gradient-to-b from-background/80 to-background/20 rounded-3xl overflow-hidden border border-white/10 relative shadow-2xl ${className || 'min-h-[500px]'}`}>
+        <Canvas shadows camera={{ position: [0, 0, 15], fov: 45 }}>
+          <Suspense fallback={null}>
+            <Stage environment="city" intensity={0.5} adjustCamera>
+              <Model url={url} />
+            </Stage>
+          </Suspense>
+          <OrbitControls makeDefault autoRotate autoRotateSpeed={1} />
+        </Canvas>
+        <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center px-6 py-3 bg-background/80 backdrop-blur-xl rounded-full border border-white/10 text-xs font-medium text-muted-foreground shadow-lg">
+          <span className="flex items-center gap-2"><span>🖱️</span> Arrastra para rotar</span>
+          <span className="flex items-center gap-2"><span>🔍</span> Rueda para zoom</span>
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }
