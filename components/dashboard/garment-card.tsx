@@ -29,6 +29,21 @@ type GarmentPreview = {
     message: string;
     requestingTenant?: { name: string | null };
   }[]; // We'll pass the requests to the card
+  variants: {
+    id: string;
+    name: string | null;
+    type: string | null;
+    colorHex: string | null;
+    previewImageUrl: string | null;
+    textureUrl: string | null;
+  }[];
+  sizes: {
+    id: string;
+    label: string;
+    scaleX: number | null;
+    scaleY: number | null;
+    scaleZ: number | null;
+  }[];
 };
 
 type Props = {
@@ -44,6 +59,8 @@ export function GarmentCard({ garment, isCommunityView = false }: Props) {
   const [isLiking, setIsLiking] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(garment.variants?.[0]?.id || null);
+  const [selectedSizeId, setSelectedSizeId] = useState<string | null>(garment.sizes?.[0]?.id || null);
 
   // Community Request State
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
@@ -289,16 +306,91 @@ export function GarmentCard({ garment, isCommunityView = false }: Props) {
             </div>
           )}
 
-          {garment.baseModelUrl ? (
-            <GarmentViewer url={garment.baseModelUrl} className="min-h-[60vh] sm:min-h-[500px] border-none" />
-          ) : garment.previewUrl && !garment.previewUrl.startsWith("r2://") ? (
-            <Image src={garment.previewUrl} alt={garment.name} fill className="object-contain p-8" />
-          ) : (
-            <div className="flex flex-col items-center justify-center text-muted-foreground gap-4">
-              <Shirt className="w-16 h-16 opacity-50" />
-              <p>No preview available</p>
+          {/* Floating UI Panel for 3D Customization */}
+          {garment.baseModelUrl && (garment.variants?.length > 0 || garment.sizes?.length > 0) && (
+            <div className="absolute top-6 left-6 z-50 bg-background/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl flex flex-col gap-4 min-w-[200px]">
+              {garment.variants?.length > 0 && (
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Variante</label>
+                  <div className="flex flex-wrap gap-2">
+                    {garment.variants.map((v) => (
+                      <button
+                        key={v.id}
+                        onClick={() => setSelectedVariantId(v.id)}
+                        title={v.name || "Sin nombre"}
+                        className={cn(
+                          "w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center overflow-hidden",
+                          selectedVariantId === v.id ? "border-primary scale-110 shadow-lg shadow-primary/30" : "border-transparent opacity-70 hover:opacity-100"
+                        )}
+                        style={v.type === "solid" && v.colorHex ? { backgroundColor: v.colorHex as string } : {}}
+                      >
+                        {v.type === "texture" && v.previewImageUrl && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={v.previewImageUrl} alt={v.name || "Preview"} className="w-full h-full object-cover" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {garment.sizes?.length > 0 && (
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Talle</label>
+                  <div className="flex flex-wrap gap-2">
+                    {garment.sizes.map((s) => (
+                      <button
+                        key={s.id}
+                        onClick={() => setSelectedSizeId(s.id)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-sm font-bold border transition-all",
+                          selectedSizeId === s.id ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30" : "bg-muted/50 border-white/5 text-muted-foreground hover:bg-white/10 hover:text-foreground"
+                        )}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
+
+          {(() => {
+            const selectedVariant = garment.variants?.find(v => v.id === selectedVariantId) || garment.variants?.[0];
+            const selectedSize = garment.sizes?.find(s => s.id === selectedSizeId) || garment.sizes?.[0];
+            
+            let scaleCalc: [number, number, number] = [1, 1, 1];
+            if (selectedSize) {
+              if (selectedSize.scaleX && selectedSize.scaleY && selectedSize.scaleZ) {
+                 scaleCalc = [selectedSize.scaleX, selectedSize.scaleY, selectedSize.scaleZ];
+              } else {
+                 const label = (selectedSize.label || "").toUpperCase();
+                 if (label === 'S' || label === '38') scaleCalc = [0.95, 0.95, 0.95];
+                 else if (label === 'M' || label === '40') scaleCalc = [1, 1, 1];
+                 else if (label === 'L' || label === '42') scaleCalc = [1.05, 1.05, 1.05];
+                 else if (label === 'XL' || label === '44') scaleCalc = [1.1, 1.1, 1.1];
+                 else if (label === 'XXL' || label === '46') scaleCalc = [1.15, 1.15, 1.15];
+              }
+            }
+
+            return garment.baseModelUrl ? (
+              <GarmentViewer 
+                url={garment.baseModelUrl} 
+                className="min-h-[60vh] sm:min-h-[500px] border-none"
+                colorHex={selectedVariant?.type === 'solid' ? (selectedVariant.colorHex || undefined) : undefined}
+                textureUrl={selectedVariant?.type === 'texture' ? (selectedVariant.textureUrl || selectedVariant.previewImageUrl || undefined) : undefined}
+                scale={scaleCalc}
+              />
+            ) : garment.previewUrl && !garment.previewUrl.startsWith("r2://") ? (
+              <Image src={garment.previewUrl} alt={garment.name} fill className="object-contain p-8" />
+            ) : (
+              <div className="flex flex-col items-center justify-center text-muted-foreground gap-4 w-full h-[500px]">
+                <Shirt className="w-16 h-16 opacity-50" />
+                <p>No preview available</p>
+              </div>
+            );
+          })()}
         </div>
       </DialogContent>
     </Dialog>

@@ -69,7 +69,10 @@ export default async function GarmentsPage({ searchParams }: Props) {
   // Common Include
   const queryInclude = {
     _count: { select: { variants: true } },
-    variants: { take: 1 },
+    variants: {
+      include: { sizes: true }
+    },
+    sizes: true,
     likes: { where: { tenantId } },
     changeRequests: {
       where: { status: "pending" },
@@ -124,7 +127,6 @@ export default async function GarmentsPage({ searchParams }: Props) {
     );
   }
 
-  // Mapper function
   const mapGarment = (g: {
     id: string;
     name: string | null;
@@ -136,7 +138,8 @@ export default async function GarmentsPage({ searchParams }: Props) {
     baseModelUrl: string | null;
     sourceImageUrl: string | null;
     _count: { variants: number };
-    variants: { previewImageUrl: string | null; textureUrl: string | null }[];
+    variants: { id: string; name: string | null; type: string | null; colorHex: string | null; previewImageUrl: string | null; textureUrl: string | null }[];
+    sizes: { id: string; label: string; scaleX: number | null; scaleY: number | null; scaleZ: number | null }[];
     likes: { id: string }[];
     changeRequests?: { id: string; type: string; message: string; requestingTenant?: { name: string | null } }[];
   }, isOwner: boolean) => {
@@ -154,7 +157,9 @@ export default async function GarmentsPage({ searchParams }: Props) {
       baseModelUrl: g.baseModelUrl,
       variantsCount: g._count.variants,
       isLiked: g.likes.length > 0,
-      pendingRequests: isOwner ? g.changeRequests : undefined
+      pendingRequests: isOwner ? g.changeRequests : undefined,
+      variants: g.variants || [],
+      sizes: g.sizes || [],
     };
   };
 
