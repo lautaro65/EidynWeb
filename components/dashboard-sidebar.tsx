@@ -68,6 +68,7 @@ export function DashboardSidebar() {
           subItems: [
             { label: t("garmentsList"), href: "/dashboard/garments" },
             { label: t("garmentsNew"), href: "/dashboard/garments/new" },
+            { label: t("garmentsRequests"), href: "/dashboard/garments/requests" },
           ],
         },
         { icon: Box, label: t("inventory"), href: "#", disabled: true },
