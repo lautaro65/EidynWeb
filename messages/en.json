@@ -108,6 +108,8 @@
     "settings": "Settings",
     "logout": "Log Out",
     "garments": "3D Garments",
+    "garmentsList": "List",
+    "garmentsNew": "New Garment",
     "connections": "Connections",
     "apiKeys": "API Keys",
     "accountInfo": "Account Information",

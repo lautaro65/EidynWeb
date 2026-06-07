@@ -89,6 +89,7 @@ model Tenant {
   shopConsents    ShopConsent[]
   sizeGuides      SizeGuide[]
   garmentLikes    GarmentLike[]
+  garmentChangeRequests GarmentChangeRequest[]
 
   @@map("tenants")
 }
@@ -240,6 +241,7 @@ model GarmentTemplate {
   likes    GarmentLike[]
   accesses GarmentAccess[] // qué tiendas tienen acceso
   listings GarmentListing[] // en qué tiendas está publicado
+  changeRequests GarmentChangeRequest[] // solicitudes de cambio de la comunidad
 
   @@map("garment_templates")
 }
@@ -785,4 +787,24 @@ model SizeGuide {
   products Product[]
 
   @@map("size_guides")
+}
+
+// ─────────────────────────────────────────
+// SOLICITUDES DE CAMBIOS (COMUNIDAD)
+// ─────────────────────────────────────────
+
+model GarmentChangeRequest {
+  id                 String   @id @default(uuid()) @db.Uuid
+  garmentId          String   @map("garment_id") @db.Uuid
+  requestingTenantId String   @map("requesting_tenant_id") @db.Uuid
+  type               String   @default("other") // new_variant | new_size | other
+  message            String
+  status             String   @default("pending") // pending | resolved | rejected
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  garment          GarmentTemplate @relation(fields: [garmentId], references: [id])
+  requestingTenant Tenant          @relation(fields: [requestingTenantId], references: [id])
+
+  @@map("garment_change_requests")
 }

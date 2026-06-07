@@ -22,6 +22,10 @@ export function GarmentsToolbar() {
     } else {
       params.set(key, value);
     }
+    // Reset pagination when filters change
+    params.delete("minePage");
+    params.delete("globalPage");
+    
     router.push(`${pathname}?${params.toString()}`);
   };
 
