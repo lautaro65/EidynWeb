@@ -50,10 +50,12 @@ function loadTextureAsCanvas(
     ctx.drawImage(img, 0, 0);
 
     const tex = new THREE.CanvasTexture(canvas);
-    tex.flipY = false;
+    // CanvasTexture default flipY is true; GLB models may need either depending on UV layout
+    // Try true first (canvas default) since the model may expect standard UV orientation
+    tex.flipY = true;
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.needsUpdate = true;
-    console.log("[GarmentViewer] CanvasTexture created successfully");
+    console.log("[GarmentViewer] CanvasTexture created successfully, flipY=true");
     onSuccess(tex);
   };
   img.onerror = (err) => {
@@ -87,12 +89,21 @@ function applyMaterialToMeshes(
     const activeMat = mesh.material as THREE.MeshStandardMaterial;
 
     if (textureUrl) {
+      // Diagnostic: check if mesh has UV coordinates
+      const geo = mesh.geometry as THREE.BufferGeometry;
+      const hasUV = geo && geo.attributes && geo.attributes.uv;
+      console.log("[GarmentViewer] Mesh:", mesh.name, "| hasUV:", !!hasUV, "| uvCount:", hasUV ? (hasUV as THREE.BufferAttribute).count : 0);
+      console.log("[GarmentViewer] Material type:", activeMat.type, "| metalness:", activeMat.metalness, "| roughness:", activeMat.roughness);
+
       activeMat.color.set(0xffffff);
+      // Ensure the texture is visible by making the material non-metallic and fully rough
+      activeMat.metalness = 0;
+      activeMat.roughness = 1;
       loadTextureAsCanvas(textureUrl, colorHex, (tex) => {
         activeMat.map = tex;
         activeMat.needsUpdate = true;
         invalidate(); // force a re-render of the canvas
-        console.log("[GarmentViewer] Texture applied to mesh:", mesh.name || "(unnamed)");
+        console.log("[GarmentViewer] Texture applied to mesh:", mesh.name || "(unnamed)", "| map uuid:", tex.uuid);
       });
     } else {
       activeMat.map = mesh.userData._origMap || null;
