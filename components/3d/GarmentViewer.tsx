@@ -1,7 +1,7 @@
 "use client";
 
-import React, { Suspense, useMemo, useLayoutEffect } from "react";
-import { Canvas, useLoader } from "@react-three/fiber";
+import React, { Suspense, useMemo, useEffect, useRef } from "react";
+import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import { OrbitControls, Stage, useGLTF } from "@react-three/drei";
 import { OBJLoader } from "three-stdlib";
 
@@ -16,8 +16,6 @@ if (typeof console !== 'undefined') {
   };
 }
 
-const textureCache = new Map<string, THREE.Texture>();
-
 function getAssetUrl(url: string | undefined): string | undefined {
   if (!url) return undefined;
   if (url.startsWith('r2://')) {
@@ -27,127 +25,117 @@ function getAssetUrl(url: string | undefined): string | undefined {
   return url;
 }
 
-function loadCompositeTexture(textureUrl: string, baseColorHex: string | undefined, callback: (tex: THREE.Texture) => void) {
+function loadTextureAsCanvas(
+  textureUrl: string,
+  baseColorHex: string | undefined,
+  onSuccess: (tex: THREE.CanvasTexture) => void,
+  onError?: (err: unknown) => void
+) {
   const processedUrl = getAssetUrl(textureUrl)!;
-  const cacheKey = processedUrl + "_" + (baseColorHex || "white");
-  
-  if (textureCache.has(cacheKey)) {
-    callback(textureCache.get(cacheKey)!);
-    return;
-  }
+  console.log("[GarmentViewer] Loading texture from:", processedUrl);
+  console.log("[GarmentViewer] Base color:", baseColorHex || "#ffffff");
 
   const img = new Image();
   img.crossOrigin = "anonymous";
   img.onload = () => {
+    console.log("[GarmentViewer] Image loaded successfully:", img.width, "x", img.height);
     const canvas = document.createElement("canvas");
     canvas.width = img.width;
     canvas.height = img.height;
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-      ctx.fillStyle = baseColorHex || "#ffffff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
-    }
+    const ctx = canvas.getContext("2d")!;
+    // Fill with base color first
+    ctx.fillStyle = baseColorHex || "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Draw the texture image on top (transparent areas show the base color)
+    ctx.drawImage(img, 0, 0);
+
     const tex = new THREE.CanvasTexture(canvas);
     tex.flipY = false;
     tex.colorSpace = THREE.SRGBColorSpace;
-    textureCache.set(cacheKey, tex);
-    callback(tex);
+    tex.needsUpdate = true;
+    console.log("[GarmentViewer] CanvasTexture created successfully");
+    onSuccess(tex);
   };
   img.onerror = (err) => {
-    console.error("Failed to load texture for 3D:", processedUrl, err);
+    console.error("[GarmentViewer] Failed to load texture image:", processedUrl, err);
+    onError?.(err);
   };
   img.src = processedUrl;
 }
 
-function ObjModel({ url, colorHex, textureUrl }: { url: string, colorHex?: string, textureUrl?: string }) {
+function applyMaterialToMeshes(
+  root: THREE.Object3D,
+  colorHex: string | undefined,
+  textureUrl: string | undefined,
+  invalidate: () => void
+) {
+  root.traverse((child) => {
+    if (!(child as THREE.Mesh).isMesh) return;
+    const mesh = child as THREE.Mesh;
+    let mat = mesh.material;
+    if (Array.isArray(mat)) mat = mat[0];
+    if (!mat || !(mat as THREE.MeshStandardMaterial).color) return;
+
+    // Clone material once so we don't mutate shared materials
+    if (!mesh.userData._clonedMat) {
+      const cloned = (mat as THREE.MeshStandardMaterial).clone();
+      mesh.userData._clonedMat = true;
+      mesh.userData._origColor = (mat as THREE.MeshStandardMaterial).color.clone();
+      mesh.userData._origMap = (mat as THREE.MeshStandardMaterial).map;
+      mesh.material = cloned;
+    }
+    const activeMat = mesh.material as THREE.MeshStandardMaterial;
+
+    if (textureUrl) {
+      activeMat.color.set(0xffffff);
+      loadTextureAsCanvas(textureUrl, colorHex, (tex) => {
+        activeMat.map = tex;
+        activeMat.needsUpdate = true;
+        invalidate(); // force a re-render of the canvas
+        console.log("[GarmentViewer] Texture applied to mesh:", mesh.name || "(unnamed)");
+      });
+    } else {
+      activeMat.map = mesh.userData._origMap || null;
+      if (colorHex) {
+        activeMat.color.set(colorHex);
+      } else if (mesh.userData._origColor) {
+        activeMat.color.copy(mesh.userData._origColor);
+      }
+      activeMat.needsUpdate = true;
+      invalidate();
+    }
+  });
+}
+
+function ObjModel({ url, colorHex, textureUrl }: { url: string; colorHex?: string; textureUrl?: string }) {
   const processedUrl = getAssetUrl(url) || url;
   const obj = useLoader(OBJLoader, processedUrl);
   const copiedObj = useMemo(() => obj.clone(), [obj]);
+  const { invalidate } = useThree();
 
-  useLayoutEffect(() => {
-    copiedObj.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mesh = child as THREE.Mesh;
-        let mat = mesh.material;
-        if (Array.isArray(mat)) {
-          mat = mat[0];
-        }
-        
-         if (mat && (mat as THREE.MeshStandardMaterial).color) {
-          const standardMat = mat as THREE.MeshStandardMaterial;
-          if (!mesh.userData.hasClonedMaterial) {
-            mesh.material = standardMat.clone();
-            mesh.userData.hasClonedMaterial = true;
-          }
-          const activeMat = mesh.material as THREE.MeshStandardMaterial;
-
-          if (textureUrl) {
-            activeMat.color.set(0xffffff); // canvas already has the base color
-            loadCompositeTexture(textureUrl, colorHex, (tex) => {
-              activeMat.map = tex;
-              activeMat.needsUpdate = true;
-            });
-          } else if (colorHex) {
-            activeMat.map = null;
-            activeMat.color.set(colorHex);
-            activeMat.needsUpdate = true;
-          }
-        }
-      }
-    });
-  }, [copiedObj, colorHex, textureUrl]);
+  useEffect(() => {
+    console.log("[GarmentViewer] ObjModel useEffect — textureUrl:", textureUrl, "colorHex:", colorHex);
+    applyMaterialToMeshes(copiedObj, colorHex, textureUrl, invalidate);
+  }, [copiedObj, colorHex, textureUrl, invalidate]);
 
   return <primitive object={copiedObj} />;
 }
 
-function GlbModel({ url, colorHex, textureUrl }: { url: string, colorHex?: string, textureUrl?: string }) {
+function GlbModel({ url, colorHex, textureUrl }: { url: string; colorHex?: string; textureUrl?: string }) {
   const processedUrl = getAssetUrl(url) || url;
   const { scene } = useGLTF(processedUrl);
   const copiedScene = useMemo(() => scene.clone(), [scene]);
+  const { invalidate } = useThree();
 
-  useLayoutEffect(() => {
-    copiedScene.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mesh = child as THREE.Mesh;
-        let mat = mesh.material;
-        if (Array.isArray(mat)) {
-          mat = mat[0];
-        }
-        
-        if (mat && (mat as THREE.MeshStandardMaterial).color) {
-          if (!mesh.userData.hasClonedMaterial) {
-            mesh.material = (mat as THREE.MeshStandardMaterial).clone();
-            mesh.userData.originalColor = (mat as THREE.MeshStandardMaterial).color.clone();
-            mesh.userData.originalMap = (mat as THREE.MeshStandardMaterial).map;
-            mesh.userData.hasClonedMaterial = true;
-          }
-          const activeMat = mesh.material as THREE.MeshStandardMaterial;
-
-          if (textureUrl) {
-            activeMat.color.set(0xffffff); // Canvas has the base color
-            loadCompositeTexture(textureUrl, colorHex, (tex) => {
-              activeMat.map = tex;
-              activeMat.needsUpdate = true;
-            });
-          } else {
-            activeMat.map = mesh.userData.originalMap;
-            if (colorHex) {
-              activeMat.color.set(colorHex);
-            } else {
-              activeMat.color.copy(mesh.userData.originalColor);
-            }
-            activeMat.needsUpdate = true;
-          }
-        }
-      }
-    });
-  }, [copiedScene, colorHex, textureUrl]);
+  useEffect(() => {
+    console.log("[GarmentViewer] GlbModel useEffect — textureUrl:", textureUrl, "colorHex:", colorHex);
+    applyMaterialToMeshes(copiedScene, colorHex, textureUrl, invalidate);
+  }, [copiedScene, colorHex, textureUrl, invalidate]);
 
   return <primitive object={copiedScene} />;
 }
 
-function Model({ url, colorHex, textureUrl, scale = [1,1,1] }: { url: string, colorHex?: string, textureUrl?: string, scale?: [number, number, number] }) {
+function Model({ url, colorHex, textureUrl, scale = [1,1,1] }: { url: string; colorHex?: string; textureUrl?: string; scale?: [number, number, number] }) {
   const isObj = url.toLowerCase().endsWith('.obj');
   
   // Ensure the URL is absolute so next-intl or relative routing doesn't append '/es/' to it
@@ -186,12 +174,14 @@ export function GarmentViewer({
   textureUrl,
   scale = [1, 1, 1]
 }: { 
-  url: string, 
-  className?: string,
-  colorHex?: string,
-  textureUrl?: string,
-  scale?: [number, number, number]
+  url: string; 
+  className?: string;
+  colorHex?: string;
+  textureUrl?: string;
+  scale?: [number, number, number];
 }) {
+  console.log("[GarmentViewer] Render — url:", url, "textureUrl:", textureUrl, "colorHex:", colorHex);
+
   if (!url) return <div className={`h-full w-full flex items-center justify-center bg-white/5 rounded-3xl border border-dashed border-white/10 text-muted-foreground ${className || 'min-h-[500px]'}`}>Modelo 3D no disponible</div>;
 
   return (
