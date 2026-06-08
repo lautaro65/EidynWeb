@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { uploadToR2 } from "@/lib/r2";
+import { removeBackground } from "@/lib/image-processing";
 import { revalidatePath } from "next/cache";
 
 export async function updateGarmentAction(templateId: string, formData: FormData) {
@@ -50,10 +51,13 @@ export async function updateGarmentAction(templateId: string, formData: FormData
 
       // Handle file upload if new file provided
       if (type === 'texture' && file && file.size > 0) {
-        const buffer = Buffer.from(await file.arrayBuffer());
+        const originalBuffer = Buffer.from(await file.arrayBuffer());
+        const { buffer, mimeType } = await removeBackground(originalBuffer, file.type);
+        
         const timestamp = Date.now();
-        const key = `garments/${templateId}/textures/${timestamp}_${file.name}`;
-        textureUrl = await uploadToR2(buffer, key, file.type);
+        const ext = mimeType === "image/png" ? "png" : file.name.split('.').pop();
+        const key = `garments/${templateId}/textures/${timestamp}_${ext}`;
+        textureUrl = await uploadToR2(buffer, key, mimeType);
       }
 
       const variantData = {

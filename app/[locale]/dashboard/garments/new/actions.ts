@@ -32,6 +32,7 @@ export async function checkSkuUnique(sku: string) {
 
 import { uploadToR2 } from "@/lib/r2";
 import { inngest } from "@/inngest/client";
+import { removeBackground } from "@/lib/image-processing";
 
 export async function createGarmentTemplateAction(formData: FormData) {
   try {
@@ -140,16 +141,22 @@ export async function createGarmentVariantsAction(templateId: string, formData: 
 
       if (type === 'texture') {
         if (fileFront && fileFront.size > 0) {
-          const buffer = Buffer.from(await fileFront.arrayBuffer());
+          const originalBuffer = Buffer.from(await fileFront.arrayBuffer());
+          const { buffer, mimeType } = await removeBackground(originalBuffer, fileFront.type);
+          
           const timestamp = Date.now();
-          const key = `garments/${templateId}/textures/${timestamp}_front_${fileFront.name}`;
-          textureUrl = await uploadToR2(buffer, key, fileFront.type);
+          const ext = mimeType === "image/png" ? "png" : fileFront.name.split('.').pop();
+          const key = `garments/${templateId}/textures/${timestamp}_front.${ext}`;
+          textureUrl = await uploadToR2(buffer, key, mimeType);
         }
         if (fileBack && fileBack.size > 0) {
-          const buffer = Buffer.from(await fileBack.arrayBuffer());
+          const originalBuffer = Buffer.from(await fileBack.arrayBuffer());
+          const { buffer, mimeType } = await removeBackground(originalBuffer, fileBack.type);
+          
           const timestamp = Date.now();
-          const key = `garments/${templateId}/textures/${timestamp}_back_${fileBack.name}`;
-          backTextureUrl = await uploadToR2(buffer, key, fileBack.type);
+          const ext = mimeType === "image/png" ? "png" : fileBack.name.split('.').pop();
+          const key = `garments/${templateId}/textures/${timestamp}_back.${ext}`;
+          backTextureUrl = await uploadToR2(buffer, key, mimeType);
         }
       }
 
@@ -162,32 +169,10 @@ export async function createGarmentVariantsAction(templateId: string, formData: 
           textureUrl: textureUrl,
           backTextureUrl: backTextureUrl,
           previewImageUrl: textureUrl, // Use the texture URL as the preview image
-          status: type === 'texture' ? "processing" : "completed",
+          status: "completed",
         }
       });
       createdVariants.push(variant.id);
-
-      if (type === 'texture') {
-        const aiJob = await db.aiJob.create({
-          data: {
-            tenantId,
-            garmentVariantId: variant.id,
-            type: "garment_texture",
-            status: "pending",
-            inputData: { textureUrl, backTextureUrl }
-          }
-        });
-
-        await inngest.send({
-          name: "garment.variant.process",
-          data: {
-            aiJobId: aiJob.id,
-            variantId: variant.id,
-            textureUrl,
-            backTextureUrl
-          }
-        });
-      }
     }
 
     return { success: true, count: createdVariants.length };

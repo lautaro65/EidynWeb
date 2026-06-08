@@ -7,6 +7,21 @@ import { OBJLoader } from "three-stdlib";
 
 import * as THREE from 'three';
 
+const textureCache = new Map<string, THREE.Texture>();
+
+function loadTexture(textureUrl: string, callback: (tex: THREE.Texture) => void) {
+  if (textureCache.has(textureUrl)) {
+    callback(textureCache.get(textureUrl)!);
+  } else {
+    new THREE.TextureLoader().load(textureUrl, (tex) => {
+      tex.flipY = false;
+      tex.colorSpace = THREE.SRGBColorSpace;
+      textureCache.set(textureUrl, tex);
+      callback(tex);
+    });
+  }
+}
+
 function ObjModel({ url, colorHex, textureUrl }: { url: string, colorHex?: string, textureUrl?: string }) {
   const obj = useLoader(OBJLoader, url);
   const copiedObj = useMemo(() => obj.clone(), [obj]);
@@ -26,7 +41,7 @@ function ObjModel({ url, colorHex, textureUrl }: { url: string, colorHex?: strin
             standardMat.color.set(colorHex);
           }
           if (textureUrl) {
-            new THREE.TextureLoader().load(textureUrl, (tex) => {
+            loadTexture(textureUrl, (tex) => {
               standardMat.map = tex;
               standardMat.needsUpdate = true;
             });
@@ -66,9 +81,7 @@ function GlbModel({ url, colorHex, textureUrl }: { url: string, colorHex?: strin
           }
 
           if (textureUrl) {
-            new THREE.TextureLoader().load(textureUrl, (tex) => {
-              tex.flipY = false;
-              tex.colorSpace = THREE.SRGBColorSpace;
+            loadTexture(textureUrl, (tex) => {
               standardMat.map = tex;
               standardMat.needsUpdate = true;
             });
@@ -100,6 +113,21 @@ function Model({ url, colorHex, textureUrl, scale = [1,1,1] }: { url: string, co
 }
 
 import { ErrorBoundary } from "./ErrorBoundary";
+import { Html, useProgress } from "@react-three/drei";
+import { Loader2 } from "lucide-react";
+
+function ModelLoader() {
+  const { progress } = useProgress();
+  return (
+    <Html center>
+      <div className="flex flex-col items-center justify-center p-6 bg-background/80 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl">
+        <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+        <p className="text-foreground font-bold text-lg whitespace-nowrap">Cargando 3D...</p>
+        <p className="text-muted-foreground text-sm font-medium mt-1">{progress.toFixed(0)}%</p>
+      </div>
+    </Html>
+  );
+}
 
 export function GarmentViewer({ 
   url, 
@@ -120,7 +148,7 @@ export function GarmentViewer({
     <ErrorBoundary>
       <div className={`w-full h-full bg-gradient-to-b from-background/80 to-background/20 rounded-3xl overflow-hidden border border-white/10 relative shadow-2xl ${className || 'min-h-[500px]'}`}>
         <Canvas shadows camera={{ position: [0, 0, 15], fov: 45 }}>
-          <Suspense fallback={null}>
+          <Suspense fallback={<ModelLoader />}>
             <Stage environment="city" intensity={0.5} adjustCamera>
               <Model url={url} colorHex={colorHex} textureUrl={textureUrl} scale={scale} />
             </Stage>
