@@ -82,11 +82,10 @@ function loadTextureAsCanvas(
       const hasTransparency = transparentPixels > totalPixels * 0.05;
 
       if (hasTransparency && maxX > minX && maxY > minY) {
-        const pad = Math.max(4, Math.round(Math.max(img.width, img.height) * 0.02));
-        cropX = Math.max(0, minX - pad);
-        cropY = Math.max(0, minY - pad);
-        cropW = Math.min(img.width, maxX + pad + 1) - cropX;
-        cropH = Math.min(img.height, maxY + pad + 1) - cropY;
+        cropX = minX;
+        cropY = minY;
+        cropW = maxX - minX + 1;
+        cropH = maxY - minY + 1;
 
         // Compute dominant garment color from opaque pixels
         if (opaqueCount > 0) {
@@ -100,28 +99,36 @@ function loadTextureAsCanvas(
       console.warn("[GarmentViewer] Auto-crop failed (CORS?), using full image", e);
     }
 
-    // 2. Create final canvas with 3-layer compositing
+    // 2. Create SQUARE canvas with content centered
+    // Square ensures uniform UV scaling (no stretch) and proper centering
+    const maxDim = Math.max(cropW, cropH);
+    const pad = Math.max(8, Math.round(maxDim * 0.04)); // 4% breathing room
+    const canvasSize = maxDim + pad * 2;
+    const drawX = pad + (maxDim - cropW) / 2; // center horizontally
+    const drawY = pad + (maxDim - cropH) / 2; // center vertically
+
     const canvas = document.createElement("canvas");
-    canvas.width = cropW;
-    canvas.height = cropH;
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
     const ctx = canvas.getContext("2d")!;
 
     // Layer 1: Solid dominant garment color (fills everything, no white gaps)
     ctx.fillStyle = dominantColor;
-    ctx.fillRect(0, 0, cropW, cropH);
+    ctx.fillRect(0, 0, canvasSize, canvasSize);
 
     // Layer 2: Blurred + enlarged version for smooth edge bleed
-    // This creates a color gradient that naturally extends beyond the garment silhouette
     ctx.save();
     ctx.filter = "blur(15px)";
-    const bleed = 1.3; // 30% larger
-    const bx = -(cropW * (bleed - 1)) / 2;
-    const by = -(cropH * (bleed - 1)) / 2;
-    ctx.drawImage(img, cropX, cropY, cropW, cropH, bx, by, cropW * bleed, cropH * bleed);
+    const bleed = 1.3;
+    const bleedW = cropW * bleed;
+    const bleedH = cropH * bleed;
+    const bx = drawX - (bleedW - cropW) / 2;
+    const by = drawY - (bleedH - cropH) / 2;
+    ctx.drawImage(img, cropX, cropY, cropW, cropH, bx, by, bleedW, bleedH);
     ctx.restore();
 
     // Layer 3: Sharp original on top (the actual garment detail)
-    ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+    ctx.drawImage(img, cropX, cropY, cropW, cropH, drawX, drawY, cropW, cropH);
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.flipY = true;
@@ -159,10 +166,13 @@ const dualProjectionVertex = /* glsl */ `
     // View-space normal → used for lighting
     vViewNormal = normalize(normalMatrix * normal);
 
-    // Planar projection: normalize vertex position within bounding box → 0..1 UV
+    // Center-based UV projection with uniform scaling
+    // Uses the larger axis for both X and Y to prevent distortion
+    vec3 bboxCenter = bboxMin + bboxSize * 0.5;
+    float maxAxis = max(bboxSize.x, bboxSize.y);
     vProjectedUV = vec2(
-      (position.x - bboxMin.x) / bboxSize.x,
-      (position.y - bboxMin.y) / bboxSize.y
+      0.5 + (position.x - bboxCenter.x) / maxAxis,
+      0.5 + (position.y - bboxCenter.y) / maxAxis
     );
 
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
