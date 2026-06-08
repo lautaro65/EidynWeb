@@ -21,6 +21,16 @@ const withClerk = clerkMiddleware(async (auth, req) => {
 });
 
 export default function proxy(req: NextRequest, event: NextFetchEvent) {
+  // Do NOT apply intlMiddleware to API routes to prevent /es/api/ 307 redirects
+  if (req.nextUrl.pathname.startsWith('/api') || req.nextUrl.pathname.startsWith('/trpc')) {
+    if (!hasClerkEnv) return;
+    return clerkMiddleware(async (auth, req) => {
+      if (isProtectedRoute(req)) {
+        await auth.protect();
+      }
+    })(req, event);
+  }
+
   if (!hasClerkEnv) {
     return intlMiddleware(req);
   }
