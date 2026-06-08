@@ -21,7 +21,8 @@ const textureCache = new Map<string, THREE.Texture>();
 function getAssetUrl(url: string | undefined): string | undefined {
   if (!url) return undefined;
   if (url.startsWith('r2://')) {
-    return `/api/r2?url=${encodeURIComponent(url)}`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    return `${origin}/api/r2?url=${encodeURIComponent(url)}`;
   }
   return url;
 }

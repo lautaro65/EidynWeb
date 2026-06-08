@@ -11,6 +11,15 @@ import { GarmentViewer } from "@/components/3d/GarmentViewer";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
+function getAssetUrl(url: string | undefined | null): string | undefined {
+  if (!url) return undefined;
+  if (url.startsWith('r2://')) {
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    return `${origin}/api/r2?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
+
 type GarmentPreview = {
   id: string;
   name: string;
@@ -181,8 +190,8 @@ export function GarmentCard({ garment, isCommunityView = false }: Props) {
 
       <div className="flex justify-between items-start mb-4 relative z-40">
         <div className="relative h-16 w-16 rounded-2xl bg-muted/50 dark:bg-white/5 flex items-center justify-center shadow-inner border border-border/50 dark:border-white/10 group-hover:scale-105 transition-transform duration-500 overflow-hidden">
-          {garment.previewUrl && !garment.previewUrl.startsWith("r2://") ? (
-            <Image src={garment.previewUrl} alt={garment.name} fill className="object-cover" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
+          {garment.previewUrl ? (
+            <img src={getAssetUrl(garment.previewUrl)} alt={garment.name} className="w-full h-full object-cover" />
           ) : (
             <Shirt className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors" />
           )}
@@ -350,7 +359,7 @@ export function GarmentCard({ garment, isCommunityView = false }: Props) {
                           >
                             {v.type === "texture" && v.previewImageUrl && (
                               // eslint-disable-next-line @next/next/no-img-element
-                              <img src={v.previewImageUrl} alt={v.name || "Preview"} className="w-full h-full object-cover" />
+                              <img src={getAssetUrl(v.previewImageUrl)} alt={v.name || "Preview"} className="w-full h-full object-cover" />
                             )}
                             {v.status === "processing" && (
                               <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm z-10">
@@ -413,8 +422,8 @@ export function GarmentCard({ garment, isCommunityView = false }: Props) {
                 textureUrl={selectedVariant?.type === 'texture' ? (selectedVariant.textureUrl || selectedVariant.previewImageUrl || undefined) : undefined}
                 scale={scaleCalc}
               />
-            ) : garment.previewUrl && !garment.previewUrl.startsWith("r2://") ? (
-              <Image src={garment.previewUrl} alt={garment.name} fill className="object-contain p-8" />
+            ) : garment.previewUrl ? (
+              <img src={getAssetUrl(garment.previewUrl)} alt={garment.name} className="object-contain p-8 w-full h-full max-h-[70vh]" />
             ) : (
               <div className="flex flex-col items-center justify-center text-muted-foreground gap-4 w-full h-[500px]">
                 <Shirt className="w-16 h-16 opacity-50" />
