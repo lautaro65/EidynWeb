@@ -74,8 +74,10 @@ function ObjModel({ url, colorHex, textureUrl }: { url: string, colorHex?: strin
           mat = mat[0];
         }
         
+         if (mat && (mat as THREE.MeshStandardMaterial).color) {
+          const standardMat = mat as THREE.MeshStandardMaterial;
           if (!mesh.userData.hasClonedMaterial) {
-            mesh.material = (standardMat).clone();
+            mesh.material = standardMat.clone();
             mesh.userData.hasClonedMaterial = true;
           }
           const activeMat = mesh.material as THREE.MeshStandardMaterial;
@@ -91,6 +93,7 @@ function ObjModel({ url, colorHex, textureUrl }: { url: string, colorHex?: strin
             activeMat.color.set(colorHex);
             activeMat.needsUpdate = true;
           }
+        }
       }
     });
   }, [copiedObj, colorHex, textureUrl]);
