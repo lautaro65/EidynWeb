@@ -26,8 +26,9 @@ function getAssetUrl(url: string | undefined): string | undefined {
 }
 
 /**
- * Load an image and composite it over a solid color background using Canvas 2D.
- * This handles transparent PNGs by filling transparent areas with the base color.
+ * Load an image, auto-crop transparent padding, and composite over a solid color.
+ * removeBackground creates PNGs with large transparent margins — this trims them
+ * so the garment content fills the entire texture for better projection coverage.
  */
 function loadTextureAsCanvas(
   textureUrl: string,
@@ -40,13 +41,56 @@ function loadTextureAsCanvas(
   const img = new Image();
   img.crossOrigin = "anonymous";
   img.onload = () => {
+    // 1. Draw on temp canvas to detect content bounds via alpha channel
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = img.width;
+    tempCanvas.height = img.height;
+    const tempCtx = tempCanvas.getContext("2d")!;
+    tempCtx.drawImage(img, 0, 0);
+
+    let cropX = 0, cropY = 0, cropW = img.width, cropH = img.height;
+
+    try {
+      const imageData = tempCtx.getImageData(0, 0, img.width, img.height);
+      const { data } = imageData;
+      let minX = img.width, minY = img.height, maxX = 0, maxY = 0;
+      let transparentPixels = 0;
+
+      for (let y = 0; y < img.height; y++) {
+        for (let x = 0; x < img.width; x++) {
+          const alpha = data[(y * img.width + x) * 4 + 3];
+          if (alpha < 128) { transparentPixels++; continue; }
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+
+      // Only auto-crop if the image has significant transparency (processed by removeBackground)
+      const totalPixels = img.width * img.height;
+      const hasTransparency = transparentPixels > totalPixels * 0.05;
+
+      if (hasTransparency && maxX > minX && maxY > minY) {
+        // Add ~2% padding around content so it doesn't touch the edge
+        const pad = Math.max(4, Math.round(Math.max(img.width, img.height) * 0.02));
+        cropX = Math.max(0, minX - pad);
+        cropY = Math.max(0, minY - pad);
+        cropW = Math.min(img.width, maxX + pad + 1) - cropX;
+        cropH = Math.min(img.height, maxY + pad + 1) - cropY;
+      }
+    } catch (e) {
+      console.warn("[GarmentViewer] Auto-crop failed (CORS?), using full image", e);
+    }
+
+    // 2. Create final canvas with cropped content over base color
     const canvas = document.createElement("canvas");
-    canvas.width = img.width;
-    canvas.height = img.height;
+    canvas.width = cropW;
+    canvas.height = cropH;
     const ctx = canvas.getContext("2d")!;
     ctx.fillStyle = baseColorHex || "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0);
+    ctx.fillRect(0, 0, cropW, cropH);
+    ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.flipY = true;
@@ -112,8 +156,8 @@ const dualProjectionFragment = /* glsl */ `
     vec3 modelNorm = normalize(vModelNormal);
     vec3 viewNorm = normalize(vViewNormal);
 
-    // Scale UVs to zoom into the garment area (photos typically have padding)
-    float uvScale = 1.35;
+    // UV scale: 1.0 = exact fit (auto-crop already removes padding from the image)
+    float uvScale = 1.0;
     float uvOffset = (1.0 - uvScale) / 2.0;
     vec2 frontUV = clamp(uvOffset + vProjectedUV * uvScale, 0.0, 1.0);
     // Mirror X for back view (left↔right flip when seen from behind)
