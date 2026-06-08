@@ -65,6 +65,66 @@ function loadTextureAsCanvas(
   img.src = processedUrl;
 }
 
+/**
+ * Generate UV coordinates for a mesh that doesn't have them.
+ * Uses box projection: for each vertex, determines the dominant normal axis
+ * and projects UVs from that plane (front/back → XY, left/right → ZY, top/bottom → XZ).
+ */
+function generateBoxUVs(geometry: THREE.BufferGeometry) {
+  const position = geometry.attributes.position;
+  if (!position) return;
+
+  geometry.computeBoundingBox();
+  const bbox = geometry.boundingBox!;
+  const size = new THREE.Vector3();
+  bbox.getSize(size);
+
+  // Prevent division by zero
+  if (size.x === 0) size.x = 1;
+  if (size.y === 0) size.y = 1;
+  if (size.z === 0) size.z = 1;
+
+  // Compute normals if not present
+  if (!geometry.attributes.normal) {
+    geometry.computeVertexNormals();
+  }
+  const normal = geometry.attributes.normal;
+
+  const uvs = new Float32Array(position.count * 2);
+
+  for (let i = 0; i < position.count; i++) {
+    const x = position.getX(i);
+    const y = position.getY(i);
+    const z = position.getZ(i);
+
+    const nx = Math.abs(normal.getX(i));
+    const ny = Math.abs(normal.getY(i));
+    const nz = Math.abs(normal.getZ(i));
+
+    let u: number, v: number;
+
+    if (nz >= nx && nz >= ny) {
+      // Front/back faces — project on XY plane (most common for t-shirt front)
+      u = (x - bbox.min.x) / size.x;
+      v = (y - bbox.min.y) / size.y;
+    } else if (nx >= ny && nx >= nz) {
+      // Left/right faces — project on ZY plane
+      u = (z - bbox.min.z) / size.z;
+      v = (y - bbox.min.y) / size.y;
+    } else {
+      // Top/bottom faces — project on XZ plane
+      u = (x - bbox.min.x) / size.x;
+      v = (z - bbox.min.z) / size.z;
+    }
+
+    uvs[i * 2] = u;
+    uvs[i * 2 + 1] = v;
+  }
+
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  console.log("[GarmentViewer] Generated box UVs for", position.count, "vertices");
+}
+
 function applyMaterialToMeshes(
   root: THREE.Object3D,
   colorHex: string | undefined,
@@ -89,11 +149,16 @@ function applyMaterialToMeshes(
     const activeMat = mesh.material as THREE.MeshStandardMaterial;
 
     if (textureUrl) {
-      // Diagnostic: check if mesh has UV coordinates
+      // Check if mesh has UV coordinates — generate them if missing
       const geo = mesh.geometry as THREE.BufferGeometry;
       const hasUV = geo && geo.attributes && geo.attributes.uv;
       console.log("[GarmentViewer] Mesh:", mesh.name, "| hasUV:", !!hasUV, "| uvCount:", hasUV ? (hasUV as THREE.BufferAttribute).count : 0);
       console.log("[GarmentViewer] Material type:", activeMat.type, "| metalness:", activeMat.metalness, "| roughness:", activeMat.roughness);
+
+      if (!hasUV && geo) {
+        console.log("[GarmentViewer] No UVs found — generating box projection UVs...");
+        generateBoxUVs(geo);
+      }
 
       activeMat.color.set(0xffffff);
       // Ensure the texture is visible by making the material non-metallic and fully rough
