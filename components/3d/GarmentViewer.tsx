@@ -27,18 +27,37 @@ function getAssetUrl(url: string | undefined): string | undefined {
   return url;
 }
 
-function loadTexture(textureUrl: string, callback: (tex: THREE.Texture) => void) {
+function loadCompositeTexture(textureUrl: string, baseColorHex: string | undefined, callback: (tex: THREE.Texture) => void) {
   const processedUrl = getAssetUrl(textureUrl)!;
-  if (textureCache.has(processedUrl)) {
-    callback(textureCache.get(processedUrl)!);
-  } else {
-    new THREE.TextureLoader().load(processedUrl, (tex) => {
-      tex.flipY = false;
-      tex.colorSpace = THREE.SRGBColorSpace;
-      textureCache.set(processedUrl, tex);
-      callback(tex);
-    });
+  const cacheKey = processedUrl + "_" + (baseColorHex || "white");
+  
+  if (textureCache.has(cacheKey)) {
+    callback(textureCache.get(cacheKey)!);
+    return;
   }
+
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.fillStyle = baseColorHex || "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+    }
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.flipY = false;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    textureCache.set(cacheKey, tex);
+    callback(tex);
+  };
+  img.onerror = (err) => {
+    console.error("Failed to load texture for 3D:", processedUrl, err);
+  };
+  img.src = processedUrl;
 }
 
 function ObjModel({ url, colorHex, textureUrl }: { url: string, colorHex?: string, textureUrl?: string }) {
@@ -55,33 +74,23 @@ function ObjModel({ url, colorHex, textureUrl }: { url: string, colorHex?: strin
           mat = mat[0];
         }
         
-        if (mat && (mat as THREE.MeshStandardMaterial).color) {
-          const standardMat = mat as THREE.MeshStandardMaterial;
+          if (!mesh.userData.hasClonedMaterial) {
+            mesh.material = (standardMat).clone();
+            mesh.userData.hasClonedMaterial = true;
+          }
+          const activeMat = mesh.material as THREE.MeshStandardMaterial;
+
           if (textureUrl) {
-            if (colorHex) standardMat.color.set(colorHex);
-            else standardMat.color.set(0xffffff);
-            
-            loadTexture(textureUrl, (tex) => {
-              standardMat.map = tex;
-              standardMat.onBeforeCompile = (shader) => {
-                shader.fragmentShader = shader.fragmentShader.replace(
-                  '#include <map_fragment>',
-                  `
-                  #ifdef USE_MAP
-                    vec4 sampledDiffuseColor = texture2D( map, vMapUv );
-                    diffuseColor = vec4( mix( diffuseColor.rgb, sampledDiffuseColor.rgb, sampledDiffuseColor.a ), diffuseColor.a );
-                  #endif
-                  `
-                );
-              };
-              standardMat.needsUpdate = true;
+            activeMat.color.set(0xffffff); // canvas already has the base color
+            loadCompositeTexture(textureUrl, colorHex, (tex) => {
+              activeMat.map = tex;
+              activeMat.needsUpdate = true;
             });
           } else if (colorHex) {
-            standardMat.color.set(colorHex);
-            standardMat.onBeforeCompile = () => {};
-            standardMat.needsUpdate = true;
+            activeMat.map = null;
+            activeMat.color.set(colorHex);
+            activeMat.needsUpdate = true;
           }
-        }
       }
     });
   }, [copiedObj, colorHex, textureUrl]);
@@ -92,9 +101,10 @@ function ObjModel({ url, colorHex, textureUrl }: { url: string, colorHex?: strin
 function GlbModel({ url, colorHex, textureUrl }: { url: string, colorHex?: string, textureUrl?: string }) {
   const processedUrl = getAssetUrl(url) || url;
   const { scene } = useGLTF(processedUrl);
+  const copiedScene = useMemo(() => scene.clone(), [scene]);
 
   useLayoutEffect(() => {
-    scene.traverse((child) => {
+    copiedScene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
         let mat = mesh.material;
@@ -103,48 +113,35 @@ function GlbModel({ url, colorHex, textureUrl }: { url: string, colorHex?: strin
         }
         
         if (mat && (mat as THREE.MeshStandardMaterial).color) {
-          const standardMat = mat as THREE.MeshStandardMaterial;
-          // Save original color and map if not saved yet
-          if (!mesh.userData.originalColor) {
-             mesh.userData.originalColor = standardMat.color.clone();
-             mesh.userData.originalMap = standardMat.map;
+          if (!mesh.userData.hasClonedMaterial) {
+            mesh.material = (mat as THREE.MeshStandardMaterial).clone();
+            mesh.userData.originalColor = (mat as THREE.MeshStandardMaterial).color.clone();
+            mesh.userData.originalMap = (mat as THREE.MeshStandardMaterial).map;
+            mesh.userData.hasClonedMaterial = true;
           }
+          const activeMat = mesh.material as THREE.MeshStandardMaterial;
 
           if (textureUrl) {
-            if (colorHex) standardMat.color.set(colorHex);
-            else standardMat.color.set(0xffffff);
-            
-            loadTexture(textureUrl, (tex) => {
-              standardMat.map = tex;
-              standardMat.onBeforeCompile = (shader) => {
-                shader.fragmentShader = shader.fragmentShader.replace(
-                  '#include <map_fragment>',
-                  `
-                  #ifdef USE_MAP
-                    vec4 sampledDiffuseColor = texture2D( map, vMapUv );
-                    diffuseColor = vec4( mix( diffuseColor.rgb, sampledDiffuseColor.rgb, sampledDiffuseColor.a ), diffuseColor.a );
-                  #endif
-                  `
-                );
-              };
-              standardMat.needsUpdate = true;
+            activeMat.color.set(0xffffff); // Canvas has the base color
+            loadCompositeTexture(textureUrl, colorHex, (tex) => {
+              activeMat.map = tex;
+              activeMat.needsUpdate = true;
             });
           } else {
-            standardMat.map = mesh.userData.originalMap;
+            activeMat.map = mesh.userData.originalMap;
             if (colorHex) {
-              standardMat.color.set(colorHex);
+              activeMat.color.set(colorHex);
             } else {
-              standardMat.color.copy(mesh.userData.originalColor);
+              activeMat.color.copy(mesh.userData.originalColor);
             }
-            standardMat.onBeforeCompile = () => {};
-            standardMat.needsUpdate = true;
+            activeMat.needsUpdate = true;
           }
         }
       }
     });
-  }, [scene, colorHex, textureUrl]);
+  }, [copiedScene, colorHex, textureUrl]);
 
-  return <primitive object={scene} />;
+  return <primitive object={copiedScene} />;
 }
 
 function Model({ url, colorHex, textureUrl, scale = [1,1,1] }: { url: string, colorHex?: string, textureUrl?: string, scale?: [number, number, number] }) {
