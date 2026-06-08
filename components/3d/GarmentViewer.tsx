@@ -58,13 +58,28 @@ function ObjModel({ url, colorHex, textureUrl }: { url: string, colorHex?: strin
         if (mat && (mat as THREE.MeshStandardMaterial).color) {
           const standardMat = mat as THREE.MeshStandardMaterial;
           if (textureUrl) {
-            standardMat.color.set(0xffffff);
+            if (colorHex) standardMat.color.set(colorHex);
+            else standardMat.color.set(0xffffff);
+            
             loadTexture(textureUrl, (tex) => {
               standardMat.map = tex;
+              standardMat.onBeforeCompile = (shader) => {
+                shader.fragmentShader = shader.fragmentShader.replace(
+                  '#include <map_fragment>',
+                  `
+                  #ifdef USE_MAP
+                    vec4 sampledDiffuseColor = texture2D( map, vMapUv );
+                    diffuseColor = vec4( mix( diffuseColor.rgb, sampledDiffuseColor.rgb, sampledDiffuseColor.a ), diffuseColor.a );
+                  #endif
+                  `
+                );
+              };
               standardMat.needsUpdate = true;
             });
           } else if (colorHex) {
             standardMat.color.set(colorHex);
+            standardMat.onBeforeCompile = () => {};
+            standardMat.needsUpdate = true;
           }
         }
       }
@@ -96,9 +111,22 @@ function GlbModel({ url, colorHex, textureUrl }: { url: string, colorHex?: strin
           }
 
           if (textureUrl) {
-            standardMat.color.set(0xffffff);
+            if (colorHex) standardMat.color.set(colorHex);
+            else standardMat.color.set(0xffffff);
+            
             loadTexture(textureUrl, (tex) => {
               standardMat.map = tex;
+              standardMat.onBeforeCompile = (shader) => {
+                shader.fragmentShader = shader.fragmentShader.replace(
+                  '#include <map_fragment>',
+                  `
+                  #ifdef USE_MAP
+                    vec4 sampledDiffuseColor = texture2D( map, vMapUv );
+                    diffuseColor = vec4( mix( diffuseColor.rgb, sampledDiffuseColor.rgb, sampledDiffuseColor.a ), diffuseColor.a );
+                  #endif
+                  `
+                );
+              };
               standardMat.needsUpdate = true;
             });
           } else {
@@ -108,6 +136,7 @@ function GlbModel({ url, colorHex, textureUrl }: { url: string, colorHex?: strin
             } else {
               standardMat.color.copy(mesh.userData.originalColor);
             }
+            standardMat.onBeforeCompile = () => {};
             standardMat.needsUpdate = true;
           }
         }
