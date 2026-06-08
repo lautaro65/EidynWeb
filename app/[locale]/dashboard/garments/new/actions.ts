@@ -56,16 +56,22 @@ export async function createGarmentTemplateAction(formData: FormData) {
       return { error: "Missing required fields" };
     }
 
-    // Convert files to Buffer and upload to R2
-    const frontBuffer = Buffer.from(await frontImage.arrayBuffer());
-    const backBuffer = Buffer.from(await backImage.arrayBuffer());
+    // Convert files to Buffer, remove background, and upload to R2
+    const originalFrontBuffer = Buffer.from(await frontImage.arrayBuffer());
+    const originalBackBuffer = Buffer.from(await backImage.arrayBuffer());
+
+    const { buffer: frontBuffer, mimeType: frontMime } = await removeBackground(originalFrontBuffer, frontImage.type);
+    const { buffer: backBuffer, mimeType: backMime } = await removeBackground(originalBackBuffer, backImage.type);
 
     const timestamp = Date.now();
-    const frontKey = `garments/uploads/${tenantId}/${timestamp}_front_${frontImage.name}`;
-    const backKey = `garments/uploads/${tenantId}/${timestamp}_back_${backImage.name}`;
+    const frontExt = frontMime === "image/png" ? "png" : frontImage.name.split('.').pop();
+    const backExt = backMime === "image/png" ? "png" : backImage.name.split('.').pop();
 
-    const frontUrl = await uploadToR2(frontBuffer, frontKey, frontImage.type);
-    const backUrl = await uploadToR2(backBuffer, backKey, backImage.type);
+    const frontKey = `garments/uploads/${tenantId}/${timestamp}_front.${frontExt}`;
+    const backKey = `garments/uploads/${tenantId}/${timestamp}_back.${backExt}`;
+
+    const frontUrl = await uploadToR2(frontBuffer, frontKey, frontMime);
+    const backUrl = await uploadToR2(backBuffer, backKey, backMime);
 
     // Create GarmentTemplate with mock model directly assigned
     const template = await db.garmentTemplate.create({

@@ -7,23 +7,42 @@ import { OBJLoader } from "three-stdlib";
 
 import * as THREE from 'three';
 
+// Suppress THREE.js deprecation warnings that come from internal R3F/Drei dependencies
+if (typeof console !== 'undefined') {
+  const originalWarn = console.warn;
+  console.warn = (...args) => {
+    if (typeof args[0] === 'string' && (args[0].includes('THREE.Clock') || args[0].includes('THREE.WebGLShadowMap'))) return;
+    originalWarn(...args);
+  };
+}
+
 const textureCache = new Map<string, THREE.Texture>();
 
+function getAssetUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  if (url.startsWith('r2://')) {
+    return `/api/r2?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
+
 function loadTexture(textureUrl: string, callback: (tex: THREE.Texture) => void) {
-  if (textureCache.has(textureUrl)) {
-    callback(textureCache.get(textureUrl)!);
+  const processedUrl = getAssetUrl(textureUrl)!;
+  if (textureCache.has(processedUrl)) {
+    callback(textureCache.get(processedUrl)!);
   } else {
-    new THREE.TextureLoader().load(textureUrl, (tex) => {
+    new THREE.TextureLoader().load(processedUrl, (tex) => {
       tex.flipY = false;
       tex.colorSpace = THREE.SRGBColorSpace;
-      textureCache.set(textureUrl, tex);
+      textureCache.set(processedUrl, tex);
       callback(tex);
     });
   }
 }
 
 function ObjModel({ url, colorHex, textureUrl }: { url: string, colorHex?: string, textureUrl?: string }) {
-  const obj = useLoader(OBJLoader, url);
+  const processedUrl = getAssetUrl(url) || url;
+  const obj = useLoader(OBJLoader, processedUrl);
   const copiedObj = useMemo(() => obj.clone(), [obj]);
 
   useLayoutEffect(() => {
@@ -55,7 +74,8 @@ function ObjModel({ url, colorHex, textureUrl }: { url: string, colorHex?: strin
 }
 
 function GlbModel({ url, colorHex, textureUrl }: { url: string, colorHex?: string, textureUrl?: string }) {
-  const { scene } = useGLTF(url);
+  const processedUrl = getAssetUrl(url) || url;
+  const { scene } = useGLTF(processedUrl);
 
   useLayoutEffect(() => {
     scene.traverse((child) => {
@@ -147,7 +167,7 @@ export function GarmentViewer({
   return (
     <ErrorBoundary>
       <div className={`w-full h-full bg-gradient-to-b from-background/80 to-background/20 rounded-3xl overflow-hidden border border-white/10 relative shadow-2xl ${className || 'min-h-[500px]'}`}>
-        <Canvas shadows camera={{ position: [0, 0, 15], fov: 45 }}>
+        <Canvas shadows={{ type: THREE.PCFShadowMap }} camera={{ position: [0, 0, 15], fov: 45 }}>
           <Suspense fallback={<ModelLoader />}>
             <Stage environment="city" intensity={0.5} adjustCamera>
               <Model url={url} colorHex={colorHex} textureUrl={textureUrl} scale={scale} />

@@ -197,7 +197,8 @@
       "statusPrivate": "Privado",
       "statusPending": "Pendiente",
       "statusActive": "Activa",
-      "variants": "Variantes"
+      "variants": "Variantes",
+      "delete": "Eliminar"
     }
   },
   "Overview": {
