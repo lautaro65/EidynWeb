@@ -44,6 +44,7 @@ type GarmentPreview = {
     colorHex: string | null;
     previewImageUrl: string | null;
     textureUrl: string | null;
+    backTextureUrl: string | null;
     status: string | null;
   }[];
   sizes: {
@@ -422,6 +423,7 @@ export function GarmentCard({ garment, isCommunityView = false }: Props) {
                   className="min-h-[60vh] sm:min-h-[500px] border-none"
                   colorHex={selectedVariant?.type === 'solid' ? (selectedVariant.colorHex || undefined) : undefined}
                   textureUrl={selectedVariant?.type === 'texture' ? (selectedVariant.textureUrl || selectedVariant.previewImageUrl || undefined) : undefined}
+                  backTextureUrl={selectedVariant?.type === 'texture' ? (selectedVariant.backTextureUrl || undefined) : undefined}
                   scale={scaleCalc}
                 />
               ) : garment.previewUrl ? (

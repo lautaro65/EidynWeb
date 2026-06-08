@@ -138,7 +138,7 @@ export default async function GarmentsPage({ searchParams }: Props) {
     baseModelUrl: string | null;
     sourceImageUrl: string | null;
     _count: { variants: number };
-    variants: { id: string; name: string | null; type: string | null; colorHex: string | null; previewImageUrl: string | null; textureUrl: string | null; status: string | null }[];
+    variants: { id: string; name: string | null; type: string | null; colorHex: string | null; previewImageUrl: string | null; textureUrl: string | null; backTextureUrl: string | null; status: string | null }[];
     sizes: { id: string; label: string; scaleX: number | null; scaleY: number | null; scaleZ: number | null }[];
     likes: { id: string }[];
     changeRequests?: { id: string; type: string; message: string; requestingTenant?: { name: string | null } }[];
@@ -158,7 +158,7 @@ export default async function GarmentsPage({ searchParams }: Props) {
       variantsCount: g._count.variants,
       isLiked: g.likes.length > 0,
       pendingRequests: isOwner ? g.changeRequests : undefined,
-      variants: g.variants.map(v => ({ ...v, status: v.status || null })) || [],
+      variants: g.variants.map(v => ({ ...v, backTextureUrl: v.backTextureUrl || null, status: v.status || null })) || [],
       sizes: g.sizes || [],
     };
   };
