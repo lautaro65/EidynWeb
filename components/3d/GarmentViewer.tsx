@@ -51,6 +51,8 @@ function loadTextureAsCanvas(
     const tex = new THREE.CanvasTexture(canvas);
     tex.flipY = true;
     tex.colorSpace = THREE.SRGBColorSpace;
+    tex.wrapS = THREE.ClampToEdgeWrapping;
+    tex.wrapT = THREE.ClampToEdgeWrapping;
     tex.needsUpdate = true;
     onSuccess(tex);
   };
@@ -61,83 +63,173 @@ function loadTextureAsCanvas(
   img.src = processedUrl;
 }
 
-/**
- * Generate UV coordinates for a mesh that doesn't have them.
- * Uses frontal planar projection: projects the texture from the front (XY plane).
- */
-function generatePlanarUVs(geometry: THREE.BufferGeometry) {
-  const position = geometry.attributes.position;
-  if (!position) return;
+// ─────────────────────────────────────────────────────────────────────────────
+// Dual Projection Shader
+// Projects front texture from +Z and back texture from -Z,
+// blending smoothly on the sides. Works with ANY model geometry.
+// ─────────────────────────────────────────────────────────────────────────────
 
-  geometry.computeBoundingBox();
-  const bbox = geometry.boundingBox!;
-  const size = new THREE.Vector3();
-  bbox.getSize(size);
+const dualProjectionVertex = /* glsl */ `
+  varying vec3 vModelNormal;
+  varying vec3 vViewNormal;
+  varying vec2 vProjectedUV;
+  varying vec3 vViewPosition;
 
-  if (size.x === 0) size.x = 1;
-  if (size.y === 0) size.y = 1;
+  uniform vec3 bboxMin;
+  uniform vec3 bboxSize;
 
-  const uvs = new Float32Array(position.count * 2);
+  void main() {
+    // Model-space normal → determines front vs back of garment
+    vModelNormal = normalize(normal);
+    // View-space normal → used for lighting
+    vViewNormal = normalize(normalMatrix * normal);
 
-  for (let i = 0; i < position.count; i++) {
-    const x = position.getX(i);
-    const y = position.getY(i);
-    uvs[i * 2] = (x - bbox.min.x) / size.x;
-    uvs[i * 2 + 1] = (y - bbox.min.y) / size.y;
+    // Planar projection: normalize vertex position within bounding box → 0..1 UV
+    vProjectedUV = vec2(
+      (position.x - bboxMin.x) / bboxSize.x,
+      (position.y - bboxMin.y) / bboxSize.y
+    );
+
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    vViewPosition = -mvPosition.xyz;
+    gl_Position = projectionMatrix * mvPosition;
   }
+`;
 
-  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-}
+const dualProjectionFragment = /* glsl */ `
+  uniform sampler2D frontMap;
+  uniform sampler2D backMap;
+  uniform bool hasFrontMap;
+  uniform bool hasBackMap;
+  uniform vec3 baseColor;
+
+  varying vec3 vModelNormal;
+  varying vec3 vViewNormal;
+  varying vec2 vProjectedUV;
+  varying vec3 vViewPosition;
+
+  void main() {
+    vec3 modelNorm = normalize(vModelNormal);
+    vec3 viewNorm = normalize(vViewNormal);
+
+    // Scale UVs to zoom into the garment area (photos typically have padding)
+    float uvScale = 1.35;
+    float uvOffset = (1.0 - uvScale) / 2.0;
+    vec2 frontUV = clamp(uvOffset + vProjectedUV * uvScale, 0.0, 1.0);
+    // Mirror X for back view (left↔right flip when seen from behind)
+    vec2 backUV = clamp(vec2(1.0 - frontUV.x, frontUV.y), 0.0, 1.0);
+
+    // Determine front vs back based on model-space normal Z
+    // smoothstep creates a soft blend on the side edges
+    float frontFactor = smoothstep(-0.15, 0.15, modelNorm.z);
+
+    vec4 frontCol = hasFrontMap ? texture2D(frontMap, frontUV) : vec4(baseColor, 1.0);
+    vec4 backCol  = hasBackMap  ? texture2D(backMap, backUV)   : vec4(baseColor, 1.0);
+
+    vec4 texColor = mix(backCol, frontCol, frontFactor);
+
+    // ── Lighting (multi-directional, soft) ──
+    vec3 light1 = normalize(vec3(0.5, 0.8, 1.0));
+    vec3 light2 = normalize(vec3(-0.4, 0.6, -0.7));
+    vec3 light3 = normalize(vec3(0.0, -0.2, 0.5));
+
+    float diff = max(dot(viewNorm, light1), 0.0) * 0.45
+               + max(dot(viewNorm, light2), 0.0) * 0.25
+               + max(dot(viewNorm, light3), 0.0) * 0.15;
+    float ambient = 0.5;
+
+    // Subtle specular highlight
+    vec3 viewDir = normalize(vViewPosition);
+    vec3 halfDir = normalize(light1 + viewDir);
+    float spec = pow(max(dot(viewNorm, halfDir), 0.0), 64.0) * 0.1;
+
+    vec3 finalColor = texColor.rgb * (ambient + diff) + vec3(spec);
+
+    gl_FragColor = vec4(finalColor, 1.0);
+  }
+`;
 
 /**
- * Split a mesh into front-facing and back-facing halves by duplicating it,
- * then apply different textures to each half.
- * Front = normals pointing towards camera (positive Z), Back = negative Z.
+ * Apply a dual-projection shader material to a mesh.
+ * Projects front and back textures using world-space normals — no UVs needed.
  */
-function applyDualTexture(
+function applyProjectionMaterial(
   mesh: THREE.Mesh,
-  frontUrl: string,
-  backUrl: string,
+  frontUrl: string | undefined,
+  backUrl: string | undefined,
   colorHex: string | undefined,
   invalidate: () => void
 ) {
   const geo = mesh.geometry as THREE.BufferGeometry;
   if (!geo) return;
 
-  // Ensure UVs exist
-  if (!geo.attributes.uv) {
-    generatePlanarUVs(geo);
+  // Compute bounding box for UV normalization
+  geo.computeBoundingBox();
+  if (!geo.attributes.normal) geo.computeVertexNormals();
+
+  const bbox = geo.boundingBox!;
+  const bboxSize = new THREE.Vector3();
+  bbox.getSize(bboxSize);
+  if (bboxSize.x === 0) bboxSize.x = 1;
+  if (bboxSize.y === 0) bboxSize.y = 1;
+
+  const baseColor = new THREE.Color(colorHex || '#888888');
+
+  // Dispose previous projection material if it exists
+  if (mesh.userData._projectionMat) {
+    (mesh.userData._projectionMat as THREE.ShaderMaterial).dispose();
   }
 
-  // Compute face normals to determine front vs back
-  if (!geo.attributes.normal) {
-    geo.computeVertexNormals();
-  }
+  const uniforms = {
+    frontMap:    { value: null as THREE.Texture | null },
+    backMap:     { value: null as THREE.Texture | null },
+    hasFrontMap: { value: false },
+    hasBackMap:  { value: false },
+    baseColor:   { value: baseColor },
+    bboxMin:     { value: bbox.min.clone() },
+    bboxSize:    { value: bboxSize },
+  };
 
-  const mat = mesh.material as THREE.MeshStandardMaterial;
-  const frontMat = mat.clone();
-  const backMat = mat.clone();
-  frontMat.metalness = 0;
-  frontMat.roughness = 1;
-  frontMat.color.set(0xffffff);
-  backMat.metalness = 0;
-  backMat.roughness = 1;
-  backMat.color.set(0xffffff);
-
-  // Use material groups: split geometry into front and back face groups
-  // For simplicity and to avoid splitting geometry (complex), we'll use a single
-  // material with a composite texture that has front on one half and back on the other.
-  // Instead, apply the front texture to the entire mesh (simpler, works for now)
-  loadTextureAsCanvas(frontUrl, colorHex, (tex) => {
-    frontMat.map = tex;
-    frontMat.needsUpdate = true;
-    mesh.material = frontMat;
-    invalidate();
+  const shaderMat = new THREE.ShaderMaterial({
+    uniforms,
+    vertexShader: dualProjectionVertex,
+    fragmentShader: dualProjectionFragment,
+    side: THREE.DoubleSide,
   });
+
+  mesh.material = shaderMat;
+  mesh.userData._projectionMat = shaderMat;
+
+  // Load textures asynchronously
+  if (frontUrl) {
+    loadTextureAsCanvas(frontUrl, colorHex, (tex) => {
+      uniforms.frontMap.value = tex;
+      uniforms.hasFrontMap.value = true;
+      shaderMat.needsUpdate = true;
+      invalidate();
+    });
+  }
+
+  if (backUrl) {
+    loadTextureAsCanvas(backUrl, colorHex, (tex) => {
+      uniforms.backMap.value = tex;
+      uniforms.hasBackMap.value = true;
+      shaderMat.needsUpdate = true;
+      invalidate();
+    });
+  }
+
+  // If no textures at all, just show the base color
+  if (!frontUrl && !backUrl) {
+    shaderMat.needsUpdate = true;
+    invalidate();
+  }
 }
 
 /**
  * Apply texture/color to all meshes in the scene graph.
+ * - Solid color: tints the existing material.
+ * - Texture: uses dual-projection shader for full coverage.
  */
 function applyMaterialToMeshes(
   root: THREE.Object3D,
@@ -151,51 +243,38 @@ function applyMaterialToMeshes(
     const mesh = child as THREE.Mesh;
     let mat = mesh.material;
     if (Array.isArray(mat)) mat = mat[0];
-    if (!mat || !(mat as THREE.MeshStandardMaterial).color) return;
+    if (!mat) return;
 
-    // Clone material once so we don't mutate shared materials
-    if (!mesh.userData._clonedMat) {
-      const cloned = (mat as THREE.MeshStandardMaterial).clone();
-      mesh.userData._clonedMat = true;
-      mesh.userData._origColor = (mat as THREE.MeshStandardMaterial).color.clone();
-      mesh.userData._origMap = (mat as THREE.MeshStandardMaterial).map;
-      mesh.userData._origMetalness = (mat as THREE.MeshStandardMaterial).metalness;
-      mesh.userData._origRoughness = (mat as THREE.MeshStandardMaterial).roughness;
-      mesh.material = cloned;
+    // Store original material on first encounter
+    if (!mesh.userData._origMat) {
+      mesh.userData._origMat = (mat as THREE.MeshStandardMaterial).clone();
     }
-    const activeMat = mesh.material as THREE.MeshStandardMaterial;
 
     if (textureUrl) {
-      const geo = mesh.geometry as THREE.BufferGeometry;
-
-      // Generate UVs if missing
-      if (geo && (!geo.attributes || !geo.attributes.uv)) {
-        generatePlanarUVs(geo);
-      }
-
-      activeMat.color.set(0xffffff);
-      activeMat.metalness = 0;
-      activeMat.roughness = 1;
-
-      if (backTextureUrl) {
-        // Dual texture: front/back
-        applyDualTexture(mesh, textureUrl, backTextureUrl, colorHex, invalidate);
-      } else {
-        // Single texture for entire mesh
-        loadTextureAsCanvas(textureUrl, colorHex, (tex) => {
-          activeMat.map = tex;
-          activeMat.needsUpdate = true;
-          invalidate();
-        });
-      }
+      // ── TEXTURE VARIANT: dual projection shader ──
+      applyProjectionMaterial(mesh, textureUrl, backTextureUrl, colorHex, invalidate);
     } else {
-      activeMat.map = mesh.userData._origMap || null;
-      activeMat.metalness = mesh.userData._origMetalness ?? 0;
-      activeMat.roughness = mesh.userData._origRoughness ?? 1;
+      // ── SOLID COLOR or RESTORE ORIGINAL ──
+      // If we previously applied a projection shader, restore the original material
+      if (mesh.userData._projectionMat) {
+        (mesh.userData._projectionMat as THREE.ShaderMaterial).dispose();
+        mesh.userData._projectionMat = null;
+        const restored = (mesh.userData._origMat as THREE.MeshStandardMaterial).clone();
+        mesh.material = restored;
+      }
+
+      // Clone material once so we don't mutate shared materials
+      if (!mesh.userData._clonedMat) {
+        const cloned = (mesh.material as THREE.MeshStandardMaterial).clone();
+        mesh.userData._clonedMat = true;
+        mesh.material = cloned;
+      }
+
+      const activeMat = mesh.material as THREE.MeshStandardMaterial;
       if (colorHex) {
         activeMat.color.set(colorHex);
-      } else if (mesh.userData._origColor) {
-        activeMat.color.copy(mesh.userData._origColor);
+      } else if (mesh.userData._origMat) {
+        activeMat.color.copy((mesh.userData._origMat as THREE.MeshStandardMaterial).color);
       }
       activeMat.needsUpdate = true;
       invalidate();
