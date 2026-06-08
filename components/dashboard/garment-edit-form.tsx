@@ -9,6 +9,15 @@ import { useRouter } from "@/i18n/routing";
 import { updateGarmentAction } from "@/app/[locale]/dashboard/garments/[id]/edit/actions";
 import { Link } from "@/i18n/routing";
 
+function getAssetUrl(url: string | undefined | null): string | undefined {
+  if (!url) return undefined;
+  if (url.startsWith('r2://')) {
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    return `${origin}/api/r2?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
+
 interface VariantInput {
   id: string;
   name: string;
@@ -377,7 +386,7 @@ export function GarmentEditForm({ initialData }: { initialData: {
                         <input type="file" accept="image/*" onChange={e => handleVariantImage(e, v.id)} className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer" />
                         {v.previewFront ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={v.previewFront} alt="Preview" className="w-full h-full object-cover" />
+                          <img src={getAssetUrl(v.previewFront)} alt="Preview" className="w-full h-full object-cover" />
                         ) : (
                           <div className="text-center text-muted-foreground flex flex-col items-center">
                             <UploadCloud className="w-6 h-6 mb-1" />
@@ -490,7 +499,7 @@ export function GarmentEditForm({ initialData }: { initialData: {
                         ) : (
                           <div className="w-4 h-4 rounded-full bg-muted flex items-center justify-center overflow-hidden">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            {v.previewFront && <img src={v.previewFront} alt="" className="w-full h-full object-cover" />}
+                            {v.previewFront && <img src={getAssetUrl(v.previewFront)} alt="" className="w-full h-full object-cover" />}
                           </div>
                         )}
                         {v.name || "Sin nombre"}
