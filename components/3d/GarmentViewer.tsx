@@ -26,9 +26,12 @@ function getAssetUrl(url: string | undefined): string | undefined {
 }
 
 /**
- * Load an image, auto-crop transparent padding, and composite over a solid color.
- * removeBackground creates PNGs with large transparent margins — this trims them
- * so the garment content fills the entire texture for better projection coverage.
+ * Load an image, auto-crop transparent padding, and composite using 3-layer bleed:
+ *   Layer 1: Solid fill with the garment's dominant color (covers everything)
+ *   Layer 2: Blurred + enlarged garment (smooth bleed near edges)
+ *   Layer 3: Sharp original garment (actual detail)
+ * This ensures zero white/blank gaps — any area outside the garment silhouette
+ * is filled with matching colors from the garment itself.
  */
 function loadTextureAsCanvas(
   textureUrl: string,
@@ -41,7 +44,7 @@ function loadTextureAsCanvas(
   const img = new Image();
   img.crossOrigin = "anonymous";
   img.onload = () => {
-    // 1. Draw on temp canvas to detect content bounds via alpha channel
+    // 1. Draw on temp canvas to detect content bounds + dominant color
     const tempCanvas = document.createElement("canvas");
     tempCanvas.width = img.width;
     tempCanvas.height = img.height;
@@ -49,47 +52,75 @@ function loadTextureAsCanvas(
     tempCtx.drawImage(img, 0, 0);
 
     let cropX = 0, cropY = 0, cropW = img.width, cropH = img.height;
+    let dominantColor = baseColorHex || "#888888";
 
     try {
       const imageData = tempCtx.getImageData(0, 0, img.width, img.height);
       const { data } = imageData;
       let minX = img.width, minY = img.height, maxX = 0, maxY = 0;
       let transparentPixels = 0;
+      let totalR = 0, totalG = 0, totalB = 0, opaqueCount = 0;
 
       for (let y = 0; y < img.height; y++) {
         for (let x = 0; x < img.width; x++) {
-          const alpha = data[(y * img.width + x) * 4 + 3];
+          const idx = (y * img.width + x) * 4;
+          const alpha = data[idx + 3];
           if (alpha < 128) { transparentPixels++; continue; }
           if (x < minX) minX = x;
           if (x > maxX) maxX = x;
           if (y < minY) minY = y;
           if (y > maxY) maxY = y;
+          // Accumulate color for dominant color calculation
+          totalR += data[idx];
+          totalG += data[idx + 1];
+          totalB += data[idx + 2];
+          opaqueCount++;
         }
       }
 
-      // Only auto-crop if the image has significant transparency (processed by removeBackground)
       const totalPixels = img.width * img.height;
       const hasTransparency = transparentPixels > totalPixels * 0.05;
 
       if (hasTransparency && maxX > minX && maxY > minY) {
-        // Add ~2% padding around content so it doesn't touch the edge
         const pad = Math.max(4, Math.round(Math.max(img.width, img.height) * 0.02));
         cropX = Math.max(0, minX - pad);
         cropY = Math.max(0, minY - pad);
         cropW = Math.min(img.width, maxX + pad + 1) - cropX;
         cropH = Math.min(img.height, maxY + pad + 1) - cropY;
+
+        // Compute dominant garment color from opaque pixels
+        if (opaqueCount > 0) {
+          const avgR = Math.round(totalR / opaqueCount);
+          const avgG = Math.round(totalG / opaqueCount);
+          const avgB = Math.round(totalB / opaqueCount);
+          dominantColor = `rgb(${avgR},${avgG},${avgB})`;
+        }
       }
     } catch (e) {
       console.warn("[GarmentViewer] Auto-crop failed (CORS?), using full image", e);
     }
 
-    // 2. Create final canvas with cropped content over base color
+    // 2. Create final canvas with 3-layer compositing
     const canvas = document.createElement("canvas");
     canvas.width = cropW;
     canvas.height = cropH;
     const ctx = canvas.getContext("2d")!;
-    ctx.fillStyle = baseColorHex || "#ffffff";
+
+    // Layer 1: Solid dominant garment color (fills everything, no white gaps)
+    ctx.fillStyle = dominantColor;
     ctx.fillRect(0, 0, cropW, cropH);
+
+    // Layer 2: Blurred + enlarged version for smooth edge bleed
+    // This creates a color gradient that naturally extends beyond the garment silhouette
+    ctx.save();
+    ctx.filter = "blur(15px)";
+    const bleed = 1.3; // 30% larger
+    const bx = -(cropW * (bleed - 1)) / 2;
+    const by = -(cropH * (bleed - 1)) / 2;
+    ctx.drawImage(img, cropX, cropY, cropW, cropH, bx, by, cropW * bleed, cropH * bleed);
+    ctx.restore();
+
+    // Layer 3: Sharp original on top (the actual garment detail)
     ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
 
     const tex = new THREE.CanvasTexture(canvas);
