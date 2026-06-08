@@ -35,10 +35,6 @@ function loadTexture(textureUrl: string, callback: (tex: THREE.Texture) => void)
     new THREE.TextureLoader().load(processedUrl, (tex) => {
       tex.flipY = false;
       tex.colorSpace = THREE.SRGBColorSpace;
-      // Tile the texture to ensure it's visible even with mismatched UVs
-      tex.wrapS = THREE.RepeatWrapping;
-      tex.wrapT = THREE.RepeatWrapping;
-      tex.repeat.set(4, 4);
       textureCache.set(processedUrl, tex);
       callback(tex);
     });
