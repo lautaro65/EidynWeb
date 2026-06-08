@@ -57,14 +57,14 @@ function ObjModel({ url, colorHex, textureUrl }: { url: string, colorHex?: strin
         
         if (mat && (mat as THREE.MeshStandardMaterial).color) {
           const standardMat = mat as THREE.MeshStandardMaterial;
-          if (colorHex) {
-            standardMat.color.set(colorHex);
-          }
           if (textureUrl) {
+            standardMat.color.set(0xffffff);
             loadTexture(textureUrl, (tex) => {
               standardMat.map = tex;
               standardMat.needsUpdate = true;
             });
+          } else if (colorHex) {
+            standardMat.color.set(colorHex);
           }
         }
       }
@@ -95,19 +95,19 @@ function GlbModel({ url, colorHex, textureUrl }: { url: string, colorHex?: strin
              mesh.userData.originalMap = standardMat.map;
           }
 
-          if (colorHex) {
-            standardMat.color.set(colorHex);
-          } else {
-            standardMat.color.copy(mesh.userData.originalColor);
-          }
-
           if (textureUrl) {
+            standardMat.color.set(0xffffff);
             loadTexture(textureUrl, (tex) => {
               standardMat.map = tex;
               standardMat.needsUpdate = true;
             });
           } else {
             standardMat.map = mesh.userData.originalMap;
+            if (colorHex) {
+              standardMat.color.set(colorHex);
+            } else {
+              standardMat.color.copy(mesh.userData.originalColor);
+            }
             standardMat.needsUpdate = true;
           }
         }
@@ -170,7 +170,7 @@ export function GarmentViewer({
       <div className={`w-full h-full bg-gradient-to-b from-background/80 to-background/20 rounded-3xl overflow-hidden border border-white/10 relative shadow-2xl ${className || 'min-h-[500px]'}`}>
         <Canvas shadows={{ type: THREE.PCFShadowMap }} camera={{ position: [0, 0, 15], fov: 45 }}>
           <Suspense fallback={<ModelLoader />}>
-            <Stage environment="city" intensity={0.5} adjustCamera>
+            <Stage environment="city" intensity={0.8} adjustCamera>
               <Model url={url} colorHex={colorHex} textureUrl={textureUrl} scale={scale} />
             </Stage>
           </Suspense>
