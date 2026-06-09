@@ -78,7 +78,7 @@ export function DashboardSidebar() {
       key: "insights",
       label: t("sectionInsights"),
       items: [
-        { icon: BarChart3, label: t("analytics"), href: "#", disabled: true },
+        { icon: BarChart3, label: t("analytics"), href: "/dashboard/analytics" },
         { icon: Plug, label: t("connections"), href: "/dashboard/connections" },
       ],
     },
@@ -224,7 +224,7 @@ export function DashboardSidebar() {
         {/* Footer */}
         <div className="p-4 border-t border-border/40 bg-muted/40 dark:border-white/5 dark:bg-black/10">
           <Link
-            href="/dashboard/account"
+            href="/dashboard/settings"
             className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium text-sm text-muted-foreground hover:bg-white/5 hover:text-foreground group mb-1"
           >
             <Settings className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
