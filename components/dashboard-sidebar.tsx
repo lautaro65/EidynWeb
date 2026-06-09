@@ -88,7 +88,7 @@ export function DashboardSidebar() {
       items: [
         { icon: User, label: t("accountInfo"), href: "/dashboard/account" },
         { icon: SlidersHorizontal, label: t("widgetConfig"), href: "/dashboard/account/organization" },
-        { icon: CreditCard, label: t("billing"), href: "#", disabled: true },
+        { icon: CreditCard, label: t("billing"), href: "/dashboard/billing" },
       ],
     },
   ];
@@ -131,6 +131,8 @@ export function DashboardSidebar() {
                       ? pathname === "/dashboard" ||
                         pathname === "/es/dashboard" ||
                         pathname === "/en/dashboard"
+                      : item.href === "/dashboard/account"
+                      ? pathname.endsWith("/dashboard/account")
                       : pathname.includes(item.href);
 
                   const itemClasses = cn(
