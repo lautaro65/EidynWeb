@@ -22,8 +22,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Missing shop" }, { status: 400 });
   }
 
-  // Ensure shop ends with myshopify.com
-  const formattedShop = shop.includes(".myshopify.com") ? shop : `${shop}.myshopify.com`;
+  // Ensure shop ends with myshopify.com and has no protocols
+  let cleanShop = shop.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const formattedShop = cleanShop.includes(".myshopify.com") ? cleanShop : `${cleanShop}.myshopify.com`;
 
   const clientId = process.env.SHOPIFY_CLIENT_ID;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
