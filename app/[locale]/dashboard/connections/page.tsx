@@ -4,9 +4,12 @@ import { redirect } from "next/navigation";
 import { Plug, Key, Webhook as WebhookIcon, ShoppingBag, ShieldCheck, Activity } from "lucide-react";
 import { ConnectionsClient } from "./connections-client";
 
+import { getTranslations } from "next-intl/server";
+
 type SessionMetadata = { tenantId?: string };
 
 export default async function ConnectionsPage() {
+  const t = await getTranslations("Connections");
   const { userId, sessionClaims } = await auth();
   if (!userId) redirect("/sign-in");
 
@@ -43,10 +46,10 @@ export default async function ConnectionsPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
             <Plug className="w-8 h-8 text-primary" />
-            Conexiones (Integraciones)
+            {t("title")}
           </h1>
           <p className="text-muted-foreground mt-1 text-sm max-w-2xl">
-            Centro de Estado de infraestructura agnóstica. Integra el motor de prueba virtual con tu stack tecnológico mediante conectores nativos o nuestra API unificada.
+            {t("subtitle")}
           </p>
         </div>
       </div>

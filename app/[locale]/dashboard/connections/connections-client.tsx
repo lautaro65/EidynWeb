@@ -41,7 +41,17 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
   const handleConnectIntegration = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsConnecting(true);
+
+    if (selectedProvider === "shopify") {
+      // Redirect to OAuth Flow
+      // We need tenantId to pass as state. Since this is a client component, 
+      // we'll fetch a quick API or just pass it down if we had it.
+      // Wait, we can let the API route get the tenantId from the server session!
+      window.location.href = `/api/auth/shopify/install?shop=${encodeURIComponent(storeUrl)}`;
+      return;
+    }
     
+    // For other providers (like WooCommerce) we might still use manual tokens for now
     const formData = new FormData();
     formData.append("provider", selectedProvider);
     formData.append("storeUrl", storeUrl);
@@ -99,7 +109,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
   return (
     <div className="w-full">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-8 w-full max-w-md bg-background/50 border border-white/10 p-1 rounded-2xl h-14">
+        <TabsList className="mb-8 w-full max-w-md bg-background/50 border border-white/10 p-2 rounded-2xl h-16">
           <TabsTrigger value="native" className="flex-1 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-sm font-semibold h-full transition-all">
             <ShoppingBag className="w-4 h-4 mr-2" />
             Integraciones Nativas
@@ -245,18 +255,20 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
                 className="h-12 bg-background/50 rounded-xl border-white/10"
               />
             </div>
-            <div className="space-y-3">
-              <Label htmlFor="accessToken" className="text-sm font-semibold ml-1">Token de Acceso (Admin API)</Label>
-              <Input 
-                id="accessToken" 
-                type="password" 
-                value={accessToken} 
-                onChange={e => setAccessToken(e.target.value)} 
-                placeholder="shpat_xxxxxxxxxxxxxxxx" 
-                required 
-                className="h-12 bg-background/50 rounded-xl border-white/10"
-              />
-            </div>
+            {selectedProvider !== "shopify" && (
+              <div className="space-y-3">
+                <Label htmlFor="accessToken" className="text-sm font-semibold ml-1">Token de Acceso (Admin API)</Label>
+                <Input 
+                  id="accessToken" 
+                  type="password" 
+                  value={accessToken} 
+                  onChange={e => setAccessToken(e.target.value)} 
+                  placeholder="shpat_xxxxxxxxxxxxxxxx" 
+                  required 
+                  className="h-12 bg-background/50 rounded-xl border-white/10"
+                />
+              </div>
+            )}
 
             <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex gap-3 text-sm text-blue-200">
               <AlertCircle className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
