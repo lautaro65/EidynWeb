@@ -71,7 +71,7 @@ export function DashboardSidebar() {
             { label: t("garmentsRequests"), href: "/dashboard/garments/requests" },
           ],
         },
-        { icon: Box, label: t("inventory"), href: "#", disabled: true },
+        { icon: Box, label: t("inventory"), href: "/dashboard/products" },
       ],
     },
     {
