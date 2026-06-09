@@ -82,6 +82,7 @@ model Tenant {
   carts           Cart[]
   orders          Order[]
   apiKeys         ApiKey[]
+  integrations    Integration[]
   webhooks        Webhook[]
   events          Event[]
   jobs            Job[]
@@ -193,12 +194,10 @@ model ShopConsent {
 // ─────────────────────────────────────────
 
 // Marca global de una prenda (Nike, Adidas, etc.)
-// Separada del Brand de tienda para que sea compartida entre tenants
+// Solo el nombre — compartida entre tenants
 model GarmentBrand {
   id        String   @id @default(uuid()) @db.Uuid
   name      String   @unique // "Nike", "Adidas", "Zara"
-  slug      String   @unique // "nike", "adidas", "zara"
-  logoUrl   String?  @map("logo_url")
   createdAt DateTime @default(now()) @map("created_at")
 
   garments GarmentTemplate[]
@@ -687,6 +686,23 @@ model ApiKey {
   tenant Tenant @relation(fields: [tenantId], references: [id])
 
   @@map("api_keys")
+}
+
+model Integration {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  provider    String   // "shopify", "woocommerce", "tiendanube"
+  storeUrl    String?  @map("store_url")
+  accessToken String?  @map("access_token")
+  status      String   @default("connected") // "connected", "error", "disconnected"
+  lastSyncAt  DateTime? @map("last_sync_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, provider])
+  @@map("integrations")
 }
 
 model Webhook {

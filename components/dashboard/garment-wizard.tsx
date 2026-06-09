@@ -5,8 +5,8 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Shirt, Tag, AlertCircle, ArrowRight, UploadCloud, Image as ImageIcon, Palette, Trash2, Plus, Ruler, CheckCircle2 } from "lucide-react";
-import { checkSkuUnique, createGarmentTemplateAction } from "@/app/[locale]/dashboard/garments/new/actions";
+import { Loader2, Shirt, Tag, AlertCircle, ArrowRight, UploadCloud, Image as ImageIcon, Palette, Trash2, Plus, Ruler, CheckCircle2, BadgeCheck } from "lucide-react";
+import { checkSkuUnique, createGarmentTemplateAction, getBrandsAction } from "@/app/[locale]/dashboard/garments/new/actions";
 
 interface VariantInput {
   id: string;
@@ -74,11 +74,29 @@ export function GarmentWizard() {
 
   // Step 1 State
   const [name, setName] = useState("");
+  const [brand, setBrand] = useState("");
+  const [brandSuggestions, setBrandSuggestions] = useState<string[]>([]);
+  const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
   const [sku, setSku] = useState("");
   const [isValidatingSku, setIsValidatingSku] = useState(false);
   const [skuError, setSkuError] = useState<string | null>(null);
   const [validatedSku, setValidatedSku] = useState<string | null>(null);
   const [category, setCategory] = useState("remeras");
+
+  // Fetch existing brands on mount
+  useEffect(() => {
+    getBrandsAction().then(res => {
+      if (res.success && res.brands) {
+        setBrandSuggestions(res.brands);
+      }
+    });
+  }, []);
+
+  // Format brand: first letter uppercase, rest lowercase
+  const formatBrand = (val: string) => {
+    if (!val) return "";
+    return val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
+  };
 
   // Step 2 State
   const [frontImage, setFrontImage] = useState<File | null>(null);
@@ -174,7 +192,7 @@ export function GarmentWizard() {
     }
   };
 
-  const isStep1Valid = name.trim().length > 0 && sku.trim().length > 0 && sku === validatedSku && category.trim().length > 0;
+  const isStep1Valid = name.trim().length > 0 && brand.trim().length > 0 && sku.trim().length > 0 && sku === validatedSku && category.trim().length > 0;
   const isStep2Valid = frontImage !== null && backImage !== null;
   const isStep3Valid = variants.length > 0 && variants.every(v => v.name.trim() !== "" && (v.type === "solid" || v.fileFront !== null));
   const isStep4Valid = sizes.length > 0 && sizes.every(s => CATEGORY_MEASUREMENTS[category].every(m => (s[m.id] || 0) > 0));
@@ -202,6 +220,7 @@ export function GarmentWizard() {
     try {
       const formData = new FormData();
       formData.append("name", name);
+      formData.append("brand", brand);
       formData.append("sku", sku);
       formData.append("category", category);
       formData.append("frontImage", frontImage as Blob);
@@ -407,6 +426,65 @@ export function GarmentWizard() {
                     className="h-14 pl-5 text-lg bg-background/50 border-white/10 focus-visible:ring-primary/50 focus-visible:border-primary transition-all rounded-xl shadow-inner"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-3">
+                <Label htmlFor="brand" className="text-sm font-semibold text-foreground/80 ml-1">Marca</Label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted-foreground">
+                    <BadgeCheck className="w-5 h-5" />
+                  </div>
+                  <Input 
+                    id="brand"
+                    value={brand}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      setBrand(raw);
+                      setIsBrandDropdownOpen(raw.length > 0);
+                    }}
+                    onBlur={() => {
+                      // Auto-format on blur
+                      if (brand.trim()) setBrand(formatBrand(brand.trim()));
+                      // Delay closing so click on suggestion can fire
+                      setTimeout(() => setIsBrandDropdownOpen(false), 200);
+                    }}
+                    onFocus={() => {
+                      if (brand.length > 0) setIsBrandDropdownOpen(true);
+                    }}
+                    placeholder="Ej: Nike, Adidas, Zara"
+                    className="h-14 pl-11 text-lg bg-background/50 border-white/10 focus-visible:ring-primary/50 focus-visible:border-primary transition-all rounded-xl shadow-inner"
+                    autoComplete="off"
+                  />
+                  {/* Autocomplete dropdown */}
+                  {isBrandDropdownOpen && (() => {
+                    const filtered = brandSuggestions.filter(s =>
+                      s.toLowerCase().includes(brand.toLowerCase()) && s.toLowerCase() !== brand.toLowerCase()
+                    );
+                    if (filtered.length === 0) return null;
+                    return (
+                      <div className="absolute z-50 top-full mt-1 w-full bg-background/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
+                        {filtered.slice(0, 6).map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => {
+                              setBrand(s);
+                              setIsBrandDropdownOpen(false);
+                            }}
+                            className="w-full px-4 py-3 text-left text-sm font-semibold hover:bg-primary/10 hover:text-primary transition-colors flex items-center gap-2"
+                          >
+                            <BadgeCheck className="w-4 h-4 text-primary/50" />
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
+                <p className="text-sm text-muted-foreground/70 ml-1">
+                  Escribí la marca o seleccioná una existente. Se formatea automáticamente.
+                </p>
               </div>
 
               <div className="space-y-3">

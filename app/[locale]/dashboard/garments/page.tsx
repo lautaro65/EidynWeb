@@ -68,6 +68,7 @@ export default async function GarmentsPage({ searchParams }: Props) {
 
   // Common Include
   const queryInclude = {
+    brand: true,
     _count: { select: { variants: true } },
     variants: {
       include: { sizes: true }
@@ -137,6 +138,7 @@ export default async function GarmentsPage({ searchParams }: Props) {
     ownerId: string | null;
     baseModelUrl: string | null;
     sourceImageUrl: string | null;
+    brand: { name: string } | null;
     _count: { variants: number };
     variants: { id: string; name: string | null; type: string | null; colorHex: string | null; previewImageUrl: string | null; textureUrl: string | null; backTextureUrl: string | null; status: string | null }[];
     sizes: { id: string; label: string; scaleX: number | null; scaleY: number | null; scaleZ: number | null }[];
@@ -148,6 +150,7 @@ export default async function GarmentsPage({ searchParams }: Props) {
     return {
       id: g.id,
       name: g.name || "",
+      brand: g.brand?.name || null,
       sku: g.sku,
       category: g.category || "General",
       isPublic: g.isPublic,

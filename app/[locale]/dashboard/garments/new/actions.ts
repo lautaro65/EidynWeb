@@ -34,6 +34,22 @@ import { uploadToR2 } from "@/lib/r2";
 import { inngest } from "@/inngest/client";
 import { removeBackground } from "@/lib/image-processing";
 
+/**
+ * Fetch all existing GarmentBrand names for autocomplete suggestions.
+ */
+export async function getBrandsAction() {
+  try {
+    const brands = await db.garmentBrand.findMany({
+      select: { name: true },
+      orderBy: { name: "asc" },
+    });
+    return { success: true, brands: brands.map((b) => b.name) };
+  } catch (error) {
+    console.error("Error fetching brands:", error);
+    return { error: "Failed to fetch brands" };
+  }
+}
+
 export async function createGarmentTemplateAction(formData: FormData) {
   try {
     const { userId, sessionClaims } = await auth();
@@ -49,11 +65,26 @@ export async function createGarmentTemplateAction(formData: FormData) {
     const name = formData.get("name") as string;
     const sku = formData.get("sku") as string;
     const category = formData.get("category") as string | null;
+    const brandName = (formData.get("brand") as string | null)?.trim() || null;
     const frontImage = formData.get("frontImage") as File;
     const backImage = formData.get("backImage") as File;
 
     if (!name || !sku || !frontImage || !backImage || !category) {
       return { error: "Missing required fields" };
+    }
+
+    // Find or create the GarmentBrand
+    let brandId: string | null = null;
+    if (brandName) {
+      // Format: first letter uppercase, rest lowercase
+      const formatted = brandName.charAt(0).toUpperCase() + brandName.slice(1).toLowerCase();
+      const existing = await db.garmentBrand.findUnique({ where: { name: formatted } });
+      if (existing) {
+        brandId = existing.id;
+      } else {
+        const created = await db.garmentBrand.create({ data: { name: formatted } });
+        brandId = created.id;
+      }
     }
 
     // Convert files to Buffer, remove background, and upload to R2
@@ -77,6 +108,7 @@ export async function createGarmentTemplateAction(formData: FormData) {
     const template = await db.garmentTemplate.create({
       data: {
         ownerId: tenantId,
+        brandId,
         name,
         sku,
         category,

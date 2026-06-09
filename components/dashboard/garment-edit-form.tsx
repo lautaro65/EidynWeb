@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Shirt, Tag, UploadCloud, Palette, Trash2, Plus, Ruler, Save, ArrowLeft, Layers } from "lucide-react";
+import { Loader2, Shirt, Tag, UploadCloud, Palette, Trash2, Plus, Ruler, Save, ArrowLeft, Layers, BadgeCheck } from "lucide-react";
 import { useRouter } from "@/i18n/routing";
 import { updateGarmentAction } from "@/app/[locale]/dashboard/garments/[id]/edit/actions";
+import { getBrandsAction } from "@/app/[locale]/dashboard/garments/new/actions";
 import { Link } from "@/i18n/routing";
 
 function getAssetUrl(url: string | undefined | null): string | undefined {
@@ -70,6 +71,7 @@ const CATEGORY_MEASUREMENTS: Record<string, { id: keyof Omit<SizeInput, 'id'|'la
 export function GarmentEditForm({ initialData }: { initialData: {
   id: string;
   name: string;
+  brand: string;
   sku: string;
   category: string;
   variants: {
@@ -101,8 +103,25 @@ export function GarmentEditForm({ initialData }: { initialData: {
   
   // Step 1: Basic Info
   const [name, setName] = useState(initialData.name || "");
+  const [brand, setBrand] = useState(initialData.brand || "");
+  const [brandSuggestions, setBrandSuggestions] = useState<string[]>([]);
+  const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
   const [sku, setSku] = useState(initialData.sku || "");
   const [category, setCategory] = useState(initialData.category || "remeras");
+
+  // Fetch existing brands on mount
+  useEffect(() => {
+    getBrandsAction().then(res => {
+      if (res.success && res.brands) {
+        setBrandSuggestions(res.brands);
+      }
+    });
+  }, []);
+
+  const formatBrand = (val: string) => {
+    if (!val) return "";
+    return val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
+  };
 
   // Step 2: Variants
   const [variants, setVariants] = useState<VariantInput[]>(
@@ -215,6 +234,7 @@ export function GarmentEditForm({ initialData }: { initialData: {
     try {
       const formData = new FormData();
       formData.append("name", name);
+      formData.append("brand", brand);
       formData.append("sku", sku);
       formData.append("category", category);
 
@@ -309,10 +329,53 @@ export function GarmentEditForm({ initialData }: { initialData: {
             </div>
             <h2 className="text-2xl font-bold">Identidad</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="space-y-3">
               <Label className="text-sm font-semibold ml-1">Nombre</Label>
               <Input value={name} onChange={e => setName(e.target.value)} className="h-12 bg-background/50 rounded-xl" />
+            </div>
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold ml-1">Marca</Label>
+              <div className="relative">
+                <BadgeCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={brand}
+                  onChange={e => {
+                    setBrand(e.target.value);
+                    setIsBrandDropdownOpen(e.target.value.length > 0);
+                  }}
+                  onBlur={() => {
+                    if (brand.trim()) setBrand(formatBrand(brand.trim()));
+                    setTimeout(() => setIsBrandDropdownOpen(false), 200);
+                  }}
+                  onFocus={() => { if (brand.length > 0) setIsBrandDropdownOpen(true); }}
+                  placeholder="Ej: Nike"
+                  className="h-12 pl-9 bg-background/50 rounded-xl"
+                  autoComplete="off"
+                />
+                {isBrandDropdownOpen && (() => {
+                  const filtered = brandSuggestions.filter(s =>
+                    s.toLowerCase().includes(brand.toLowerCase()) && s.toLowerCase() !== brand.toLowerCase()
+                  );
+                  if (filtered.length === 0) return null;
+                  return (
+                    <div className="absolute z-50 top-full mt-1 w-full bg-background/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
+                      {filtered.slice(0, 5).map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onMouseDown={e => e.preventDefault()}
+                          onClick={() => { setBrand(s); setIsBrandDropdownOpen(false); }}
+                          className="w-full px-4 py-2.5 text-left text-sm font-semibold hover:bg-primary/10 hover:text-primary transition-colors flex items-center gap-2"
+                        >
+                          <BadgeCheck className="w-3.5 h-3.5 text-primary/50" />
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
             <div className="space-y-3">
               <Label className="text-sm font-semibold ml-1">SKU</Label>

@@ -79,7 +79,7 @@ export function DashboardSidebar() {
       label: t("sectionInsights"),
       items: [
         { icon: BarChart3, label: t("analytics"), href: "#", disabled: true },
-        { icon: Plug, label: t("connections"), href: "#", disabled: true },
+        { icon: Plug, label: t("connections"), href: "/dashboard/connections" },
       ],
     },
     {

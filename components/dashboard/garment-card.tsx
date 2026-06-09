@@ -30,6 +30,7 @@ type GarmentPreview = {
   previewUrl?: string | null;
   baseModelUrl?: string | null;
   variantsCount: number;
+  brand?: string | null;
   isLiked?: boolean; // We'll add this from the page
   pendingRequests?: {
     id: string;
@@ -265,6 +266,9 @@ export function GarmentCard({ garment, isCommunityView = false }: Props) {
             )}
           </div>
 
+          {garment.brand && (
+            <p className="text-xs font-semibold text-primary/80 mb-1 uppercase tracking-wider">{garment.brand}</p>
+          )}
           <h3 className="font-bold text-xl text-foreground group-hover:text-primary transition-colors line-clamp-1">{garment.name || "Untitled Garment"}</h3>
           <p className="text-xs text-muted-foreground mt-1 font-mono">{garment.sku}</p>
         </div>

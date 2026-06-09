@@ -26,6 +26,7 @@ export default async function EditGarmentPage({ params }: Props) {
   const garment = await db.garmentTemplate.findUnique({
     where: { id },
     include: {
+      brand: true,
       variants: {
         include: {
           sizes: true
@@ -54,6 +55,7 @@ export default async function EditGarmentPage({ params }: Props) {
   const initialData = {
     id: garment.id,
     name: garment.name || "",
+    brand: garment.brand?.name || "",
     sku: garment.sku,
     category: garment.category || "remeras",
     variants: garment.variants.map(v => ({

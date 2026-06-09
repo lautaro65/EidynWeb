@@ -31,10 +31,24 @@ export async function updateGarmentAction(templateId: string, formData: FormData
     const name = formData.get("name") as string;
     const sku = formData.get("sku") as string;
     const category = formData.get("category") as string;
+    const brandName = (formData.get("brand") as string | null)?.trim() || null;
+
+    // Find or create GarmentBrand
+    let brandId: string | null = null;
+    if (brandName) {
+      const formatted = brandName.charAt(0).toUpperCase() + brandName.slice(1).toLowerCase();
+      const existing = await db.garmentBrand.findUnique({ where: { name: formatted } });
+      if (existing) {
+        brandId = existing.id;
+      } else {
+        const created = await db.garmentBrand.create({ data: { name: formatted } });
+        brandId = created.id;
+      }
+    }
 
     await db.garmentTemplate.update({
       where: { id: templateId },
-      data: { name, sku, category }
+      data: { name, sku, category, brandId }
     });
 
     // 2. Process Variants
