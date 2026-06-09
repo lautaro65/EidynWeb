@@ -29,6 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Tipos mockeados para esta vista previa visual
 interface MockProduct {
@@ -49,12 +50,16 @@ const MOCK_PRODUCTS: MockProduct[] = [
 
 interface Props {
   baseGarments: { id: string, name: string | null, baseModelUrl: string | null }[];
+  initialProducts: MockProduct[];
 }
 
-export function ProductsClient({ baseGarments }: Props) {
+export function ProductsClient({ baseGarments, initialProducts }: Props) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
-  const [products, setProducts] = useState<MockProduct[]>(MOCK_PRODUCTS);
+  const [products, setProducts] = useState<MockProduct[]>(initialProducts);
+  
+  // Feedback visual state
+  const [syncMessage, setSyncMessage] = useState<{ type: "success" | "error" | "info", title: string, text: string } | null>(null);
 
   // Modals state
   const [mappingModalOpen, setMappingModalOpen] = useState(false);
@@ -62,10 +67,32 @@ export function ProductsClient({ baseGarments }: Props) {
 
   const [widgetModalOpen, setWidgetModalOpen] = useState(false);
 
-  const handleSync = () => {
+  const handleSync = async () => {
     setIsSyncing(true);
-    // Simula sincronización de 2 segundos
-    setTimeout(() => setIsSyncing(false), 2000);
+    setSyncMessage(null);
+    try {
+      // Import dynamic to avoid top-level issues, or standard server action import
+      const { syncCatalogAction } = await import("./actions");
+      const res = await syncCatalogAction();
+      if (res.error) {
+        setSyncMessage({ type: "error", title: "Error de Sincronización", text: res.error });
+      } else {
+        const count = res.count || 0;
+        if (count === 0) {
+          setSyncMessage({ type: "info", title: "Sin novedades", text: "No se encontraron productos nuevos en tus tiendas conectadas para sincronizar." });
+        } else {
+          setSyncMessage({ type: "success", title: "¡Sincronización Exitosa!", text: `Se han importado o actualizado ${count} productos en tu catálogo. La página se actualizará enseguida...` });
+          setTimeout(() => {
+            window.location.reload();
+          }, 3000);
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      setSyncMessage({ type: "error", title: "Ocurrió un problema", text: "Hubo un error de conexión al intentar sincronizar el catálogo." });
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const openMappingModal = (product: MockProduct) => {
@@ -119,6 +146,24 @@ export function ProductsClient({ baseGarments }: Props) {
           {isSyncing ? "Sincronizando..." : "Sincronizar Catálogo"}
         </Button>
       </div>
+
+      {/* Sync Message Alert */}
+      {syncMessage && (
+        <Alert 
+          variant={syncMessage.type === "error" ? "destructive" : "default"}
+          className={`rounded-2xl border ${
+            syncMessage.type === "success" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" :
+            syncMessage.type === "info" ? "bg-blue-500/10 border-blue-500/20 text-blue-500" :
+            "bg-destructive/10 border-destructive/20 text-destructive"
+          }`}
+        >
+          {syncMessage.type === "success" && <CheckCircle2 className="h-5 w-5 !text-emerald-500" />}
+          {syncMessage.type === "info" && <AlertCircle className="h-5 w-5 !text-blue-500" />}
+          {syncMessage.type === "error" && <AlertCircle className="h-5 w-5 !text-destructive" />}
+          <AlertTitle className="font-bold ml-2">{syncMessage.title}</AlertTitle>
+          <AlertDescription className="ml-2 mt-1 opacity-90">{syncMessage.text}</AlertDescription>
+        </Alert>
+      )}
 
       {/* Data Table */}
       <div className="rounded-[2rem] border border-white/10 bg-background/40 backdrop-blur-2xl overflow-hidden shadow-2xl">

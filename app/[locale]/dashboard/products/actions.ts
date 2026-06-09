@@ -1,0 +1,171 @@
+"use server";
+
+import { db } from "@/lib/db";
+import { auth } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
+
+export async function syncCatalogAction() {
+  try {
+    const { userId, sessionClaims } = await auth();
+    if (!userId) return { error: "Unauthorized" };
+
+    let tenantId = (sessionClaims?.metadata as { tenantId?: string })?.tenantId;
+    if (!tenantId) {
+      const mem = await db.membership.findFirst({ where: { user: { clerkId: userId } } });
+      if (!mem) return { error: "No tenant" };
+      tenantId = mem.tenantId;
+    }
+
+    // 1. Get all active integrations
+    const integrations = await db.integration.findMany({
+      where: { tenantId, status: "connected" }
+    });
+
+    if (integrations.length === 0) {
+      return { error: "No hay integraciones activas para sincronizar." };
+    }
+
+    // 2. Iterate and sync based on provider
+    let totalSynced = 0;
+    for (const integration of integrations) {
+      if (integration.provider === "shopify") {
+        const count = await syncShopifyProducts(tenantId, integration);
+        totalSynced += count;
+      } else {
+        console.warn(`Provider ${integration.provider} no tiene lógica de sincronización aún.`);
+      }
+    }
+
+    revalidatePath("/[locale]/dashboard/products", "page");
+    return { success: true, count: totalSynced };
+
+  } catch (error: any) {
+    console.error("Error in syncCatalogAction:", error);
+    return { error: error.message || "Error al sincronizar el catálogo" };
+  }
+}
+
+async function syncShopifyProducts(tenantId: string, integration: any) {
+  if (!integration.storeUrl || !integration.accessToken) {
+    throw new Error("Credenciales de Shopify incompletas.");
+  }
+
+  const cleanUrl = integration.storeUrl.replace(/\/$/, "");
+  const endpoint = `https://${cleanUrl}/admin/api/2024-04/products.json?limit=50`;
+
+  const response = await fetch(endpoint, {
+    method: "GET",
+    headers: {
+      "X-Shopify-Access-Token": integration.accessToken,
+      "Content-Type": "application/json"
+    }
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Shopify sync error:", errorText);
+    throw new Error(`Error de Shopify: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const products = data.products || [];
+
+  // Ensure a Store exists for this tenant
+  let store = await db.store.findFirst({
+    where: { tenantId }
+  });
+
+  if (!store) {
+    store = await db.store.create({
+      data: {
+        tenantId,
+        name: `Tienda ${cleanUrl}`,
+        status: "active"
+      }
+    });
+  }
+
+  let syncedCount = 0;
+
+  // Iterate over products and save to local DB
+  for (const sp of products) {
+    const mainImage = sp.images?.[0]?.src || null;
+    const spSlug = sp.handle || sp.title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+    let product = await db.product.findFirst({
+      where: { slug: spSlug, storeId: store.id }
+    });
+
+    if (product) {
+      product = await db.product.update({
+        where: { id: product.id },
+        data: {
+          name: sp.title,
+          status: sp.status === "active" ? "active" : "draft",
+          description: sp.body_html || null,
+        }
+      });
+    } else {
+      product = await db.product.create({
+        data: {
+          tenantId,
+          storeId: store.id,
+          name: sp.title,
+          slug: spSlug,
+          status: sp.status === "active" ? "active" : "draft",
+          description: sp.body_html || null,
+        }
+      });
+    }
+
+    // Handle Asset (Image)
+    if (mainImage) {
+      const existingAsset = await db.productAsset.findFirst({
+        where: { productId: product.id }
+      });
+      if (!existingAsset) {
+        await db.productAsset.create({
+          data: {
+            productId: product.id,
+            url: mainImage,
+            type: "image"
+          }
+        });
+      } else {
+        await db.productAsset.update({
+          where: { id: existingAsset.id },
+          data: { url: mainImage }
+        });
+      }
+    }
+
+    // Handle Variants
+    for (const v of sp.variants || []) {
+      const variantSku = v.sku || v.id.toString();
+      await db.productVariant.upsert({
+        where: { sku: variantSku },
+        create: {
+          productId: product.id,
+          sku: variantSku,
+          price: v.price ? parseFloat(v.price) : 0,
+          barcode: v.barcode || null,
+          status: "active"
+        },
+        update: {
+          price: v.price ? parseFloat(v.price) : 0,
+          barcode: v.barcode || null,
+        }
+      });
+    }
+    
+    syncedCount++;
+  }
+
+  // Update integration sync timestamp
+  await db.integration.update({
+    where: { id: integration.id },
+    data: { lastSyncAt: new Date() }
+  });
+  
+  return syncedCount;
+}

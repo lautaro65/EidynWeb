@@ -78,6 +78,27 @@ export default async function ProductsPage({ params }: Props) {
     }
   });
 
+  // Fetch real synchronized products
+  const dbProducts = await db.product.findMany({
+    where: { tenantId },
+    include: {
+      assets: true,
+      garmentListings: true,
+      category: true,
+    },
+    orderBy: { createdAt: "desc" }
+  });
+
+  const formattedProducts = dbProducts.map(p => ({
+    id: p.id,
+    sku: p.slug || p.id.split("-")[0], // Fallback sku for ui
+    name: p.name || "Sin Nombre",
+    category: p.category?.name || "General",
+    image: p.assets[0]?.url || "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&auto=format&fit=crop&q=60",
+    status: p.garmentListings.length > 0 ? "mapped" as const : "unmapped" as const,
+    mappedGarmentId: p.garmentListings[0]?.garmentId
+  }));
+
   return (
     <div className="flex-1 space-y-8 p-8">
       <div>
@@ -89,7 +110,7 @@ export default async function ProductsPage({ params }: Props) {
         </p>
       </div>
 
-      <ProductsClient baseGarments={baseGarments} />
+      <ProductsClient baseGarments={baseGarments} initialProducts={formattedProducts} />
     </div>
   );
 }
