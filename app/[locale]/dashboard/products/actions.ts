@@ -344,3 +344,65 @@ export async function unmapProductFromGarmentAction(productId: string) {
     return { error: "Error al desvincular el producto" };
   }
 }
+
+export async function getGarmentPreviewAction(garmentId: string) {
+  try {
+    const { userId, sessionClaims } = await auth();
+    if (!userId) return { error: "Unauthorized" };
+
+    let tenantId = (sessionClaims?.metadata as { tenantId?: string })?.tenantId;
+    if (!tenantId) {
+      const mem = await db.membership.findFirst({ where: { user: { clerkId: userId } } });
+      if (!mem) return { error: "No tenant" };
+      tenantId = mem.tenantId;
+    }
+
+    const garment = await db.garmentTemplate.findUnique({
+      where: { id: garmentId },
+      include: {
+        brand: true,
+        variants: true,
+        sizes: true
+      }
+    });
+
+    if (!garment) return { error: "Modelo 3D no encontrado" };
+
+    const formattedData = {
+      id: garment.id,
+      name: garment.name || "",
+      sku: garment.sku,
+      category: garment.category || "",
+      isPublic: garment.isPublic,
+      status: garment.status,
+      isOwner: garment.ownerId === tenantId,
+      previewUrl: garment.sourceImageUrl,
+      baseModelUrl: garment.baseModelUrl,
+      variantsCount: garment.variants.length,
+      brand: garment.brand?.name || null,
+      isLiked: false,
+      variants: garment.variants.map(v => ({
+        id: v.id,
+        name: v.name,
+        type: v.type,
+        colorHex: v.colorHex,
+        previewImageUrl: v.previewImageUrl,
+        textureUrl: v.textureUrl,
+        backTextureUrl: v.backTextureUrl,
+        status: v.status
+      })),
+      sizes: garment.sizes.map(s => ({
+        id: s.id,
+        label: s.label,
+        scaleX: s.scaleX,
+        scaleY: s.scaleY,
+        scaleZ: s.scaleZ
+      }))
+    };
+
+    return { success: true, data: formattedData };
+  } catch (error: any) {
+    console.error("Error fetching garment preview:", error);
+    return { error: "Error al cargar la previsualización" };
+  }
+}

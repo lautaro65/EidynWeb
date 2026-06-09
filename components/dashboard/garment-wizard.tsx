@@ -798,27 +798,34 @@ export function GarmentWizard() {
             </div>
 
             <div className="space-y-8 max-w-4xl mx-auto">
-              {availableSizeGuides.length > 0 && (
                 <div className="bg-primary/5 border border-primary/20 p-6 rounded-2xl shadow-sm mb-6">
                   <Label className="text-primary font-bold mb-2 block">Autocompletar con Guía de Talles</Label>
-                  <Select value={selectedGuideId} onValueChange={handleApplySizeGuide}>
-                    <SelectTrigger className="w-full h-12 bg-background border border-primary/30 focus:ring-2 focus:ring-primary/50 transition-all rounded-xl shadow-inner">
-                      <SelectValue placeholder="Selecciona una guía guardada...">
-                        {selectedGuideId === "none" ? "Ninguna (Limpiar)" : (availableSizeGuides.find(g => g.id === selectedGuideId)?.name ? `${availableSizeGuides.find(g => g.id === selectedGuideId)?.name} (${availableSizeGuides.find(g => g.id === selectedGuideId)?.category})` : "Selecciona una guía guardada...")}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className="bg-background/95 backdrop-blur-3xl border border-border/60 rounded-xl shadow-2xl p-1 max-h-[250px] overflow-y-auto">
-                      <SelectItem value="none" className="py-2.5 px-4 font-semibold text-muted-foreground">Ninguna (Limpiar)</SelectItem>
-                      {availableSizeGuides.map(g => (
-                        <SelectItem key={g.id} value={g.id} className="py-2.5 px-4 font-bold">{g.name} ({g.category})</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Esto llenará automáticamente los talles y medidas. Puedes modificarlos luego.
-                  </p>
+                  
+                  {availableSizeGuides.length > 0 ? (
+                    <>
+                      <Select value={selectedGuideId} onValueChange={handleApplySizeGuide}>
+                        <SelectTrigger className="w-full h-12 bg-background border border-primary/30 focus:ring-2 focus:ring-primary/50 transition-all rounded-xl shadow-inner">
+                          <SelectValue placeholder="Selecciona una guía guardada...">
+                            {selectedGuideId === "none" ? "Ninguna (Limpiar)" : (availableSizeGuides.find(g => g.id === selectedGuideId)?.name ? `${availableSizeGuides.find(g => g.id === selectedGuideId)?.name} (${availableSizeGuides.find(g => g.id === selectedGuideId)?.category})` : "Selecciona una guía guardada...")}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent className="bg-background/95 backdrop-blur-3xl border border-border/60 rounded-xl shadow-2xl p-1 max-h-[250px] overflow-y-auto">
+                          <SelectItem value="none" className="py-2.5 px-4 font-semibold text-muted-foreground">Ninguna (Limpiar)</SelectItem>
+                          {availableSizeGuides.map(g => (
+                            <SelectItem key={g.id} value={g.id} className="py-2.5 px-4 font-bold">{g.name} ({g.category})</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Esto llenará automáticamente los talles y medidas. Puedes modificarlos luego.
+                      </p>
+                    </>
+                  ) : (
+                    <div className="text-sm text-muted-foreground bg-background/50 border border-white/10 rounded-xl p-4 text-center">
+                      No tenés guías de talles guardadas en tu cuenta. Podés crearlas desde el menú principal "Guías de Talle" para acelerar este paso en el futuro.
+                    </div>
+                  )}
                 </div>
-              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-background/50 border border-border/50 p-6 rounded-2xl shadow-sm">
                 <div className="space-y-3">

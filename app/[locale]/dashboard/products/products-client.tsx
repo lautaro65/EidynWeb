@@ -23,7 +23,10 @@ import {
   Users,
   User,
   Heart,
-  Loader2
+  Loader2,
+  ChevronUp,
+  ChevronDown,
+  X
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -34,6 +37,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { GarmentViewer } from "@/components/3d/GarmentViewer";
+import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Tipos mockeados para esta vista previa visual
 interface MockProduct {
@@ -67,7 +82,18 @@ export function ProductsClient({ initialProducts }: Props) {
   // Modals state
   const [mappingModalOpen, setMappingModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<MockProduct | null>(null);
-  const [widgetModalOpen, setWidgetModalOpen] = useState(false);
+
+  // 3D Preview Modal State
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [previewGarmentData, setPreviewGarmentData] = useState<any>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+  const [selectedSizeId, setSelectedSizeId] = useState<string | null>(null);
+  const [isVariationsMenuOpen, setIsVariationsMenuOpen] = useState(true);
+
+  // Unmap Modal State
+  const [unmapModalOpen, setUnmapModalOpen] = useState(false);
+  const [productToUnmap, setProductToUnmap] = useState<MockProduct | null>(null);
 
   // Mapping Explorer State
   const [mappingTab, setMappingTab] = useState<"own" | "community">("own");
@@ -155,9 +181,30 @@ export function ProductsClient({ initialProducts }: Props) {
     setMappingModalOpen(true);
   };
 
-  const openWidgetModal = (product: MockProduct) => {
-    setSelectedProduct(product);
-    setWidgetModalOpen(true);
+  const handleOpenPreview = async (garmentId?: string) => {
+    if (!garmentId) return;
+    setIsPreviewLoading(true);
+    setPreviewGarmentData(null);
+    setPreviewModalOpen(true); // Open modal early showing loader
+    
+    try {
+      const { getGarmentPreviewAction } = await import("./actions");
+      const res = await getGarmentPreviewAction(garmentId);
+      if (res.success && res.data) {
+        setPreviewGarmentData(res.data);
+        setSelectedVariantId(res.data.variants?.[0]?.id || null);
+        setSelectedSizeId(res.data.sizes?.[0]?.id || null);
+      } else {
+        setPreviewModalOpen(false);
+        setSyncMessage({ type: "error", title: "Error", text: res.error || "No se pudo cargar el modelo 3D." });
+      }
+    } catch (error) {
+      console.error(error);
+      setPreviewModalOpen(false);
+      setSyncMessage({ type: "error", title: "Error", text: "Problema de conexión al cargar la vista previa." });
+    } finally {
+      setIsPreviewLoading(false);
+    }
   };
 
   const handleMapGarment = async (garmentId: string) => {
@@ -208,6 +255,11 @@ export function ProductsClient({ initialProducts }: Props) {
       console.error(e);
       setSyncMessage({ type: "error", title: "Error de red", text: "Hubo un problema al desvincular el producto." });
     }
+  };
+
+  const confirmUnmap = (product: MockProduct) => {
+    setProductToUnmap(product);
+    setUnmapModalOpen(true);
   };
 
   const filteredProducts = products.filter(p => 
@@ -318,24 +370,16 @@ export function ProductsClient({ initialProducts }: Props) {
                         variant="secondary" 
                         className="rounded-xl hover:bg-primary/20 hover:text-primary transition-colors"
                         title="Previsualizar Paramétricamente"
+                        onClick={() => handleOpenPreview(product.mappedGarmentId)}
                       >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        size="icon-sm" 
-                        variant="outline" 
-                        className="rounded-xl border-white/10 hover:bg-white/10 transition-colors"
-                        title="Obtener Widget"
-                        onClick={() => openWidgetModal(product)}
-                      >
-                        <Code2 className="w-4 h-4" />
+                        {isPreviewLoading && previewModalOpen ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                       </Button>
                       <Button 
                         size="icon-sm" 
                         variant="ghost" 
                         className="rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                         title="Desvincular"
-                        onClick={() => handleUnmap(product.id)}
+                        onClick={() => confirmUnmap(product)}
                       >
                         <Link2 className="w-4 h-4" />
                       </Button>
@@ -469,45 +513,181 @@ export function ProductsClient({ initialProducts }: Props) {
         </DialogContent>
       </Dialog>
 
-      {/* MODAL: FACTORY DE WIDGETS */}
-      <Dialog open={widgetModalOpen} onOpenChange={setWidgetModalOpen}>
-        <DialogContent className="sm:max-w-lg bg-background/95 backdrop-blur-3xl border-white/10 rounded-[2rem] shadow-2xl p-8">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-              <Code2 className="w-6 h-6 text-primary" />
-              Factory de Widgets
-            </DialogTitle>
-            <DialogDescription className="text-base mt-2">
-              Copiá y pegá este fragmento en la página de tu producto en Shopify/Custom para inyectar el probador virtual.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="mt-6 bg-black/50 border border-white/10 rounded-xl p-4 font-mono text-sm text-green-400 overflow-x-auto relative group">
-            <pre>
-{`<!-- Eidyn 3D Widget para ${selectedProduct?.sku} -->
-<div id="eidyn-viewer-container" data-sku="${selectedProduct?.sku}"></div>
-<script src="https://eidyn.vercel.app/sdk/viewer.js" async></script>`}
-            </pre>
-            <Button 
-              size="sm" 
-              variant="secondary" 
-              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"
-              onClick={() => {
-                navigator.clipboard.writeText(`<div id="eidyn-viewer-container" data-sku="${selectedProduct?.sku}"></div>\n<script src="https://eidyn.vercel.app/sdk/viewer.js" async></script>`);
-                alert("Copiado al portapapeles!");
-              }}
-            >
-              Copiar
+      {/* MODAL: PREVISUALIZACION PARAMETRICA */}
+      <Dialog open={previewModalOpen} onOpenChange={setPreviewModalOpen}>
+        <DialogContent className="max-w-[95vw] w-[1400px] h-[90vh] bg-background border-border/50 rounded-[2rem] shadow-2xl p-0 overflow-hidden flex flex-col">
+          <div className="flex justify-between items-center p-4 border-b border-white/5 bg-background/80 backdrop-blur-xl shrink-0 absolute top-0 left-0 w-full z-10">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Eye className="w-5 h-5 text-primary" />
+              Previsualización Paramétrica 3D
+            </h2>
+            <Button variant="ghost" size="icon" onClick={() => setPreviewModalOpen(false)} className="rounded-xl">
+              <X className="w-5 h-5" />
             </Button>
           </div>
+          
+          <div className="flex-1 relative w-full h-full bg-black/20">
+            {isPreviewLoading || !previewGarmentData ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center space-y-4">
+                <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                <p className="text-muted-foreground animate-pulse">Cargando modelo 3D y texturas...</p>
+              </div>
+            ) : (
+              <>
+                <GarmentViewer 
+                  url={previewGarmentData.baseModelUrl}
+                  colorHex={previewGarmentData.variants?.find((v: any) => v.id === selectedVariantId)?.colorHex}
+                  textureUrl={previewGarmentData.variants?.find((v: any) => v.id === selectedVariantId)?.textureUrl}
+                  backTextureUrl={previewGarmentData.variants?.find((v: any) => v.id === selectedVariantId)?.backTextureUrl}
+                  scale={[
+                    previewGarmentData.sizes?.find((s: any) => s.id === selectedSizeId)?.scaleX || 1,
+                    previewGarmentData.sizes?.find((s: any) => s.id === selectedSizeId)?.scaleY || 1,
+                    previewGarmentData.sizes?.find((s: any) => s.id === selectedSizeId)?.scaleZ || 1
+                  ]}
+                />
+                
+                {/* Selector Overlay */}
+                <div 
+                  className={cn(
+                    "absolute bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[500px] z-10 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] shadow-2xl rounded-3xl",
+                    isVariationsMenuOpen ? "translate-y-0 opacity-100 scale-100" : "translate-y-[120%] opacity-0 scale-95 pointer-events-none"
+                  )}
+                >
+                  <div className="bg-background/80 backdrop-blur-3xl border border-white/10 rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+                    <div className="p-5 flex items-center justify-between border-b border-white/5 bg-white/5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30 shadow-[0_0_15px_rgba(var(--primary),0.3)]">
+                          <Eye className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-base text-foreground leading-tight">Test Paramétrico</h3>
+                          <p className="text-xs text-muted-foreground font-medium">Validá combinaciones</p>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="rounded-full hover:bg-white/10 h-8 w-8 transition-colors"
+                        onClick={() => setIsVariationsMenuOpen(false)}
+                      >
+                        <ChevronDown className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />
+                      </Button>
+                    </div>
 
-          <div className="mt-6">
-            <Button onClick={() => setWidgetModalOpen(false)} className="w-full h-12 rounded-xl bg-foreground text-background font-bold hover:scale-[1.02] transition-transform">
-              Entendido
-            </Button>
+                    <div className="p-6 space-y-6">
+                      {/* Variants Section */}
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Variante</span>
+                          <span className="text-xs font-medium text-foreground bg-white/5 px-2 py-1 rounded-md border border-white/5">
+                            {previewGarmentData.variants?.find((v: any) => v.id === selectedVariantId)?.name || 'Ninguna'}
+                          </span>
+                        </div>
+                        <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar snap-x">
+                          {previewGarmentData.variants?.map((v: any) => (
+                            <button
+                              key={v.id}
+                              className={cn(
+                                "relative w-14 h-14 rounded-2xl flex-shrink-0 transition-all duration-300 snap-center overflow-hidden group outline-none",
+                                selectedVariantId === v.id 
+                                  ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 shadow-[0_0_20px_rgba(var(--primary),0.4)]" 
+                                  : "hover:scale-105 border border-white/10 opacity-70 hover:opacity-100"
+                              )}
+                              onClick={() => setSelectedVariantId(v.id)}
+                            >
+                              {v.type === 'solid' ? (
+                                <div className="absolute inset-0 transition-transform group-hover:scale-110" style={{ backgroundColor: v.colorHex || '#ffffff' }} />
+                              ) : (
+                                <img src={v.previewImageUrl || v.textureUrl} alt={v.name} className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-110" />
+                              )}
+                              {selectedVariantId === v.id && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+                                  <CheckCircle2 className="w-5 h-5 text-white drop-shadow-md" />
+                                </div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+                      {/* Sizes Section */}
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Talle</span>
+                          <span className="text-xs font-medium text-foreground bg-white/5 px-2 py-1 rounded-md border border-white/5">
+                            {previewGarmentData.sizes?.find((s: any) => s.id === selectedSizeId)?.label || 'Ninguno'}
+                          </span>
+                        </div>
+                        <div className="flex gap-2 flex-wrap">
+                          {previewGarmentData.sizes?.map((s: any) => (
+                            <button
+                              key={s.id}
+                              className={cn(
+                                "h-10 px-4 rounded-xl text-sm font-bold transition-all duration-300 outline-none",
+                                selectedSizeId === s.id 
+                                  ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary),0.4)] scale-105" 
+                                  : "bg-white/5 text-muted-foreground border border-white/10 hover:bg-white/10 hover:text-foreground"
+                              )}
+                              onClick={() => setSelectedSizeId(s.id)}
+                            >
+                              {s.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Show Menu Button */}
+                {!isVariationsMenuOpen && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute bottom-6 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full bg-background/80 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:bg-white/10 hover:scale-110 transition-all duration-300 group z-10"
+                    onClick={() => setIsVariationsMenuOpen(true)}
+                  >
+                    <ChevronUp className="w-6 h-6 text-foreground group-hover:-translate-y-1 transition-transform" />
+                  </Button>
+                )}
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* MODAL: CONFIRMACION DE DESVINCULACION */}
+      <AlertDialog open={unmapModalOpen} onOpenChange={setUnmapModalOpen}>
+        <AlertDialogContent className="bg-background/95 backdrop-blur-3xl border-white/10 rounded-[2rem] shadow-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold flex items-center gap-2 text-foreground">
+              <Link2 className="w-5 h-5 text-destructive" />
+              ¿Estás seguro que querés desvincular?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground mt-2">
+              Se eliminará el modelo 3D asignado para el producto <span className="font-bold text-foreground">{productToUnmap?.name}</span>. Los clientes en la tienda ya no podrán usar el probador virtual para este artículo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-6 gap-3 sm:gap-0">
+            <AlertDialogCancel className="rounded-xl h-12 bg-white/5 border-white/10 hover:bg-white/10 transition-colors">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              className="rounded-xl h-12 bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+              onClick={() => {
+                if (productToUnmap) {
+                  handleUnmap(productToUnmap.id);
+                }
+              }}
+            >
+              Desvincular Prenda
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );
