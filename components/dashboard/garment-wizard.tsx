@@ -822,7 +822,7 @@ export function GarmentWizard() {
                     </>
                   ) : (
                     <div className="text-sm text-muted-foreground bg-background/50 border border-white/10 rounded-xl p-4 text-center">
-                      No tenés guías de talles guardadas en tu cuenta. Podés crearlas desde el menú principal "Guías de Talle" para acelerar este paso en el futuro.
+                      No tenés guías de talles guardadas en tu cuenta. Podés crearlas desde el menú principal &quot;Guías de Talle&quot; para acelerar este paso en el futuro.
                     </div>
                   )}
                 </div>

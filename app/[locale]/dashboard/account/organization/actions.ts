@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
@@ -41,15 +42,23 @@ export async function getOrganizationConfigAction() {
         tenantSlug: tenant.slug || "",
         logoUrl: tenant.logoUrl || "",
         brandColor: tenant.brandColor || "#ffffff",
+        plan: tenant.plan || "free",
+        widgetConfig: (tenant.widgetConfig as Record<string, unknown>) || {
+          theme: "system",
+          watermark: true,
+          allowZoom: true,
+          sessionTtlMinutes: 30,
+          consentText: "Al probar esta prenda con nuestro probador virtual, autorizas el procesamiento temporal de tus datos para generar el modelo 3D. Tus datos están protegidos y expiran automáticamente."
+        },
         storeName: store?.name || "",
         currency: store?.currency || "USD",
         timezone: store?.timezone || "UTC",
         country: store?.country || "US",
       }
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching org config:", error);
-    return { error: error.message || "Failed to fetch organization config" };
+    return { error: (error as Error).message || "Failed to fetch organization config" };
   }
 }
 
@@ -58,6 +67,7 @@ export async function updateOrganizationConfigAction(data: {
   tenantSlug: string;
   logoUrl: string;
   brandColor: string;
+  widgetConfig: Record<string, unknown>;
   currency: string;
   timezone: string;
   country: string;
@@ -66,13 +76,14 @@ export async function updateOrganizationConfigAction(data: {
     const tenantId = await getTenantId();
 
     // Update Tenant
-    const updatedTenant = await db.tenant.update({
+    await db.tenant.update({
       where: { id: tenantId },
       data: {
         name: data.tenantName,
         slug: data.tenantSlug,
         logoUrl: data.logoUrl,
         brandColor: data.brandColor,
+        widgetConfig: data.widgetConfig as Prisma.InputJsonObject,
       }
     });
 
@@ -106,8 +117,8 @@ export async function updateOrganizationConfigAction(data: {
 
     revalidatePath("/[locale]/dashboard/account/organization", "page");
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error updating org config:", error);
-    return { error: error.message || "Failed to update organization config" };
+    return { error: (error as Error).message || "Failed to update organization config" };
   }
 }

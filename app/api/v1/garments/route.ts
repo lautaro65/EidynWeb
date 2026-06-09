@@ -46,7 +46,7 @@ export async function GET(request: Request) {
         baseMeshUrl: garment.baseModelUrl,
       },
       status: garment.status,
-      variants: garment.variants.map((variant: any) => ({
+      variants: garment.variants.map((variant: { id: string; name: string | null; colorHex: string | null; textureUrl: string | null; backTextureUrl: string | null; sizes: unknown }) => ({
         id: variant.id,
         name: variant.name,
         colorHex: variant.colorHex,

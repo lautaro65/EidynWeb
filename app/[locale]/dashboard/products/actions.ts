@@ -39,13 +39,13 @@ export async function syncCatalogAction() {
     revalidatePath("/[locale]/dashboard/products", "page");
     return { success: true, count: totalSynced };
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error in syncCatalogAction:", error);
-    return { error: error.message || "Error al sincronizar el catálogo" };
+    return { error: (error as Error).message || "Error al sincronizar el catálogo" };
   }
 }
 
-async function syncShopifyProducts(tenantId: string, integration: any) {
+async function syncShopifyProducts(tenantId: string, integration: { storeUrl: string | null, accessToken: string | null, id: string }) {
   if (!integration.storeUrl || !integration.accessToken) {
     throw new Error("Credenciales de Shopify incompletas.");
   }
@@ -191,7 +191,7 @@ export async function getGarmentsForMappingAction(params: {
     const { tab, search, page, limit, likedOnly } = params;
     const skip = (page - 1) * limit;
 
-    const whereClause: any = {
+    const whereClause: Record<string, unknown> = {
       status: "complete"
     };
 
@@ -243,7 +243,7 @@ export async function getGarmentsForMappingAction(params: {
       total,
       hasMore: skip + data.length < total
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching garments for mapping:", error);
     return { error: "Failed to fetch garments" };
   }
@@ -309,7 +309,7 @@ export async function mapProductToGarmentAction(productId: string, garmentId: st
 
     revalidatePath("/[locale]/dashboard/products", "page");
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error mapping product:", error);
     return { error: "Error al mapear el producto" };
   }
@@ -339,7 +339,7 @@ export async function unmapProductFromGarmentAction(productId: string) {
 
     revalidatePath("/[locale]/dashboard/products", "page");
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error unmapping product:", error);
     return { error: "Error al desvincular el producto" };
   }
@@ -401,7 +401,7 @@ export async function getGarmentPreviewAction(garmentId: string) {
     };
 
     return { success: true, data: formattedData };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching garment preview:", error);
     return { error: "Error al cargar la previsualización" };
   }

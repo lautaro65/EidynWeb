@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
-import { Plug, Key, Webhook as WebhookIcon, ShoppingBag, ShieldCheck, Activity } from "lucide-react";
+import { Plug } from "lucide-react";
 import { ConnectionsClient } from "./connections-client";
 
 import { getTranslations } from "next-intl/server";

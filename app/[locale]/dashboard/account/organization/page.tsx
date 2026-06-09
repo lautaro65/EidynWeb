@@ -1,5 +1,5 @@
 import { getOrganizationConfigAction } from "./actions";
-import { OrganizationClient } from "./organization-client";
+import { OrganizationClient, ConfigData } from "./organization-client";
 import { getTranslations } from "next-intl/server";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -24,7 +24,7 @@ export default async function OrganizationPage() {
 
   return (
     <div className="max-w-5xl mx-auto py-8 px-6 lg:px-8 min-h-[calc(100vh-6rem)]">
-      <OrganizationClient initialData={res.data} />
+      <OrganizationClient initialData={res.data as unknown as ConfigData} />
     </div>
   );
 }

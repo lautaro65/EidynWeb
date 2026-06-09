@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { 
   Table, 
   TableBody, 
@@ -15,7 +16,6 @@ import {
   RefreshCw, 
   Link2, 
   Eye, 
-  Code2, 
   Box, 
   Search,
   CheckCircle2,
@@ -61,11 +61,7 @@ interface MockProduct {
   mappedGarmentId?: string;
 }
 
-const MOCK_PRODUCTS: MockProduct[] = [
-  { id: "p1", sku: "TSH-BLK-01", name: "Remera Básica Negra", category: "Remeras", image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&auto=format&fit=crop&q=60", status: "unmapped" },
-  { id: "p2", sku: "HOOD-GRY-01", name: "Buzo Hoodie Gris", category: "Buzos", image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500&auto=format&fit=crop&q=60", status: "mapped", mappedGarmentId: "g1" },
-  { id: "p3", sku: "PANT-DNM-01", name: "Pantalón Denim Clásico", category: "Pantalones", image: "https://images.unsplash.com/photo-1542272604-7804473e6580?w=500&auto=format&fit=crop&q=60", status: "unmapped" },
-];
+
 
 interface Props {
   initialProducts: MockProduct[];
@@ -85,7 +81,7 @@ export function ProductsClient({ initialProducts }: Props) {
 
   // 3D Preview Modal State
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
-  const [previewGarmentData, setPreviewGarmentData] = useState<any>(null);
+  const [previewGarmentData, setPreviewGarmentData] = useState<Record<string, unknown> | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [selectedSizeId, setSelectedSizeId] = useState<string | null>(null);
@@ -100,7 +96,7 @@ export function ProductsClient({ initialProducts }: Props) {
   const [mappingSearch, setMappingSearch] = useState("");
   const [mappingPage, setMappingPage] = useState(1);
   const [mappingLikedOnly, setMappingLikedOnly] = useState(false);
-  const [mappingGarments, setMappingGarments] = useState<any[]>([]);
+  const [mappingGarments, setMappingGarments] = useState<{ id: string, name: string | null, sku: string, baseModelUrl: string | null }[]>([]);
   const [mappingLoading, setMappingLoading] = useState(false);
   const [mappingHasMore, setMappingHasMore] = useState(false);
 
@@ -145,6 +141,7 @@ export function ProductsClient({ initialProducts }: Props) {
 
   // Reset page when filters change
   useEffect(() => {
+    // eslint-disable-next-line
     setMappingPage(1);
   }, [mappingTab, mappingSearch, mappingLikedOnly]);
 
@@ -326,8 +323,8 @@ export function ProductsClient({ initialProducts }: Props) {
             {filteredProducts.map((product) => (
               <TableRow key={product.id} className="border-white/5 hover:bg-white/5 transition-colors">
                 <TableCell className="p-4">
-                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted border border-white/10">
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted border border-white/10 relative">
+                    <Image src={product.image} alt={product.name} fill className="object-cover" unoptimized />
                   </div>
                 </TableCell>
                 <TableCell className="font-medium">
@@ -469,7 +466,7 @@ export function ProductsClient({ initialProducts }: Props) {
                   {mappingGarments.map((garment) => (
                     <div 
                       key={garment.id}
-                      onClick={() => handleMapGarment(garment.id)}
+                      onClick={() => handleMapGarment(garment.id as string)}
                       className="group cursor-pointer rounded-2xl border border-white/10 bg-background/50 p-4 hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center gap-4 shadow-sm"
                     >
                       <div className="w-16 h-16 rounded-xl bg-muted border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform overflow-hidden relative">
@@ -535,14 +532,14 @@ export function ProductsClient({ initialProducts }: Props) {
             ) : (
               <>
                 <GarmentViewer 
-                  url={previewGarmentData.baseModelUrl}
-                  colorHex={previewGarmentData.variants?.find((v: any) => v.id === selectedVariantId)?.colorHex}
-                  textureUrl={previewGarmentData.variants?.find((v: any) => v.id === selectedVariantId)?.textureUrl}
-                  backTextureUrl={previewGarmentData.variants?.find((v: any) => v.id === selectedVariantId)?.backTextureUrl}
+                  url={previewGarmentData.baseModelUrl as string}
+                  colorHex={(previewGarmentData.variants as {id: string, colorHex: string, textureUrl: string, backTextureUrl: string}[])?.find(v => v.id === selectedVariantId)?.colorHex}
+                  textureUrl={(previewGarmentData.variants as {id: string, colorHex: string, textureUrl: string, backTextureUrl: string}[])?.find(v => v.id === selectedVariantId)?.textureUrl}
+                  backTextureUrl={(previewGarmentData.variants as {id: string, colorHex: string, textureUrl: string, backTextureUrl: string}[])?.find(v => v.id === selectedVariantId)?.backTextureUrl}
                   scale={[
-                    previewGarmentData.sizes?.find((s: any) => s.id === selectedSizeId)?.scaleX || 1,
-                    previewGarmentData.sizes?.find((s: any) => s.id === selectedSizeId)?.scaleY || 1,
-                    previewGarmentData.sizes?.find((s: any) => s.id === selectedSizeId)?.scaleZ || 1
+                    (previewGarmentData.sizes as {id: string, scaleX: number, scaleY: number, scaleZ: number}[])?.find(s => s.id === selectedSizeId)?.scaleX || 1,
+                    (previewGarmentData.sizes as {id: string, scaleX: number, scaleY: number, scaleZ: number}[])?.find(s => s.id === selectedSizeId)?.scaleY || 1,
+                    (previewGarmentData.sizes as {id: string, scaleX: number, scaleY: number, scaleZ: number}[])?.find(s => s.id === selectedSizeId)?.scaleZ || 1
                   ]}
                 />
                 
@@ -580,11 +577,11 @@ export function ProductsClient({ initialProducts }: Props) {
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Variante</span>
                           <span className="text-xs font-medium text-foreground bg-white/5 px-2 py-1 rounded-md border border-white/5">
-                            {previewGarmentData.variants?.find((v: any) => v.id === selectedVariantId)?.name || 'Ninguna'}
+                            {(previewGarmentData.variants as {id: string, name: string}[])?.find(v => v.id === selectedVariantId)?.name || 'Ninguna'}
                           </span>
                         </div>
                         <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar snap-x">
-                          {previewGarmentData.variants?.map((v: any) => (
+                          {(previewGarmentData.variants as {id: string, name: string, type: string, colorHex?: string, previewImageUrl?: string, textureUrl?: string}[])?.map(v => (
                             <button
                               key={v.id}
                               className={cn(
@@ -598,7 +595,7 @@ export function ProductsClient({ initialProducts }: Props) {
                               {v.type === 'solid' ? (
                                 <div className="absolute inset-0 transition-transform group-hover:scale-110" style={{ backgroundColor: v.colorHex || '#ffffff' }} />
                               ) : (
-                                <img src={v.previewImageUrl || v.textureUrl} alt={v.name} className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-110" />
+                                  <Image src={(v.previewImageUrl || v.textureUrl) as string} alt={v.name} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
                               )}
                               {selectedVariantId === v.id && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
@@ -618,11 +615,11 @@ export function ProductsClient({ initialProducts }: Props) {
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Talle</span>
                           <span className="text-xs font-medium text-foreground bg-white/5 px-2 py-1 rounded-md border border-white/5">
-                            {previewGarmentData.sizes?.find((s: any) => s.id === selectedSizeId)?.label || 'Ninguno'}
+                            {(previewGarmentData.sizes as {id: string, label: string}[])?.find(s => s.id === selectedSizeId)?.label || 'Ninguno'}
                           </span>
                         </div>
                         <div className="flex gap-2 flex-wrap">
-                          {previewGarmentData.sizes?.map((s: any) => (
+                          {(previewGarmentData.sizes as {id: string, label: string}[])?.map(s => (
                             <button
                               key={s.id}
                               className={cn(

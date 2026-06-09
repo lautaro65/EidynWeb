@@ -7,8 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ShoppingBag, Box, Key, Trash2, CheckCircle2, XCircle, Plus, Copy, AlertCircle, Loader2, ArrowRight } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ShoppingBag, Box, Key, Trash2, CheckCircle2, XCircle, Plus, Copy, AlertCircle, Loader2 } from "lucide-react";
 import { createIntegrationAction, deleteIntegrationAction, createApiKeyAction, revokeApiKeyAction } from "./actions";
 
 type Props = {
@@ -262,7 +262,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
               Setup de {PROVIDERS.find(p => p.id === selectedProvider)?.name}
             </DialogTitle>
             <DialogDescription className="text-base mt-2">
-              Ingresa los detalles de tu tienda para autorizar el "handshake".
+              Ingresa los detalles de tu tienda para autorizar el &quot;handshake&quot;.
             </DialogDescription>
           </DialogHeader>
 

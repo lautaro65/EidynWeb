@@ -109,7 +109,7 @@ export async function createApiKeyAction(formData: FormData) {
     // For this MVP, we generate a UUID. We will return it so the user can copy it ONCE.
     const secretKey = `edyn_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`;
 
-    const newKey = await db.apiKey.create({
+    await db.apiKey.create({
       data: {
         tenantId,
         name,
