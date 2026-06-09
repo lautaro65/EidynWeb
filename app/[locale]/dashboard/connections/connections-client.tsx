@@ -131,12 +131,12 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
   return (
     <div className="w-full">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-8 w-full max-w-md grid grid-cols-2 bg-background/50 border border-white/10 p-2 rounded-2xl h-16">
-          <TabsTrigger value="native" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-sm font-semibold h-full transition-all">
+        <TabsList className="mb-8 w-full max-w-md grid grid-cols-2 bg-background/50 border border-white/10 p-1 rounded-2xl h-14">
+          <TabsTrigger value="native" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-sm font-semibold py-2.5 transition-all">
             <ShoppingBag className="w-4 h-4 mr-2" />
             Integraciones Nativas
           </TabsTrigger>
-          <TabsTrigger value="api" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-sm font-semibold h-full transition-all">
+          <TabsTrigger value="api" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-sm font-semibold py-2.5 transition-all">
             <Key className="w-4 h-4 mr-2" />
             Gestión de Acceso (API)
           </TabsTrigger>
@@ -298,11 +298,11 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
               <p>Esta conexión habilitará la sincronización bidireccional del catálogo 3D de Eidyn con tu tienda en tiempo real.</p>
             </div>
 
-            <DialogFooter className="mt-8">
+            <div className="mt-8">
               <Button type="submit" disabled={isConnecting} className="w-full h-12 rounded-xl bg-foreground text-background font-bold hover:scale-[1.02] transition-transform shadow-lg">
                 {isConnecting ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Conectando...</> : <><CheckCircle2 className="w-5 h-5 mr-2" /> Autorizar Conexión</>}
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         </DialogContent>
       </Dialog>
@@ -335,11 +335,11 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
                 />
               </div>
 
-              <DialogFooter className="mt-8">
+              <div className="mt-8">
                 <Button type="submit" disabled={isGeneratingKey} className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold hover:scale-[1.02] transition-transform shadow-[0_0_20px_-5px_var(--tw-shadow-color)] shadow-primary/30">
                   {isGeneratingKey ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Generando...</> : <><Key className="w-5 h-5 mr-2" /> Generar Clave</>}
                 </Button>
-              </DialogFooter>
+              </div>
             </form>
           ) : (
             <div className="space-y-6 mt-4 animate-in fade-in slide-in-from-bottom-4">
@@ -388,12 +388,12 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
             </DialogDescription>
           </DialogHeader>
 
-          <DialogFooter className="mt-8 flex gap-3 sm:justify-between w-full">
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:justify-between w-full">
             <Button 
               type="button" 
               variant="outline" 
               onClick={() => setIsDisconnectModalOpen(false)} 
-              className="flex-1 h-12 rounded-xl"
+              className="flex-1 h-12 rounded-xl border-white/10 hover:bg-white/5"
             >
               Cancelar
             </Button>
@@ -406,7 +406,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
             >
               {isDisconnecting ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Desconectando...</> : <><Trash2 className="w-5 h-5 mr-2" /> Sí, Desconectar</>}
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
