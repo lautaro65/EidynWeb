@@ -18,8 +18,14 @@ type Props = {
 
 const PROVIDERS = [
   { id: "shopify", name: "Shopify", icon: ShoppingBag, color: "text-green-500", bg: "bg-green-500/10", border: "border-green-500/20" },
-  { id: "woocommerce", name: "WooCommerce", icon: Box, color: "text-purple-500", bg: "bg-purple-500/10", border: "border-purple-500/20" },
   { id: "tiendanube", name: "Tiendanube", icon: ShoppingBag, color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/20" },
+  { id: "woocommerce", name: "WooCommerce", icon: Box, color: "text-purple-500", bg: "bg-purple-500/10", border: "border-purple-500/20" },
+  { id: "magento", name: "Magento / Adobe", icon: Box, color: "text-orange-500", bg: "bg-orange-500/10", border: "border-orange-500/20" },
+  { id: "bigcommerce", name: "BigCommerce", icon: ShoppingBag, color: "text-stone-500", bg: "bg-stone-500/10", border: "border-stone-500/20" },
+  { id: "wix", name: "Wix eCommerce", icon: Box, color: "text-zinc-500", bg: "bg-zinc-500/10", border: "border-zinc-500/20" },
+  { id: "squarespace", name: "Squarespace", icon: Box, color: "text-neutral-500", bg: "bg-neutral-500/10", border: "border-neutral-500/20" },
+  { id: "prestashop", name: "PrestaShop", icon: ShoppingBag, color: "text-indigo-500", bg: "bg-indigo-500/10", border: "border-indigo-500/20" },
+  { id: "vtex", name: "VTEX", icon: Box, color: "text-pink-500", bg: "bg-pink-500/10", border: "border-pink-500/20" },
 ];
 
 export function ConnectionsClient({ integrations, apiKeys }: Props) {
@@ -31,6 +37,11 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
   const [storeUrl, setStoreUrl] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
+
+  // Disconnect Modal
+  const [isDisconnectModalOpen, setIsDisconnectModalOpen] = useState(false);
+  const [disconnectTargetId, setDisconnectTargetId] = useState<string | null>(null);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
 
   // API Key Modal
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
@@ -69,10 +80,21 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
     }
   };
 
-  const handleDisconnect = async (id: string) => {
-    if (confirm("¿Estás seguro de que deseas desconectar esta integración?")) {
-      const res = await deleteIntegrationAction(id);
-      if (res.error) alert(res.error);
+  const confirmDisconnect = (id: string) => {
+    setDisconnectTargetId(id);
+    setIsDisconnectModalOpen(true);
+  };
+
+  const executeDisconnect = async () => {
+    if (!disconnectTargetId) return;
+    setIsDisconnecting(true);
+    const res = await deleteIntegrationAction(disconnectTargetId);
+    setIsDisconnecting(false);
+    if (res.error) {
+      alert(res.error);
+    } else {
+      setIsDisconnectModalOpen(false);
+      setDisconnectTargetId(null);
     }
   };
 
@@ -109,12 +131,12 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
   return (
     <div className="w-full">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-8 w-full max-w-md bg-background/50 border border-white/10 p-2 rounded-2xl h-16">
-          <TabsTrigger value="native" className="flex-1 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-sm font-semibold h-full transition-all">
+        <TabsList className="mb-8 w-full max-w-md grid grid-cols-2 bg-background/50 border border-white/10 p-2 rounded-2xl h-16">
+          <TabsTrigger value="native" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-sm font-semibold h-full transition-all">
             <ShoppingBag className="w-4 h-4 mr-2" />
             Integraciones Nativas
           </TabsTrigger>
-          <TabsTrigger value="api" className="flex-1 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-sm font-semibold h-full transition-all">
+          <TabsTrigger value="api" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-sm font-semibold h-full transition-all">
             <Key className="w-4 h-4 mr-2" />
             Gestión de Acceso (API)
           </TabsTrigger>
@@ -156,19 +178,20 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
                     {isConnected ? (
                       <div className="w-full flex items-center justify-between">
                         <span className="text-xs text-muted-foreground font-medium">Último sync: {existing.lastSyncAt ? new Date(existing.lastSyncAt).toLocaleDateString() : 'Nunca'}</span>
-                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl" onClick={() => handleDisconnect(existing.id)}>
+                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl" onClick={() => confirmDisconnect(existing.id)}>
                           Desconectar
                         </Button>
                       </div>
                     ) : (
                       <Button 
-                        className="w-full rounded-xl bg-foreground text-background hover:scale-[1.02] transition-transform font-bold shadow-lg"
+                        className="w-full rounded-xl bg-foreground text-background hover:scale-[1.02] transition-transform font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                        disabled={provider.id !== "shopify"}
                         onClick={() => {
                           setSelectedProvider(provider.id);
                           setIsIntegrationModalOpen(true);
                         }}
                       >
-                        Configurar Conexión
+                        {provider.id === "shopify" ? "Configurar Conexión" : "Próximamente"}
                       </Button>
                     )}
                   </CardFooter>
@@ -270,8 +293,8 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
               </div>
             )}
 
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex gap-3 text-sm text-blue-200">
-              <AlertCircle className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex gap-3 text-sm text-blue-700 dark:text-blue-200">
+              <AlertCircle className="w-5 h-5 text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
               <p>Esta conexión habilitará la sincronización bidireccional del catálogo 3D de Eidyn con tu tienda en tiempo real.</p>
             </div>
 
@@ -347,6 +370,43 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
               </Button>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* DISCONNECT CONFIRMATION MODAL */}
+      <Dialog open={isDisconnectModalOpen} onOpenChange={setIsDisconnectModalOpen}>
+        <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-3xl border-white/10 rounded-[2rem] shadow-2xl p-8">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold flex items-center gap-2 text-destructive">
+              <AlertCircle className="w-6 h-6" />
+              Desconectar Tienda
+            </DialogTitle>
+            <DialogDescription className="text-base mt-2">
+              ¿Estás seguro de que deseas desconectar esta integración?
+              <br /><br />
+              Los modelos 3D que ya estén sincronizados no se borrarán, pero perderás la actualización en tiempo real del catálogo y no podrás enviar nuevos productos a la tienda.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="mt-8 flex gap-3 sm:justify-between w-full">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setIsDisconnectModalOpen(false)} 
+              className="flex-1 h-12 rounded-xl"
+            >
+              Cancelar
+            </Button>
+            <Button 
+              type="button" 
+              variant="destructive" 
+              disabled={isDisconnecting} 
+              onClick={executeDisconnect} 
+              className="flex-1 h-12 rounded-xl font-bold shadow-lg shadow-destructive/20 hover:scale-[1.02] transition-transform"
+            >
+              {isDisconnecting ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Desconectando...</> : <><Trash2 className="w-5 h-5 mr-2" /> Sí, Desconectar</>}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
