@@ -18,8 +18,7 @@ export async function checkSkuUnique(sku: string) {
 
     const existing = await db.garmentTemplate.findFirst({
       where: {
-        sku: sku,
-        ownerId: tenantId
+        sku: sku
       }
     });
 
@@ -143,7 +142,7 @@ export async function createGarmentTemplateAction(formData: FormData) {
     return { success: true, templateId: template.id };
   } catch (error) {
     console.error("Error creating GarmentTemplate:", error);
-    return { error: "Failed to create garment template" };
+    return { error: error instanceof Error ? error.message : "Failed to create garment template" };
   }
 }
 

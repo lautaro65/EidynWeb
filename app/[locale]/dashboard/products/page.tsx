@@ -62,22 +62,6 @@ export default async function ProductsPage({ params }: Props) {
     );
   }
 
-  // Fetch garments for the mapping modal
-  const baseGarments = await db.garmentTemplate.findMany({
-    where: {
-      OR: [
-        { ownerId: tenantId },
-        { isPublic: true }
-      ],
-      status: "complete"
-    },
-    select: {
-      id: true,
-      name: true,
-      baseModelUrl: true,
-    }
-  });
-
   // Fetch real synchronized products
   const dbProducts = await db.product.findMany({
     where: { tenantId },
@@ -110,7 +94,7 @@ export default async function ProductsPage({ params }: Props) {
         </p>
       </div>
 
-      <ProductsClient baseGarments={baseGarments} initialProducts={formattedProducts} />
+      <ProductsClient initialProducts={formattedProducts} />
     </div>
   );
 }

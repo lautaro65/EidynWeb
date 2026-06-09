@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Table, 
   TableBody, 
@@ -19,7 +19,11 @@ import {
   Box, 
   Search,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Users,
+  User,
+  Heart,
+  Loader2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -49,11 +53,10 @@ const MOCK_PRODUCTS: MockProduct[] = [
 ];
 
 interface Props {
-  baseGarments: { id: string, name: string | null, baseModelUrl: string | null }[];
   initialProducts: MockProduct[];
 }
 
-export function ProductsClient({ baseGarments, initialProducts }: Props) {
+export function ProductsClient({ initialProducts }: Props) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
   const [products, setProducts] = useState<MockProduct[]>(initialProducts);
@@ -64,8 +67,60 @@ export function ProductsClient({ baseGarments, initialProducts }: Props) {
   // Modals state
   const [mappingModalOpen, setMappingModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<MockProduct | null>(null);
-
   const [widgetModalOpen, setWidgetModalOpen] = useState(false);
+
+  // Mapping Explorer State
+  const [mappingTab, setMappingTab] = useState<"own" | "community">("own");
+  const [mappingSearch, setMappingSearch] = useState("");
+  const [mappingPage, setMappingPage] = useState(1);
+  const [mappingLikedOnly, setMappingLikedOnly] = useState(false);
+  const [mappingGarments, setMappingGarments] = useState<any[]>([]);
+  const [mappingLoading, setMappingLoading] = useState(false);
+  const [mappingHasMore, setMappingHasMore] = useState(false);
+
+  // Fetch garments dynamically
+  useEffect(() => {
+    if (!mappingModalOpen) return;
+    
+    let isMounted = true;
+    const fetchGarments = async () => {
+      setMappingLoading(true);
+      try {
+        const { getGarmentsForMappingAction } = await import("./actions");
+        const res = await getGarmentsForMappingAction({
+          tab: mappingTab,
+          search: mappingSearch,
+          page: mappingPage,
+          limit: 10,
+          likedOnly: mappingLikedOnly
+        });
+        if (res.success && isMounted) {
+          if (mappingPage === 1) {
+            setMappingGarments(res.data || []);
+          } else {
+            setMappingGarments(prev => {
+              // Avoid duplicates
+              const newGarments = (res.data || []).filter(ng => !prev.some(pg => pg.id === ng.id));
+              return [...prev, ...newGarments];
+            });
+          }
+          setMappingHasMore(res.hasMore || false);
+        }
+      } catch(e) {
+        console.error(e);
+      } finally {
+        if (isMounted) setMappingLoading(false);
+      }
+    };
+    
+    const timeoutId = setTimeout(fetchGarments, 300); // debounce search
+    return () => { isMounted = false; clearTimeout(timeoutId); };
+  }, [mappingModalOpen, mappingTab, mappingSearch, mappingPage, mappingLikedOnly]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setMappingPage(1);
+  }, [mappingTab, mappingSearch, mappingLikedOnly]);
 
   const handleSync = async () => {
     setIsSyncing(true);
@@ -105,16 +160,54 @@ export function ProductsClient({ baseGarments, initialProducts }: Props) {
     setWidgetModalOpen(true);
   };
 
-  const handleMapGarment = (garmentId: string) => {
+  const handleMapGarment = async (garmentId: string) => {
     if (!selectedProduct) return;
     
-    // Update local state for mock UI
+    setMappingModalOpen(false); // Close immediately for optimistic UI feel
+    
+    // Optimistic local update
     setProducts(prev => prev.map(p => 
       p.id === selectedProduct.id 
         ? { ...p, status: "mapped", mappedGarmentId: garmentId } 
         : p
     ));
-    setMappingModalOpen(false);
+
+    try {
+      const { mapProductToGarmentAction } = await import("./actions");
+      const res = await mapProductToGarmentAction(selectedProduct.id, garmentId);
+      if (res.error) {
+        setSyncMessage({ type: "error", title: "Error al mapear", text: res.error });
+        // Revert on error
+        setProducts(prev => prev.map(p => 
+          p.id === selectedProduct.id 
+            ? { ...p, status: "unmapped", mappedGarmentId: undefined } 
+            : p
+        ));
+      }
+    } catch (e) {
+      console.error(e);
+      setSyncMessage({ type: "error", title: "Error de red", text: "Hubo un problema al guardar el mapeo." });
+    }
+  };
+
+  const handleUnmap = async (productId: string) => {
+    // Optimistic local update
+    setProducts(prev => prev.map(p => 
+      p.id === productId 
+        ? { ...p, status: "unmapped", mappedGarmentId: undefined } 
+        : p
+    ));
+
+    try {
+      const { unmapProductFromGarmentAction } = await import("./actions");
+      const res = await unmapProductFromGarmentAction(productId);
+      if (res.error) {
+        setSyncMessage({ type: "error", title: "Error al desvincular", text: res.error });
+      }
+    } catch (e) {
+      console.error(e);
+      setSyncMessage({ type: "error", title: "Error de red", text: "Hubo un problema al desvincular el producto." });
+    }
   };
 
   const filteredProducts = products.filter(p => 
@@ -242,9 +335,7 @@ export function ProductsClient({ baseGarments, initialProducts }: Props) {
                         variant="ghost" 
                         className="rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                         title="Desvincular"
-                        onClick={() => {
-                          setProducts(prev => prev.map(p => p.id === product.id ? { ...p, status: "unmapped", mappedGarmentId: undefined } : p))
-                        }}
+                        onClick={() => handleUnmap(product.id)}
                       >
                         <Link2 className="w-4 h-4" />
                       </Button>
@@ -267,40 +358,112 @@ export function ProductsClient({ baseGarments, initialProducts }: Props) {
 
       {/* MODAL: MAPEO INTELIGENTE */}
       <Dialog open={mappingModalOpen} onOpenChange={setMappingModalOpen}>
-        <DialogContent className="sm:max-w-2xl bg-background/95 backdrop-blur-3xl border-white/10 rounded-[2rem] shadow-2xl p-8">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-              <Link2 className="w-6 h-6 text-primary" />
-              Mapeo Inteligente (Binding)
-            </DialogTitle>
-            <DialogDescription className="text-base mt-2">
-              Selecciona a qué modelo 3D base corresponde el producto <strong className="text-foreground">{selectedProduct?.name}</strong> ({selectedProduct?.sku}).
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-3xl bg-background/95 backdrop-blur-3xl border-white/10 rounded-[2rem] shadow-2xl p-0 overflow-hidden flex flex-col h-[80vh]">
+          <div className="p-8 pb-4 shrink-0 border-b border-white/5">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                <Link2 className="w-6 h-6 text-primary" />
+                Mapeo Inteligente (Binding)
+              </DialogTitle>
+              <DialogDescription className="text-base mt-2">
+                Selecciona a qué modelo 3D base corresponde el producto <strong className="text-foreground">{selectedProduct?.name}</strong> ({selectedProduct?.sku}).
+              </DialogDescription>
+            </DialogHeader>
 
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-            {baseGarments.map((garment) => (
-              <div 
-                key={garment.id}
-                onClick={() => handleMapGarment(garment.id)}
-                className="group cursor-pointer rounded-2xl border border-white/10 bg-background/50 p-4 hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center gap-4"
-              >
-                <div className="w-16 h-16 rounded-xl bg-muted border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  <Box className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors">{garment.name || "Sin nombre"}</h4>
-                  <p className="text-xs text-muted-foreground mt-1 font-mono">{garment.id.split('-')[0]}</p>
-                </div>
+            <div className="mt-6 space-y-4">
+              {/* Tabs */}
+              <div className="flex bg-white/5 p-1 rounded-xl w-fit border border-white/10">
+                <button 
+                  onClick={() => setMappingTab("own")}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${mappingTab === "own" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <User className="w-4 h-4" /> Mis Modelos
+                </button>
+                <button 
+                  onClick={() => setMappingTab("community")}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${mappingTab === "community" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <Users className="w-4 h-4" /> Comunidad
+                </button>
               </div>
-            ))}
-            {baseGarments.length === 0 && (
-              <div className="col-span-2 text-center p-8 text-muted-foreground bg-white/5 rounded-2xl border border-dashed border-white/10">
-                <Box className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                No tenés modelos 3D listos para mapear.
-                <br />
-                Asegurate de que estén en estado "Completado".
+
+              {/* Filters */}
+              <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                <div className="relative w-full max-w-sm">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Buscar por SKU o nombre..." 
+                    value={mappingSearch}
+                    onChange={(e) => setMappingSearch(e.target.value)}
+                    className="pl-9 h-10 rounded-xl bg-background/50 border-white/10"
+                  />
+                </div>
+                
+                {mappingTab === "community" && (
+                  <Button 
+                    variant={mappingLikedOnly ? "default" : "outline"} 
+                    onClick={() => setMappingLikedOnly(!mappingLikedOnly)}
+                    className={`h-10 rounded-xl border-white/10 transition-colors ${mappingLikedOnly ? "bg-rose-500 text-white hover:bg-rose-600 border-transparent shadow-md shadow-rose-500/20" : "hover:bg-rose-500/10 hover:text-rose-500 hover:border-rose-500/20"}`}
+                  >
+                    <Heart className={`w-4 h-4 mr-2 ${mappingLikedOnly ? "fill-current" : ""}`} />
+                    Solo mis favoritos
+                  </Button>
+                )}
               </div>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-8 pt-4 custom-scrollbar">
+            {mappingLoading && mappingPage === 1 ? (
+              <div className="flex flex-col items-center justify-center h-40 text-muted-foreground space-y-4">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <p>Cargando modelos 3D...</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {mappingGarments.map((garment) => (
+                    <div 
+                      key={garment.id}
+                      onClick={() => handleMapGarment(garment.id)}
+                      className="group cursor-pointer rounded-2xl border border-white/10 bg-background/50 p-4 hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center gap-4 shadow-sm"
+                    >
+                      <div className="w-16 h-16 rounded-xl bg-muted border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform overflow-hidden relative">
+                        {garment.baseModelUrl ? (
+                          <Box className="w-8 h-8 text-primary" />
+                        ) : (
+                          <Box className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors" />
+                        )}
+                      </div>
+                      <div className="flex-1 overflow-hidden">
+                        <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">{garment.name || "Sin nombre"}</h4>
+                        <p className="text-xs text-muted-foreground mt-1 font-mono">{garment.sku}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {mappingGarments.length === 0 && !mappingLoading && (
+                  <div className="text-center p-8 text-muted-foreground bg-white/5 rounded-2xl border border-dashed border-white/10 mt-4">
+                    <Box className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    No se encontraron modelos 3D que coincidan con la búsqueda.
+                  </div>
+                )}
+
+                {mappingHasMore && (
+                  <div className="mt-8 flex justify-center">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setMappingPage(p => p + 1)}
+                      disabled={mappingLoading}
+                      className="rounded-xl border-white/10"
+                    >
+                      {mappingLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      Cargar más
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </DialogContent>

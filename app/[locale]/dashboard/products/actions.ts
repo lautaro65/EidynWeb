@@ -169,3 +169,178 @@ async function syncShopifyProducts(tenantId: string, integration: any) {
   
   return syncedCount;
 }
+
+export async function getGarmentsForMappingAction(params: {
+  tab: "own" | "community";
+  search: string;
+  page: number;
+  limit: number;
+  likedOnly: boolean;
+}) {
+  try {
+    const { userId, sessionClaims } = await auth();
+    if (!userId) return { error: "Unauthorized" };
+
+    let tenantId = (sessionClaims?.metadata as { tenantId?: string })?.tenantId;
+    if (!tenantId) {
+      const mem = await db.membership.findFirst({ where: { user: { clerkId: userId } } });
+      if (!mem) return { error: "No tenant" };
+      tenantId = mem.tenantId;
+    }
+
+    const { tab, search, page, limit, likedOnly } = params;
+    const skip = (page - 1) * limit;
+
+    const whereClause: any = {
+      status: "complete"
+    };
+
+    if (tab === "own") {
+      whereClause.ownerId = tenantId;
+    } else {
+      whereClause.isPublic = true;
+      whereClause.ownerId = { not: tenantId };
+      
+      if (likedOnly) {
+        // Find garment ids that this tenant liked
+        const likes = await db.garmentLike.findMany({
+          where: { tenantId },
+          select: { garmentId: true }
+        });
+        const likedGarmentIds = likes.map(l => l.garmentId);
+        whereClause.id = { in: likedGarmentIds };
+      }
+    }
+
+    if (search && search.trim() !== "") {
+      whereClause.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+        { sku: { contains: search, mode: "insensitive" } }
+      ];
+    }
+
+    const [total, data] = await Promise.all([
+      db.garmentTemplate.count({ where: whereClause }),
+      db.garmentTemplate.findMany({
+        where: whereClause,
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          name: true,
+          sku: true,
+          baseModelUrl: true,
+        },
+        orderBy: {
+          createdAt: "desc"
+        }
+      })
+    ]);
+
+    return {
+      success: true,
+      data,
+      total,
+      hasMore: skip + data.length < total
+    };
+  } catch (error: any) {
+    console.error("Error fetching garments for mapping:", error);
+    return { error: "Failed to fetch garments" };
+  }
+}
+
+export async function mapProductToGarmentAction(productId: string, garmentId: string) {
+  try {
+    const { userId, sessionClaims } = await auth();
+    if (!userId) return { error: "Unauthorized" };
+
+    let tenantId = (sessionClaims?.metadata as { tenantId?: string })?.tenantId;
+    if (!tenantId) {
+      const mem = await db.membership.findFirst({ where: { user: { clerkId: userId } } });
+      if (!mem) return { error: "No tenant" };
+      tenantId = mem.tenantId;
+    }
+
+    const product = await db.product.findUnique({
+      where: { id: productId, tenantId }
+    });
+
+    if (!product) return { error: "Product not found" };
+
+    // Check if listing already exists for this product
+    const existingListing = await db.garmentListing.findFirst({
+      where: { storeProductId: productId }
+    });
+
+    if (existingListing) {
+      await db.garmentListing.update({
+        where: { id: existingListing.id },
+        data: { garmentId }
+      });
+    } else {
+      // Check if the garmentId + storeId combo already exists (due to unique constraint)
+      const existingCombo = await db.garmentListing.findUnique({
+        where: {
+          storeId_garmentId: {
+            storeId: product.storeId,
+            garmentId
+          }
+        }
+      });
+
+      if (existingCombo) {
+        // If it exists, just update it to point to this product.
+        // NOTE: This means one GarmentTemplate per store can only be linked to ONE Product right now.
+        await db.garmentListing.update({
+          where: { id: existingCombo.id },
+          data: { storeProductId: productId }
+        });
+      } else {
+        await db.garmentListing.create({
+          data: {
+            storeId: product.storeId,
+            garmentId,
+            storeProductId: productId,
+            customName: product.name
+          }
+        });
+      }
+    }
+
+    revalidatePath("/[locale]/dashboard/products", "page");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error mapping product:", error);
+    return { error: "Error al mapear el producto" };
+  }
+}
+
+export async function unmapProductFromGarmentAction(productId: string) {
+  try {
+    const { userId, sessionClaims } = await auth();
+    if (!userId) return { error: "Unauthorized" };
+
+    let tenantId = (sessionClaims?.metadata as { tenantId?: string })?.tenantId;
+    if (!tenantId) {
+      const mem = await db.membership.findFirst({ where: { user: { clerkId: userId } } });
+      if (!mem) return { error: "No tenant" };
+      tenantId = mem.tenantId;
+    }
+
+    const product = await db.product.findUnique({
+      where: { id: productId, tenantId }
+    });
+
+    if (!product) return { error: "Product not found" };
+
+    await db.garmentListing.deleteMany({
+      where: { storeProductId: productId }
+    });
+
+    revalidatePath("/[locale]/dashboard/products", "page");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error unmapping product:", error);
+    return { error: "Error al desvincular el producto" };
+  }
+}
