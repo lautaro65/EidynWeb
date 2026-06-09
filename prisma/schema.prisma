@@ -61,6 +61,8 @@ model Tenant {
   name       String?
   slug       String?   @unique
   logoUrl    String?   @map("logo_url")
+  brandColor String?   @map("brand_color")
+  widgetConfig Json?   @map("widget_config")
   plan       String?
   status     String?
   isVerified Boolean   @default(false) @map("is_verified")

@@ -86,8 +86,8 @@ export function DashboardSidebar() {
       key: "account",
       label: t("sectionAccount"),
       items: [
-        { icon: User, label: t("accountInfo"), href: "#", disabled: true },
-        { icon: SlidersHorizontal, label: t("widgetConfig"), href: "#", disabled: true },
+        { icon: User, label: t("accountInfo"), href: "/dashboard/account" },
+        { icon: SlidersHorizontal, label: t("widgetConfig"), href: "/dashboard/account/organization" },
         { icon: CreditCard, label: t("billing"), href: "#", disabled: true },
       ],
     },
@@ -221,10 +221,13 @@ export function DashboardSidebar() {
 
         {/* Footer */}
         <div className="p-4 border-t border-border/40 bg-muted/40 dark:border-white/5 dark:bg-black/10">
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium text-sm text-muted-foreground hover:bg-white/5 hover:text-foreground group mb-1 opacity-50 cursor-not-allowed">
+          <Link
+            href="/dashboard/account"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium text-sm text-muted-foreground hover:bg-white/5 hover:text-foreground group mb-1"
+          >
             <Settings className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
             {t("settings")}
-          </div>
+          </Link>
 
           <button
             onClick={() => signOut({ redirectUrl: "/" })}
