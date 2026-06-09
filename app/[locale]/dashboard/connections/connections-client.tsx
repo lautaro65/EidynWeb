@@ -61,7 +61,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
       window.location.href = `/api/auth/shopify/install?shop=${encodeURIComponent(storeUrl)}`;
       return;
     }
-    
+
     // For other providers (like WooCommerce) we might still use manual tokens for now
     const formData = new FormData();
     formData.append("provider", selectedProvider);
@@ -131,7 +131,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
   return (
     <div className="w-full">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-8 w-full max-w-md grid grid-cols-2 bg-background/50 border border-white/10 p-1.5 rounded-2xl">
+        <TabsList className="mb-8 w-full max-w-md grid grid-cols-2 bg-background/50 border border-white/10 p-1.5 rounded-2xl h-auto">
           <TabsTrigger value="native" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-sm font-semibold py-3 transition-all flex items-center justify-center">
             <ShoppingBag className="w-4 h-4 mr-2" />
             Integraciones Nativas
@@ -183,7 +183,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
                         </Button>
                       </div>
                     ) : (
-                      <Button 
+                      <Button
                         className="w-full rounded-xl bg-foreground text-background hover:scale-[1.02] transition-transform font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                         disabled={provider.id !== "shopify"}
                         onClick={() => {
@@ -209,7 +209,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
                 <CardTitle className="text-2xl">Claves de API</CardTitle>
                 <CardDescription>Genera credenciales de acceso para desarrollos a medida o CMS externos.</CardDescription>
               </div>
-              <Button 
+              <Button
                 onClick={() => {
                   setGeneratedSecret(null);
                   setIsApiKeyModalOpen(true);
@@ -269,25 +269,25 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
           <form onSubmit={handleConnectIntegration} className="space-y-6 mt-4">
             <div className="space-y-3">
               <Label htmlFor="storeUrl" className="text-sm font-semibold ml-1">URL de la Tienda</Label>
-              <Input 
-                id="storeUrl" 
-                value={storeUrl} 
-                onChange={e => setStoreUrl(e.target.value)} 
-                placeholder="ej: mi-tienda.myshopify.com" 
-                required 
+              <Input
+                id="storeUrl"
+                value={storeUrl}
+                onChange={e => setStoreUrl(e.target.value)}
+                placeholder="ej: mi-tienda.myshopify.com"
+                required
                 className="h-12 bg-background/50 rounded-xl border-white/10"
               />
             </div>
             {selectedProvider !== "shopify" && (
               <div className="space-y-3">
                 <Label htmlFor="accessToken" className="text-sm font-semibold ml-1">Token de Acceso (Admin API)</Label>
-                <Input 
-                  id="accessToken" 
-                  type="password" 
-                  value={accessToken} 
-                  onChange={e => setAccessToken(e.target.value)} 
-                  placeholder="shpat_xxxxxxxxxxxxxxxx" 
-                  required 
+                <Input
+                  id="accessToken"
+                  type="password"
+                  value={accessToken}
+                  onChange={e => setAccessToken(e.target.value)}
+                  placeholder="shpat_xxxxxxxxxxxxxxxx"
+                  required
                   className="h-12 bg-background/50 rounded-xl border-white/10"
                 />
               </div>
@@ -324,12 +324,12 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
             <form onSubmit={handleGenerateKey} className="space-y-6 mt-4">
               <div className="space-y-3">
                 <Label htmlFor="keyName" className="text-sm font-semibold ml-1">Nombre de la Clave</Label>
-                <Input 
-                  id="keyName" 
-                  value={keyName} 
-                  onChange={e => setKeyName(e.target.value)} 
-                  placeholder="ej: Wordpress Producción" 
-                  required 
+                <Input
+                  id="keyName"
+                  value={keyName}
+                  onChange={e => setKeyName(e.target.value)}
+                  placeholder="ej: Wordpress Producción"
+                  required
                   className="h-12 bg-background/50 rounded-xl border-white/10"
                   autoComplete="off"
                 />
@@ -349,15 +349,15 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
               </div>
 
               <div className="relative">
-                <Input 
-                  readOnly 
-                  value={generatedSecret} 
+                <Input
+                  readOnly
+                  value={generatedSecret}
                   className="h-14 font-mono text-primary bg-primary/5 border-primary/20 rounded-xl pr-14"
                 />
-                <Button 
-                  type="button" 
-                  size="icon" 
-                  variant="ghost" 
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
                   className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-primary/20 hover:text-primary rounded-lg text-muted-foreground"
                   onClick={() => copyToClipboard(generatedSecret)}
                 >
@@ -389,19 +389,19 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
           </DialogHeader>
 
           <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:justify-between w-full">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => setIsDisconnectModalOpen(false)} 
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsDisconnectModalOpen(false)}
               className="flex-1 h-12 rounded-xl border-white/10 hover:bg-white/5"
             >
               Cancelar
             </Button>
-            <Button 
-              type="button" 
-              variant="destructive" 
-              disabled={isDisconnecting} 
-              onClick={executeDisconnect} 
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isDisconnecting}
+              onClick={executeDisconnect}
               className="flex-1 h-12 rounded-xl font-bold shadow-lg shadow-destructive/20 hover:scale-[1.02] transition-transform"
             >
               {isDisconnecting ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Desconectando...</> : <><Trash2 className="w-5 h-5 mr-2" /> Sí, Desconectar</>}
