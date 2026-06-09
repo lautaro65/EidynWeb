@@ -131,12 +131,12 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
   return (
     <div className="w-full">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-8 w-full max-w-md grid grid-cols-2 bg-background/50 border border-white/10 p-1 rounded-2xl h-14">
-          <TabsTrigger value="native" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-sm font-semibold py-2.5 transition-all">
+        <TabsList className="mb-8 w-full max-w-md grid grid-cols-2 bg-background/50 border border-white/10 p-1.5 rounded-2xl">
+          <TabsTrigger value="native" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-sm font-semibold py-3 transition-all flex items-center justify-center">
             <ShoppingBag className="w-4 h-4 mr-2" />
             Integraciones Nativas
           </TabsTrigger>
-          <TabsTrigger value="api" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-sm font-semibold py-2.5 transition-all">
+          <TabsTrigger value="api" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-sm font-semibold py-3 transition-all flex items-center justify-center">
             <Key className="w-4 h-4 mr-2" />
             Gestión de Acceso (API)
           </TabsTrigger>
