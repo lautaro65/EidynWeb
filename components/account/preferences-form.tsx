@@ -60,18 +60,34 @@ export function PreferencesForm({
             </label>
             <div className="grid grid-cols-3 gap-3">
               {[
-                { id: "light", icon: Sun, label: t("themeLight") || "Claro" },
-                { id: "dark", icon: Moon, label: t("themeDark") || "Oscuro" },
-                { id: "system", icon: Monitor, label: t("themeSystem") || "Sistema" },
+                { 
+                  id: "light", 
+                  icon: Sun, 
+                  label: t("themeLight") || "Claro",
+                  activeClass: "bg-zinc-100 text-zinc-900 border-zinc-300 shadow-[0_0_15px_rgba(255,255,255,0.5)] dark:bg-zinc-200",
+                  inactiveClass: "border-border bg-background hover:bg-zinc-100 hover:text-zinc-900 hover:border-zinc-300 text-muted-foreground"
+                },
+                { 
+                  id: "dark", 
+                  icon: Moon, 
+                  label: t("themeDark") || "Oscuro",
+                  activeClass: "bg-zinc-950 text-zinc-100 border-zinc-800 shadow-[0_0_15px_rgba(0,0,0,0.5)]",
+                  inactiveClass: "border-border bg-background hover:bg-zinc-950 hover:text-zinc-100 hover:border-zinc-800 text-muted-foreground"
+                },
+                { 
+                  id: "system", 
+                  icon: Monitor, 
+                  label: t("themeSystem") || "Sistema",
+                  activeClass: "bg-primary/10 text-primary border-primary shadow-[0_0_15px_rgba(var(--primary),0.2)]",
+                  inactiveClass: "border-border bg-background hover:bg-primary/5 hover:text-primary hover:border-primary/50 text-muted-foreground"
+                },
               ].map((opt) => (
                 <button
                   key={opt.id}
                   onClick={() => setLocalTheme(opt.id)}
                   className={`
                     flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all
-                    ${theme === opt.id 
-                      ? "border-primary bg-primary/10 text-primary shadow-[0_0_15px_rgba(var(--primary),0.2)]" 
-                      : "border-border bg-background hover:bg-muted/50 hover:border-primary/50 text-muted-foreground"}
+                    ${theme === opt.id ? opt.activeClass : opt.inactiveClass}
                   `}
                 >
                   <opt.icon className="w-5 h-5" />

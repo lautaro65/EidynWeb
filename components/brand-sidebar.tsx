@@ -70,7 +70,6 @@ export function BrandSidebar() {
       label: t("sectionAccount"),
       items: [
         { icon: User, label: t("accountInfo"), href: "/dashboard/brand/account" },
-        { icon: Settings, label: t("settings") || "Configuración", href: "/dashboard/brand/settings" },
       ],
     },
   ];
