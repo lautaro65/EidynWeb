@@ -9,7 +9,6 @@ import {
   BarChart3, 
   LogOut,
   Plug,
-  CreditCard,
   User,
   SlidersHorizontal,
   type LucideIcon,
@@ -67,7 +66,6 @@ export function DashboardSidebar() {
       items: [
         { icon: User, label: t("accountInfo"), href: "/dashboard/shop/account" },
         { icon: SlidersHorizontal, label: t("widgetConfig"), href: "/dashboard/shop/account/organization" },
-        { icon: CreditCard, label: t("billing"), href: "/dashboard/shop/billing" },
       ],
     },
   ];

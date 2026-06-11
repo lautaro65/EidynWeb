@@ -734,5 +734,21 @@
     "noImage": "No Image",
     "requestedBy": "Requested by",
     "goToEdit": "Go to Edit"
+  },
+  "BrandDashboard": {
+    "welcome": "Welcome to your Brand Dashboard",
+    "subtitle": "Manage your 3D catalog and visualize the impact of your garments.",
+    "totalGarments": "Total Garments",
+    "activeInCatalog": "Active in catalog",
+    "connectedStores": "Connected Stores",
+    "usingYourGarments": "Using your garments",
+    "totalTryOns": "Virtual Try-Ons",
+    "fromAllStores": "From all stores",
+    "communityRating": "Community Rating",
+    "basedOnReviews": "Based on reviews",
+    "recentGarments": "Recent Garments",
+    "noGarmentsYet": "No garments uploaded yet",
+    "topStores": "Top Stores",
+    "noStoresYet": "No connected stores yet"
   }
 }

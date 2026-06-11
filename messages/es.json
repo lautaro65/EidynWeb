@@ -734,5 +734,21 @@
     "noImage": "Sin Imagen",
     "requestedBy": "Solicitado por",
     "goToEdit": "Ir a Editar"
+  },
+  "BrandDashboard": {
+    "welcome": "Bienvenido a tu Panel de Marca",
+    "subtitle": "Gestioná tu catálogo 3D y visualizá el impacto de tus prendas.",
+    "totalGarments": "Prendas Totales",
+    "activeInCatalog": "Activas en catálogo",
+    "connectedStores": "Tiendas Conectadas",
+    "usingYourGarments": "Usando tus prendas",
+    "totalTryOns": "Pruebas Virtuales (Try-Ons)",
+    "fromAllStores": "Desde todas las tiendas",
+    "communityRating": "Valoración de Comunidad",
+    "basedOnReviews": "Basado en reseñas",
+    "recentGarments": "Prendas Recientes",
+    "noGarmentsYet": "Aún no has subido prendas",
+    "topStores": "Tiendas Destacadas",
+    "noStoresYet": "Aún no hay tiendas conectadas"
   }
 }
