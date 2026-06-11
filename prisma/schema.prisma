@@ -62,7 +62,10 @@ model Tenant {
   slug       String?   @unique
   logoUrl    String?   @map("logo_url")
   brandColor String?   @map("brand_color")
-  widgetConfig         Json?     @map("widget_config")
+  type         String    @default("store") // "store" | "brand"
+  websiteUrl   String?   @map("website_url")
+  socialUrl    String?   @map("social_url")
+  widgetConfig Json?     @map("widget_config")
   plan                 String?
   status               String?
   stripeCustomerId     String?   @unique @map("stripe_customer_id")
@@ -92,7 +95,6 @@ model Tenant {
   jobs            Job[]
   aiJobs          AiJob[]
   shopConsents    ShopConsent[]
-  sizeGuides      SizeGuide[]
   garmentLikes    GarmentLike[]
   garmentChangeRequests GarmentChangeRequest[]
 
@@ -441,7 +443,6 @@ model Product {
   fitChest    Float    @default(1.0) @map("fit_chest")
   fitSleeve   Float    @default(1.0) @map("fit_sleeve")
   fitLength   Float    @default(1.0) @map("fit_length")
-  sizeGuideId String?  @map("size_guide_id") @db.Uuid
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -453,7 +454,6 @@ model Product {
   assets          ProductAsset[]
   tryonSessions   TryOnSession[]
   garmentListings GarmentListing[] // modelos 3D vinculados a este producto
-  sizeGuide       SizeGuide?       @relation(fields: [sizeGuideId], references: [id])
 
   @@map("products")
 }
@@ -787,26 +787,6 @@ model AiModel {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("ai_models")
-}
-
-// ─────────────────────────────────────────
-// GUÍAS DE TALLES
-// ─────────────────────────────────────────
-
-model SizeGuide {
-  id        String   @id @default(uuid()) @db.Uuid
-  tenantId  String   @map("tenant_id") @db.Uuid
-  name      String
-  category  String
-  status    String   @default("Active")
-  matrix    Json // Guardará el mapeo de talles y medidas
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  tenant   Tenant    @relation(fields: [tenantId], references: [id])
-  products Product[]
-
-  @@map("size_guides")
 }
 
 // ─────────────────────────────────────────

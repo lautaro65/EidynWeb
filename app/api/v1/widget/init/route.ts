@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
       if (origin) {
         originHost = new URL(origin).hostname.replace(/^www\./, "");
       }
-    } catch (e) {
+    } catch {
       // Si el origin es directamente un dominio (ej: tienda.com)
       originHost = origin.replace(/^www\./, "");
     }
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
             isAuthorized = true;
             break;
           }
-        } catch (e) {
+        } catch {
           // ignorar URLs mal formateadas
         }
       }
@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
                  isAuthorized = true;
                  break;
              }
-          } catch(e) {}
+          } catch {}
         }
       }
     }

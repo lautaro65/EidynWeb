@@ -26,7 +26,7 @@
   try {
       const scriptUrl = new URL(currentScript.src);
       baseUrl = scriptUrl.origin;
-  } catch(e) {}
+  } catch {}
 
   fetch(`${baseUrl}/api/v1/widget/init?apiKey=${encodeURIComponent(apiKey)}&sku=${encodeURIComponent(sku)}`)
     .then(res => res.json())
@@ -35,7 +35,7 @@
         initWidgetUI(data, baseUrl);
       }
     })
-    .catch(err => {
+    .catch(() => {
       // Silently fail if there's a network error
     });
 

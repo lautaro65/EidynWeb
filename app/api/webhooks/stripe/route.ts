@@ -4,6 +4,7 @@ import Stripe from "stripe";
 import { db } from "@/lib/db";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_mock", {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   apiVersion: "2024-04-10" as any,
 });
 
@@ -23,9 +24,9 @@ export async function POST(req: Request) {
         // Mock en caso de que no haya keys configuradas
         event = JSON.parse(body);
       }
-    } catch (err: any) {
-      console.error(`Webhook Error: ${err.message}`);
-      return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
+    } catch (err: unknown) {
+      console.error(`Webhook Error: ${err instanceof Error ? err.message : "Error"}`);
+      return new NextResponse(`Webhook Error: ${err instanceof Error ? err.message : "Error"}`, { status: 400 });
     }
 
     const session = event.data.object as Stripe.Checkout.Session;

@@ -68,7 +68,7 @@ export async function GET(request: Request) {
 
     // Redirect user back to the dashboard with a success parameter
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    return NextResponse.redirect(`${appUrl}/es/dashboard/connections?shopify=success`);
+    return NextResponse.redirect(`${appUrl}/es/dashboard/shop/connections?shopify=success`);
 
   } catch (error) {
     console.error("Callback error:", error);

@@ -1,10 +1,7 @@
-import { getTranslations } from "next-intl/server";
 import { User, Ruler, Store, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/routing";
 
-export default async function PortalPage({ params }: { params: Promise<{ locale: string }> }) {
-  // Placeholder para futuras traducciones
-  // const t = await getTranslations({ locale: (await params).locale, namespace: "Portal" });
+export default function PortalPage() {
 
   return (
     <div className="max-w-5xl space-y-12">

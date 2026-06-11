@@ -18,7 +18,6 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  if (pathname.startsWith("/widget")) return null;
 
   const isAuthReady = isLoaded;
   const isSignedIn = Boolean(userId);
@@ -47,6 +46,8 @@ export function Navbar() {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+  if (pathname.startsWith("/widget")) return null;
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);

@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { GarmentViewer } from "@/components/3d/GarmentViewer";
 import { cn } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
 import { checkWidgetAuthAction, grantConsentAction } from "@/app/[locale]/widget/actions";
 
 type Variant = {
@@ -44,28 +43,43 @@ export function WidgetViewerClient({
   const [authState, setAuthState] = useState<AuthState>("checking");
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
 
-  const checkAuth = async () => {
-    setAuthState("checking");
-    const res = await checkWidgetAuthAction(apiKey);
-    if (res.status === "authorized") {
-      setUserAvatarUrl(res.avatarUrl || null);
-      setAuthState("authorized");
-    } else {
-      setAuthState(res.status as AuthState);
-    }
-  };
-
   useEffect(() => {
+    let mounted = true;
+
+    const checkAuth = async () => {
+      // Evitamos llamar setState sincrónicamente para cumplir con react-hooks/set-state-in-effect
+      // ya que default state es "checking"
+      const res = await checkWidgetAuthAction(apiKey);
+      if (!mounted) return;
+      if (res.status === "authorized") {
+        setUserAvatarUrl(res.avatarUrl || null);
+        setAuthState("authorized");
+      } else {
+        setAuthState(res.status as AuthState);
+      }
+    };
+
     checkAuth();
 
     // Escuchar mensajes del popup de login
     const handleMessage = (event: MessageEvent) => {
       if (event.data === "eidyn-login-success") {
-        checkAuth();
+        setAuthState("checking"); // Esto está en un event listener, así que no cuenta como synchronous effect call
+        checkWidgetAuthAction(apiKey).then(res => {
+          if (res.status === "authorized") {
+            setUserAvatarUrl(res.avatarUrl || null);
+            setAuthState("authorized");
+          } else {
+            setAuthState(res.status as AuthState);
+          }
+        });
       }
     };
     window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
+    return () => {
+      mounted = false;
+      window.removeEventListener("message", handleMessage);
+    };
   }, [apiKey]);
 
   const handleLogin = () => {
@@ -87,7 +101,13 @@ export function WidgetViewerClient({
     setAuthState("checking");
     const res = await grantConsentAction(apiKey);
     if (res.success) {
-      checkAuth();
+      const authRes = await checkWidgetAuthAction(apiKey);
+      if (authRes.status === "authorized") {
+        setUserAvatarUrl(authRes.avatarUrl || null);
+        setAuthState("authorized");
+      } else {
+        setAuthState(authRes.status as AuthState);
+      }
     } else {
       setAuthState("needs_consent");
     }
@@ -190,6 +210,7 @@ export function WidgetViewerClient({
                   }}
                 >
                   {variant.textureUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img 
                       src={variant.textureUrl} 
                       alt={variant.name || ""} 

@@ -4,14 +4,12 @@ import { usePathname } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { 
   LayoutDashboard, 
+  Shirt, 
   Settings, 
-  Box, 
   BarChart3, 
   LogOut,
-  Plug,
   CreditCard,
   User,
-  SlidersHorizontal,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -33,7 +31,7 @@ type NavSection = {
   items: NavItem[];
 };
 
-export function DashboardSidebar() {
+export function BrandSidebar() {
   const pathname = usePathname();
   const { signOut } = useClerk();
   const t = useTranslations("DashboardSidebar");
@@ -43,31 +41,37 @@ export function DashboardSidebar() {
       key: "general",
       label: t("sectionGeneral"),
       items: [
-        { icon: LayoutDashboard, label: t("overview"), href: "/dashboard" },
+        { icon: LayoutDashboard, label: t("overview"), href: "/dashboard/brand" },
       ],
     },
     {
       key: "catalog",
       label: t("sectionCatalog"),
       items: [
-        { icon: Box, label: t("inventory"), href: "/dashboard/shop/products" },
+        { 
+          icon: Shirt, 
+          label: t("garments") || "Prendas", 
+          href: "/dashboard/brand/garments",
+          subItems: [
+            { label: t("garmentsList") || "Catálogo", href: "/dashboard/brand/garments" },
+            { label: t("garmentsNew") || "Nueva Prenda", href: "/dashboard/brand/garments/new" },
+          ],
+        },
       ],
     },
     {
       key: "insights",
       label: t("sectionInsights"),
       items: [
-        { icon: BarChart3, label: t("analytics"), href: "/dashboard/shop/analytics" },
-        { icon: Plug, label: t("connections"), href: "/dashboard/shop/connections" },
+        { icon: BarChart3, label: t("analytics"), href: "/dashboard/brand/analytics" },
       ],
     },
     {
       key: "account",
       label: t("sectionAccount"),
       items: [
-        { icon: User, label: t("accountInfo"), href: "/dashboard/shop/account" },
-        { icon: SlidersHorizontal, label: t("widgetConfig"), href: "/dashboard/shop/account/organization" },
-        { icon: CreditCard, label: t("billing"), href: "/dashboard/shop/billing" },
+        { icon: User, label: t("accountInfo"), href: "/dashboard/brand/account" },
+        { icon: CreditCard, label: t("billing"), href: "/dashboard/brand/billing" },
       ],
     },
   ];
@@ -106,12 +110,12 @@ export function DashboardSidebar() {
               <div className="space-y-1">
                 {section.items.map((item) => {
                   const isParentActive =
-                    item.href === "/dashboard"
-                      ? pathname === "/dashboard" ||
-                        pathname === "/es/dashboard" ||
-                        pathname === "/en/dashboard"
-                      : item.href === "/dashboard/shop/account"
-                      ? pathname.endsWith("/dashboard/shop/account")
+                    item.href === "/dashboard/brand"
+                      ? pathname === "/dashboard/brand" ||
+                        pathname === "/es/dashboard/brand" ||
+                        pathname === "/en/dashboard/brand"
+                      : item.href === "/dashboard/brand/account"
+                      ? pathname.endsWith("/dashboard/brand/account")
                       : pathname.includes(item.href);
 
                   const itemClasses = cn(
@@ -200,7 +204,7 @@ export function DashboardSidebar() {
         {/* Footer */}
         <div className="p-4 border-t border-border/40 bg-muted/40 dark:border-white/5 dark:bg-black/10">
           <Link
-            href="/dashboard/shop/settings"
+            href="/dashboard/brand/settings"
             className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium text-sm text-muted-foreground hover:bg-white/5 hover:text-foreground group mb-1"
           >
             <Settings className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
