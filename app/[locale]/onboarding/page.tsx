@@ -17,6 +17,7 @@ export default function OnboardingPage() {
   const [socialUrl, setSocialUrl] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleNextStep = async () => {
     if (role === "shopper") {
@@ -28,6 +29,7 @@ export default function OnboardingPage() {
 
   const handleComplete = async () => {
     setIsSubmitting(true);
+    setErrorMsg(null);
     try {
       const formData = new FormData();
       formData.append("role", role!);
@@ -53,12 +55,14 @@ export default function OnboardingPage() {
       }
     } catch (error) {
       console.error(error);
+      const errorMessage = error instanceof Error ? error.message : "Ocurrió un error inesperado al crear la cuenta.";
+      setErrorMsg(errorMessage);
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 pt-24 md:pt-32">
       <div className="w-full max-w-2xl">
         {/* Step indicator */}
         <div className="flex items-center gap-2 mb-10">
@@ -293,7 +297,7 @@ export default function OnboardingPage() {
                     </label>
                     <input
                       type="url"
-                      placeholder="https://tumarca.com"
+                      placeholder={t("websitePlaceholder") || "https://tumarca.com"}
                       value={websiteUrl}
                       onChange={(e) => setWebsiteUrl(e.target.value)}
                       className="w-full h-12 px-4 rounded-[0.875rem] border-[1.5px] border-border bg-background text-[0.95rem] text-foreground placeholder:text-muted-foreground/50 font-light outline-none transition-colors duration-200 focus:border-primary"
@@ -306,7 +310,7 @@ export default function OnboardingPage() {
                     </label>
                     <input
                       type="url"
-                      placeholder="https://instagram.com/tumarca"
+                      placeholder={t("socialPlaceholder") || "https://instagram.com/tumarca"}
                       value={socialUrl}
                       onChange={(e) => setSocialUrl(e.target.value)}
                       className="w-full h-12 px-4 rounded-[0.875rem] border-[1.5px] border-border bg-background text-[0.95rem] text-foreground placeholder:text-muted-foreground/50 font-light outline-none transition-colors duration-200 focus:border-primary"
@@ -327,8 +331,10 @@ export default function OnboardingPage() {
                 </div>
               )}
 
-              {/* Divider */}
-              <div className="h-px bg-border opacity-60" />
+              {role !== "brand_owner" && (
+                <>
+                  {/* Divider */}
+                  <div className="h-px bg-border opacity-60" />
 
               {/* Plan selector */}
               <div className="space-y-3">
@@ -429,10 +435,18 @@ export default function OnboardingPage() {
                   </button>
                 </div>
               </div>
+              </>
+            )}
             </div>
 
-            <div className="flex justify-between items-center mt-8">
-              <button
+              <div className="flex flex-col gap-4 mt-8">
+                {errorMsg && (
+                  <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm text-center">
+                    {errorMsg}
+                  </div>
+                )}
+                <div className="flex justify-between items-center">
+                  <button
                 onClick={() => setStep(1)}
                 disabled={isSubmitting}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-lg disabled:opacity-40"
@@ -464,6 +478,7 @@ export default function OnboardingPage() {
                   </>
                 )}
               </button>
+            </div>
             </div>
           </div>
         )}

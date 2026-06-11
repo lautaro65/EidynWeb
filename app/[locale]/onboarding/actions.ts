@@ -41,6 +41,29 @@ export async function submitOnboarding(formData: FormData) {
 
   // 2. Handle Store/Brand Owner logic
   if ((role === "store_owner" || role === "brand_owner") && storeName) {
+    // 2.1 Brand Domain Validation (Blacklist)
+    if (role === "brand_owner") {
+      const RESERVED_BRANDS: Record<string, string> = {
+        "nike": "nike.com",
+        "adidas": "adidas.com",
+        "zara": "zara.com",
+        "puma": "puma.com",
+        "gucci": "gucci.com",
+        "prada": "prada.com",
+        "balenciaga": "balenciaga.com",
+        "h&m": "hm.com",
+      };
+      
+      const normalizedName = storeName.toLowerCase().trim();
+      if (RESERVED_BRANDS[normalizedName]) {
+        const expectedDomain = RESERVED_BRANDS[normalizedName];
+        const userDomain = email?.split("@")[1];
+        if (userDomain !== expectedDomain) {
+          throw new Error(`Para registrar la marca ${storeName}, debes usar un correo oficial @${expectedDomain}`);
+        }
+      }
+    }
+
     // Generate a simple slug
     const slug = storeName
       .toLowerCase()
