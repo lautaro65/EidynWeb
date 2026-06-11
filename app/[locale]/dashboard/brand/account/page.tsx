@@ -1,9 +1,6 @@
 import { UserProfile } from "@clerk/nextjs";
 import { getTranslations } from "next-intl/server";
 import { currentUser } from "@clerk/nextjs/server";
-import { db } from "@/lib/db";
-import { PreferencesForm } from "@/components/account/preferences-form";
-import { DangerZone } from "@/components/account/danger-zone";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -15,17 +12,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default async function AccountPage() {
   const t = await getTranslations("Account");
-  
+
   const clerkUser = await currentUser();
   if (!clerkUser) return null;
 
-  const dbUser = await db.user.findUnique({
-    where: { clerkId: clerkUser.id }
-  });
 
-  const initialTheme = dbUser?.preferredTheme || "system";
-  const initialLocale = dbUser?.preferredLocale || "es";
-  
   return (
     <div className="max-w-5xl mx-auto py-8 px-6 lg:px-8 space-y-8 min-h-[calc(100vh-6rem)]">
       <div>
@@ -38,22 +29,17 @@ export default async function AccountPage() {
       <div className="bg-background/50 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] pointer-events-none -mt-40 -mr-40" />
         <div className="relative flex justify-center">
-          <UserProfile 
+          <UserProfile
             appearance={{
               elements: {
                 rootBox: "w-full max-w-none shadow-none",
                 card: "w-full max-w-none shadow-none bg-transparent border-none",
-                navbar: "hidden", 
+                navbar: "hidden",
                 pageScrollBox: "w-full",
               }
             }}
           />
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <PreferencesForm initialTheme={initialTheme} initialLocale={initialLocale} />
-        <DangerZone />
       </div>
     </div>
   );

@@ -517,7 +517,19 @@
   },
   "Account": {
     "title": "Account Info",
-    "description": "Manage your personal account settings, security, and active sessions."
+    "description": "Manage your personal account settings, security, and active sessions.",
+    "preferencesTitle": "Application Preferences",
+    "themeLabel": "Appearance",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "languageLabel": "Language",
+    "savePreferences": "Save Preferences",
+    "dangerZoneTitle": "Danger Zone",
+    "dangerZoneDesc": "Once you delete your account, there is no going back. This will permanently delete all your personal data, settings, and the link to your store or brand.",
+    "typeToDelete": "Type \"{word}\" to confirm",
+    "deleteConfirmWord": "DELETE",
+    "deleteAccountBtn": "Delete my account"
   },
   "GarmentsNew": {
     "title": "Create 3D Garment",

@@ -513,11 +513,23 @@
     "gdpr": "Aviso de Consentimiento GDPR",
     "gdprDesc": "Mostrar consentimiento de cookies antes de cargar assets 3D.",
     "save": "Guardar Cambios",
-    "errorLoading": "Error al cargar la configuraci�n"
+    "errorLoading": "Error al cargar la configuracin"
   },
   "Account": {
-    "title": "Informaci�n de la Cuenta",
-    "description": "Gestiona la configuraci�n personal de tu cuenta, seguridad y sesiones activas."
+    "title": "Configuración de Cuenta",
+    "description": "Gestioná tu cuenta personal, preferencias de sesión y seguridad.",
+    "preferencesTitle": "Preferencias de la Aplicación",
+    "themeLabel": "Apariencia",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro",
+    "themeSystem": "Sistema",
+    "languageLabel": "Idioma",
+    "savePreferences": "Guardar Preferencias",
+    "dangerZoneTitle": "Zona de Peligro",
+    "dangerZoneDesc": "Una vez que elimines tu cuenta, no hay vuelta atrás. Esto borrará permanentemente todos tus datos personales, configuraciones y la vinculación con tu tienda o marca.",
+    "typeToDelete": "Escribe \"{word}\" para confirmar",
+    "deleteConfirmWord": "ELIMINAR",
+    "deleteAccountBtn": "Eliminar mi cuenta"
   },
   "GarmentsNew": {
     "title": "Crear Prenda 3D",

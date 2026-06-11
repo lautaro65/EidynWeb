@@ -2,6 +2,8 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { BrandSettingsForm } from "./settings-form";
+import { PreferencesForm } from "@/components/account/preferences-form";
+import { DangerZone } from "@/components/account/danger-zone";
 
 export const metadata = {
   title: "Configuración de Marca - Eidyn",
@@ -21,7 +23,7 @@ export default async function BrandSettingsPage({
 
   const membership = await db.membership.findFirst({
     where: { user: { clerkId: user.id } },
-    include: { tenant: true },
+    include: { tenant: true, user: true },
   });
 
   if (!membership || membership.tenant.type !== "brand") {
@@ -40,6 +42,14 @@ export default async function BrandSettingsPage({
       </div>
 
       <BrandSettingsForm tenant={membership.tenant} />
+
+      <div className="space-y-8 pt-8 border-t border-border/40">
+        <PreferencesForm 
+          initialTheme={membership.user.preferredTheme || "system"} 
+          initialLocale={membership.user.preferredLocale || "es"} 
+        />
+        <DangerZone />
+      </div>
     </div>
   );
 }
