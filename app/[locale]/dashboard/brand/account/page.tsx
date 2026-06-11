@@ -29,9 +29,9 @@ export default async function AccountPage() {
   return (
     <div className="max-w-5xl mx-auto py-8 px-6 lg:px-8 space-y-8 min-h-[calc(100vh-6rem)]">
       <div>
-        <h1 className="text-3xl font-semibold tracking-tight">{t("title", { fallback: "Account Info" })}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">{t("title") || "Configuración de Cuenta"}</h1>
         <p className="text-muted-foreground mt-2">
-          {t("description", { fallback: "Manage your personal account settings, security, and active sessions." })}
+          {t("description") || "Gestioná tu cuenta personal, preferencias de sesión y seguridad."}
         </p>
       </div>
 
@@ -43,8 +43,7 @@ export default async function AccountPage() {
               elements: {
                 rootBox: "w-full max-w-none shadow-none",
                 card: "w-full max-w-none shadow-none bg-transparent border-none",
-                navbar: "hidden", // Hide clerk sidebar to just show settings linearly or keep it? 
-                // Clerk's UserProfile handles its own sidebar, let's keep it but style it
+                navbar: "hidden", 
                 pageScrollBox: "w-full",
               }
             }}

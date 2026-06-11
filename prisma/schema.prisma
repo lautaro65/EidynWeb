@@ -35,6 +35,10 @@ model User {
   avatarMonthlyLimit Int      @default(2) @map("avatar_monthly_limit")
   avatarCountResetAt DateTime @default(now()) @map("avatar_count_reset_at") // fecha en que se resetea el contador
 
+  // Preferencias de la aplicación
+  preferredTheme  String    @default("system") @map("preferred_theme")
+  preferredLocale String    @default("en") @map("preferred_locale")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
