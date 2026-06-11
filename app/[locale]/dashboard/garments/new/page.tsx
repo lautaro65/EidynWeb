@@ -1,9 +1,8 @@
-import { GarmentWizard } from "@/components/dashboard/garment-wizard";
 import { Link } from "@/i18n/routing";
 import { ArrowLeft } from "lucide-react";
+import { NewGarmentFlow } from "@/components/garments/new-garment-flow";
 
 export default async function NewGarmentPage() {
-
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex items-center gap-4">
@@ -15,12 +14,12 @@ export default async function NewGarmentPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Crear Prenda 3D</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Sigue los pasos para procesar tu prenda</p>
+          <p className="text-muted-foreground mt-1 text-sm">Configura el nuevo modelo 3D</p>
         </div>
       </div>
 
       <div className="py-6">
-        <GarmentWizard />
+        <NewGarmentFlow />
       </div>
     </div>
   );

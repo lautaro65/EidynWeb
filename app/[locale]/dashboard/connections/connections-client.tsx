@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Integration, ApiKey } from "@prisma/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -29,6 +30,7 @@ const PROVIDERS = [
 ];
 
 export function ConnectionsClient({ integrations, apiKeys }: Props) {
+  const t = useTranslations("Connections");
   const [activeTab, setActiveTab] = useState("native");
 
   // Integration Modal
@@ -207,7 +209,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
             <CardHeader className="border-b border-white/5 pb-8 flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-2xl">Claves de API</CardTitle>
-                <CardDescription>Genera credenciales de acceso para desarrollos a medida o CMS externos.</CardDescription>
+                <CardDescription>{t("apiDesc")}</CardDescription>
               </div>
               <Button
                 onClick={() => {
@@ -223,7 +225,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
               {apiKeys.length === 0 ? (
                 <div className="text-center py-20 text-muted-foreground">
                   <Key className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                  <p>No tienes claves de API activas.</p>
+                  <p>{t("noKeys")}</p>
                 </div>
               ) : (
                 <div className="divide-y divide-white/5">
@@ -241,7 +243,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
                           </div>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 hover:text-destructive rounded-xl" onClick={() => handleRevokeKey(key.id)} title="Revocar llave">
+                      <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 hover:text-destructive rounded-xl" onClick={() => handleRevokeKey(key.id)} aria-label="Revocar llave" title="Revocar llave">
                         <Trash2 className="w-5 h-5" />
                       </Button>
                     </div>
@@ -360,8 +362,9 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
                   variant="ghost"
                   className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-primary/20 hover:text-primary rounded-lg text-muted-foreground"
                   onClick={() => copyToClipboard(generatedSecret)}
+                  aria-label="Copiar clave secreta al portapapeles"
                 >
-                  <Copy className="w-5 h-5" />
+                  <Copy className="w-5 h-5" aria-hidden="true" />
                 </Button>
               </div>
 

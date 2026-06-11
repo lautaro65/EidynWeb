@@ -18,6 +18,8 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  if (pathname.startsWith("/widget")) return null;
+
   const isAuthReady = isLoaded;
   const isSignedIn = Boolean(userId);
 
@@ -69,7 +71,7 @@ export function Navbar() {
           !isScrolled && "max-w-6xl mx-auto"
         )}>
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2 group">
+            <Link href="/" aria-label={t("home")} className="flex items-center space-x-2 group">
               <BrandLogo
                 priority
                 className="w-[112px] sm:w-[124px] transition-transform duration-300 group-hover:scale-[1.02]"
@@ -77,10 +79,11 @@ export function Navbar() {
             </Link>
           </div>
 
-          <nav className="hidden md:flex items-center justify-center space-x-6 text-sm font-medium">
+          <nav aria-label="Main" className="hidden md:flex items-center justify-center space-x-6 text-sm font-medium">
             <Link
               href="/about"
               onClick={closeMobileMenu}
+              aria-current={isAboutActive ? "page" : undefined}
               className={cn(
                 "relative py-1 transition-colors group",
                 isAboutActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
@@ -97,6 +100,7 @@ export function Navbar() {
             <Link
               href="/contact"
               onClick={closeMobileMenu}
+              aria-current={isContactActive ? "page" : undefined}
               className={cn(
                 "relative py-1 transition-colors group",
                 isContactActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
@@ -197,7 +201,8 @@ export function Navbar() {
             <button
               onClick={() => setIsMobileMenuOpen((prev) => !prev)}
               className="md:hidden inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-label={isMobileMenuOpen ? t("closeMenu") : t("openMenu")}
+              aria-expanded={isMobileMenuOpen}
             >
               {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </button>
@@ -207,10 +212,11 @@ export function Navbar() {
 
       {isMobileMenuOpen && (
         <div className="pointer-events-auto absolute top-full mt-2 w-[calc(100%-1rem)] max-w-[420px] rounded-2xl border border-border/60 bg-background/95 backdrop-blur-2xl shadow-2xl p-3 md:hidden animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200">
-          <nav className="flex flex-col gap-1">
+          <nav aria-label="Mobile" className="flex flex-col gap-1">
             <Link
               href="/about"
               onClick={closeMobileMenu}
+              aria-current={isAboutActive ? "page" : undefined}
               className={cn(
                 "rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                 isAboutActive ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
@@ -221,6 +227,7 @@ export function Navbar() {
             <Link
               href="/contact"
               onClick={closeMobileMenu}
+              aria-current={isContactActive ? "page" : undefined}
               className={cn(
                 "rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                 isContactActive ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"

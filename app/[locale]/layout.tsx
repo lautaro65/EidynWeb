@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "@/app/globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { getMessages, getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { notFound } from "next/navigation";
 import { Navbar } from "@/components/navbar";
@@ -22,10 +22,30 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Eidyn",
-  description: "Virtual Try-On SaaS",
-};
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: Promise<{ locale: string }> 
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Metadata" });
+
+  return {
+    title: {
+      template: `%s | ${t("title")}`,
+      default: t("title"),
+    },
+    description: t("description"),
+    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+    openGraph: {
+      title: t("title"),
+      description: t("description"),
+      siteName: "Eidyn",
+      locale: locale,
+      type: "website",
+    },
+  };
+}
 
 export default async function RootLayout({
   children,
@@ -74,6 +94,7 @@ export default async function RootLayout({
     >
       <html
         lang={locale}
+        dir="ltr"
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       >

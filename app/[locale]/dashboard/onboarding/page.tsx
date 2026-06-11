@@ -67,9 +67,7 @@ export default function OnboardingPage() {
         {step === 1 && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Badge */}
-            <div className="inline-flex items-center gap-1.5 text-xs font-medium tracking-widest uppercase px-3 py-1 rounded-full bg-primary/10 text-primary mb-6">
-              Bienvenido a Eidyn
-            </div>
+            <div className="inline-flex items-center gap-1.5 text-xs font-medium tracking-widest uppercase px-3 py-1 rounded-full bg-primary/10 text-primary mb-6">{t("welcome")}</div>
 
             <h1 className="font-serif text-5xl font-light tracking-tight leading-tight text-foreground mb-2">
               {t("step1Title")}
@@ -82,6 +80,7 @@ export default function OnboardingPage() {
               {/* Shopper card */}
               <button
                 onClick={() => setRole("shopper")}
+                aria-label={t("shopperTitle")}
                 className={`
                   relative flex flex-col items-start gap-3 p-7 border-2 rounded-[1.4rem] text-left
                   transition-all duration-200 group
@@ -124,6 +123,7 @@ export default function OnboardingPage() {
               {/* Store owner card */}
               <button
                 onClick={() => setRole("store_owner")}
+                aria-label={t("storeTitle")}
                 className={`
                   relative flex flex-col items-start gap-3 p-7 border-2 rounded-[1.4rem] text-left
                   transition-all duration-200 group
@@ -194,9 +194,7 @@ export default function OnboardingPage() {
         {/* Step 2 */}
         {step === 2 && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="inline-flex items-center gap-1.5 text-xs font-medium tracking-widest uppercase px-3 py-1 rounded-full bg-primary/10 text-primary mb-6">
-              Tu tienda
-            </div>
+            <div className="inline-flex items-center gap-1.5 text-xs font-medium tracking-widest uppercase px-3 py-1 rounded-full bg-primary/10 text-primary mb-6">{t("yourStore")}</div>
 
             <h1 className="font-serif text-5xl font-light tracking-tight leading-tight text-foreground mb-2">
               {t("step2Title")}
@@ -208,10 +206,11 @@ export default function OnboardingPage() {
             <div className="bg-card border border-border/60 rounded-[2rem] p-8 shadow-sm space-y-8">
               {/* Store name */}
               <div className="space-y-2">
-                <label className="block text-[0.7rem] font-medium tracking-widest uppercase text-muted-foreground">
+                <label htmlFor="storeNameInput" className="block text-[0.7rem] font-medium tracking-widest uppercase text-muted-foreground">
                   {t("storeNameLabel")}
                 </label>
                 <input
+                  id="storeNameInput"
                   type="text"
                   placeholder={t("storeNamePlaceholder")}
                   value={storeName}
@@ -239,6 +238,7 @@ export default function OnboardingPage() {
                   {/* Free */}
                   <button
                     onClick={() => setPlan("free")}
+                    aria-label={t("freePlanTitle")}
                     className={`
                       relative flex flex-col items-start gap-3 p-5 border-[1.5px] rounded-[1.125rem] text-left
                       transition-all duration-200
@@ -284,6 +284,7 @@ export default function OnboardingPage() {
                   {/* Pro */}
                   <button
                     onClick={() => setPlan("pro")}
+                    aria-label={t("proPlanTitle")}
                     className={`
                       relative flex flex-col items-start gap-3 p-5 border-[1.5px] rounded-[1.125rem] text-left
                       transition-all duration-200

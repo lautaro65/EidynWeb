@@ -2,11 +2,19 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { Plug } from "lucide-react";
-import { ConnectionsClient } from "./connections-client";
-
+import dynamic from "next/dynamic";
+const ConnectionsClient = dynamic(() => import("./connections-client").then(mod => mod.ConnectionsClient));
 import { getTranslations } from "next-intl/server";
 
 type SessionMetadata = { tenantId?: string };
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "DashboardSidebar" });
+  return {
+    title: `${t("connections")} - Eidyn`,
+  };
+}
 
 export default async function ConnectionsPage() {
   const t = await getTranslations("Connections");
@@ -22,7 +30,7 @@ export default async function ConnectionsPage() {
   if (!tenantId) {
     return (
       <div className="flex flex-col items-center justify-center py-20 border border-border/40 border-dashed rounded-[2rem] bg-background/30 backdrop-blur-md text-center shadow-sm">
-        <h3 className="text-xl font-bold text-foreground">No tenant assigned</h3>
+        <h3 className="text-xl font-bold text-foreground">{t("noTenant", { fallback: "No tenant assigned" })}</h3>
       </div>
     );
   }

@@ -1,10 +1,13 @@
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/routing";
+import { Link, usePathname } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/brand-logo";
 
 export function Footer() {
   const t = useTranslations("Footer");
+  const pathname = usePathname();
+
+  if (pathname.startsWith("/widget")) return null;
 
   return (
     <footer className="relative w-full border-t border-border/40 bg-background overflow-hidden mt-auto pt-14 md:pt-24">
@@ -30,7 +33,7 @@ export function Footer() {
         {/* Links Grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-12 border-t border-foreground/5 pt-12 md:pt-16">
           <div className="md:col-span-4 flex flex-col space-y-6">
-            <Link href="/" className="flex items-center space-x-2 group">
+            <Link href="/" aria-label="Home" className="flex items-center space-x-2 group">
               <BrandLogo className="w-[124px] transition-transform duration-300 group-hover:scale-[1.02]" />
             </Link>
             <p className="text-muted-foreground/80 font-light max-w-xs leading-relaxed">
@@ -72,7 +75,7 @@ export function Footer() {
       </div>
 
       {/* Giant Watermark Logo */}
-      <div className="absolute bottom-[-1rem] sm:bottom-[-4rem] md:bottom-[-6rem] inset-x-0 w-full flex justify-center overflow-hidden pointer-events-none select-none">
+      <div aria-hidden="true" className="absolute bottom-[-1rem] sm:bottom-[-4rem] md:bottom-[-6rem] inset-x-0 w-full flex justify-center overflow-hidden pointer-events-none select-none">
         <span className="text-[22vw] sm:text-[18vw] font-black tracking-tighter leading-none text-foreground/5 dark:text-white/[0.02]">
           EIDYN
         </span>

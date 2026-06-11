@@ -269,7 +269,7 @@ export function GarmentCard({ garment, isCommunityView = false }: Props) {
           {garment.brand && (
             <p className="text-xs font-semibold text-primary/80 mb-1 uppercase tracking-wider">{garment.brand}</p>
           )}
-          <h3 className="font-bold text-xl text-foreground group-hover:text-primary transition-colors line-clamp-1">{garment.name || "Untitled Garment"}</h3>
+          <h3 className="font-bold text-xl text-foreground group-hover:text-primary transition-colors line-clamp-1">{garment.name || t("card.untitled", { fallback: "Untitled Garment" })}</h3>
           <p className="text-xs text-muted-foreground mt-1 font-mono">{garment.sku}</p>
         </div>
 
@@ -336,7 +336,7 @@ export function GarmentCard({ garment, isCommunityView = false }: Props) {
                 >
                   <div className="flex items-center gap-2 text-foreground">
                     <Settings2 className="w-4 h-4 text-primary" />
-                    <span className="font-bold text-sm tracking-wide">Opciones</span>
+                    <span className="font-bold text-sm tracking-wide">{t("preview.options", { fallback: "Opciones" })}</span>
                   </div>
                   <div className="p-1 rounded-full hover:bg-white/10 text-muted-foreground transition-colors">
                     {isVariationsMenuOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -347,7 +347,7 @@ export function GarmentCard({ garment, isCommunityView = false }: Props) {
                   <div className="flex flex-col gap-4 mt-2 animate-in fade-in slide-in-from-top-2">
                     {garment.variants?.length > 0 && (
                       <div>
-                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Variante</label>
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">{t("preview.variant", { fallback: "Variante" })}</label>
                         <div className="flex flex-wrap gap-2">
                           {garment.variants.map((v) => (
                             <button
@@ -355,7 +355,7 @@ export function GarmentCard({ garment, isCommunityView = false }: Props) {
                               onClick={() => {
                                 if (v.status !== "processing") setSelectedVariantId(v.id);
                               }}
-                              title={v.status === "processing" ? "Procesando textura..." : v.name || "Sin nombre"}
+                              title={v.status === "processing" ? t("preview.processing", { fallback: "Procesando textura..." }) : v.name || t("preview.noName", { fallback: "Sin nombre" })}
                               disabled={v.status === "processing"}
                               className={cn(
                                 "w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center overflow-hidden relative",
@@ -381,7 +381,7 @@ export function GarmentCard({ garment, isCommunityView = false }: Props) {
 
                     {garment.sizes?.length > 0 && (
                       <div>
-                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Talle</label>
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">{t("preview.size", { fallback: "Talle" })}</label>
                         <div className="flex flex-wrap gap-2">
                           {garment.sizes.map((s) => (
                             <button
@@ -438,7 +438,7 @@ export function GarmentCard({ garment, isCommunityView = false }: Props) {
               ) : (
                 <div className="flex flex-col items-center justify-center text-muted-foreground gap-4 w-full h-[500px]">
                   <Shirt className="w-16 h-16 opacity-50" />
-                  <p>No preview available</p>
+                  <p>{t("preview.noPreview", { fallback: "No preview available" })}</p>
                 </div>
               );
             })()}

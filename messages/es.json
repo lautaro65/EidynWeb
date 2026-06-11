@@ -1,11 +1,20 @@
 {
+  "Metadata": {
+    "title": "Eidyn",
+    "description": "SaaS de Probador Virtual. Transforma tu e-commerce con prueba de ropa virtual en 3D."
+  },
   "Navigation": {
     "about": "Nosotros",
     "contact": "Contacto",
     "dashboard": "Ir al Panel",
     "login": "Iniciar Sesión",
     "signup": "Crear Cuenta",
-    "switchingLanguage": "Cambiando idioma..."
+    "switchingLanguage": "Cambiando idioma...",
+    "home": "Inicio",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "toggleTheme": "Cambiar tema",
+    "toggleLanguage": "Cambiar idioma"
   },
   "Footer": {
     "description": "Transformando el e-commerce con prueba de ropa virtual en 3D.",
@@ -38,29 +47,8 @@
     "finalCtaSubtitle": "Unite a las marcas que ya están usando Eidyn para revolucionar su tienda online."
   },
   "Onboarding": {
-    "step1Title": "Bienvenido a Eidyn",
-    "step1Subtitle": "¿Cómo vas a usar la plataforma?",
-    "shopperTitle": "Quiero probarme ropa",
-    "shopperDesc": "Creá tu avatar 3D y probate prendas de cientos de marcas al instante.",
-    "storeTitle": "Tengo una marca de ropa",
-    "storeDesc": "Digitalizá tu catálogo a 3D e integrá nuestra API en tu tienda.",
-    "step2Title": "Creá tu Tienda",
-    "step2Subtitle": "Configuremos tu experiencia de prueba virtual.",
-    "storeNameLabel": "Nombre de la Tienda",
-    "storeNamePlaceholder": "ej. Acme Studio",
-    "selectPlanLabel": "Elegí tu Plan",
-    "freePlanTitle": "Starter (Gratis)",
-    "freePlanFeature1": "Marca de agua en probador 3D",
-    "freePlanFeature2": "Hasta 50 Prendas",
-    "freePlanFeature3": "Acceso Básico a API",
-    "proPlanTitle": "Pro",
-    "proPlanFeature1": "Sin marcas de agua",
-    "proPlanFeature2": "Prendas Ilimitadas",
-    "proPlanFeature3": "Acceso Total a API y Webhooks",
-    "backBtn": "Atrás",
-    "completeSetupBtn": "Completar Registro",
-    "continueBtn": "Continuar",
-    "launchStoreBtn": "Lanzar Tienda"
+    "welcome": "Bienvenido a Eidyn",
+    "yourStore": "Tu tienda"
   },
   "Settings": {
     "title": "Configuración de la Tienda",
@@ -193,12 +181,17 @@
       "like": "Me gusta",
       "unlike": "Ya no me gusta",
       "edit": "Editar",
-      "statusPublic": "Público",
+      "statusPublic": "P�blico",
       "statusPrivate": "Privado",
       "statusPending": "Pendiente",
-      "statusActive": "Activa",
+      "statusActive": "Activo",
       "variants": "Variantes",
-      "delete": "Eliminar"
+      "delete": "Eliminar",
+      "untitled": "Prenda sin t�tulo"
+    },
+    "requests": {
+      "backToModels": "Volver a Modelos",
+      "desc": "Gestiona los cambios y adiciones sugeridas por otras tiendas para tus modelos 3D."
     }
   },
   "Overview": {
@@ -234,36 +227,56 @@
     "revokeConfirm": "¿Estás seguro de que querés revocar esta Llave API? Cualquier integración que la use dejará de funcionar inmediatamente."
   },
   "Billing": {
-    "title": "Facturación y Planes",
-    "subtitle": "Gestioná tu suscripción, mirá tu uso actual y descargá facturas anteriores.",
-    "currentPlan": "Plan Actual",
-    "generations": "Generaciones 3D",
-    "used": "{current} / {total} en uso",
-    "generationsDesc": "Te queda {left} generación este mes. Mejorá tu plan para generaciones ilimitadas.",
-    "apiRequests": "Peticiones API",
-    "apiDesc": "Los límites de API se reinician el {date}.",
-    "availablePlans": "Planes Disponibles",
-    "currentPlanBtn": "Plan Actual",
-    "recommended": "Recomendado",
-    "upgradeToPro": "Mejorar a Pro",
-    "billingHistory": "Historial de Facturación",
-    "invoice": "Factura",
-    "date": "Fecha",
-    "amount": "Monto",
-    "status": "Estado",
-    "receipt": "Recibo",
-    "month": "mes",
-    "hobbyDesc": "Ideal para explorar la plataforma y probar las generaciones 3D.",
-    "proDesc": "Para tiendas en crecimiento que buscan automatizar su flujo 3D."
+    "title": "Planes y Facturaci�n",
+    "description": "Gestiona tu suscripci�n, uso de c�mputo y el historial de transacciones.",
+    "currentPlanTitle": "Plan Actual",
+    "currentPlanDesc": "Actualmente est�s en el plan",
+    "starter": "Starter",
+    "starterDesc": "Para peque�as marcas que empiezan con 3D.",
+    "pro": "Pro",
+    "proDesc": "Para marcas en crecimiento con mayor volumen.",
+    "enterprise": "Enterprise",
+    "enterpriseDesc": "Para grandes retailers que necesitan recursos dedicados.",
+    "computeTitle": "Uso de C�mputo",
+    "computeDesc": "L�mites mensuales de generaci�n de mallas.",
+    "paymentTitle": "M�todos de Pago",
+    "paymentDesc": "Gestiona tus tarjetas de cr�dito.",
+    "primary": "Principal",
+    "edit": "Editar",
+    "historyTitle": "Historial de Facturaci�n",
+    "historyDesc": "Ver tus facturas pasadas.",
+    "securityTitle": "Seguridad Financiera",
+    "securityDesc": "Tus transacciones est�n encriptadas y procesadas de forma segura.",
+    "table": {
+      "invoice": "Comprobante",
+      "date": "Fecha",
+      "plan": "Plan",
+      "amount": "Monto",
+      "status": "Estado"
+    },
+    "paid": "Pagado",
+    "failed": "Fallido",
+    "pending": "Pendiente"
   },
   "Connections": {
-    "title": "Conexiones",
-    "subtitle": "Integrá Eidyn con tus plataformas de e-commerce favoritas. Sincronizá productos, automatizá generaciones 3D e insertá el visor en un clic.",
-    "connected": "Conectado",
-    "comingSoon": "Próximamente",
-    "manageSettings": "Gestionar Ajustes",
-    "connect": "Conectar",
-    "notifyMe": "Notificarme"
+    "title": "Conexiones y API",
+    "description": "Conecta tu tienda y gestiona tus claves de API.",
+    "storeTitle": "Integraci�n de Tienda",
+    "storeDesc": "Conecta tu tienda Shopify o VTEX.",
+    "apiTitle": "Claves de API",
+    "apiDesc": "Genera credenciales de acceso para desarrollos a medida o CMS externos.",
+    "noKeys": "No tienes claves de API activas.",
+    "storeUrl": "URL de la Tienda",
+    "connecting": "Conectando...",
+    "authorize": "Autorizar Conexi�n",
+    "keyName": "Nombre de la Clave",
+    "generating": "Generando...",
+    "generateKey": "Generar Clave",
+    "disconnecting": "Desconectando...",
+    "disconnect": "S�, Desconectar",
+    "disconnectTitle": "Desconectar Tienda",
+    "disconnectDesc": "�Est�s seguro de que quieres desconectar esta tienda? Esto detendr� la sincronizaci�n 3D.",
+    "noTenant": "No hay tenant asignado"
   },
   "Dashboard": {
     "title": "Dashboard",
@@ -370,7 +383,11 @@
       "successCreate": "Guía de talles creada exitosamente",
       "successUpdate": "Guía actualizada exitosamente",
       "error": "Ocurrió un error al guardar la guía",
-      "errorServer": "Error inesperado al comunicarse con el servidor"
+      "errorServer": "Error inesperado al comunicarse con el servidor",
+      "systemTitle": "Sistema de Talles",
+      "availableSizes": "Talles Disponibles",
+      "sysAlpha": "Alfanum�rico (S, M, L, XL)",
+      "sysNumeric": "Num�rico (38, 40, 42, 44)"
     },
     "card": {
       "draft": "Borrador",
@@ -392,6 +409,300 @@
       "successCopy": "Información copiada al portapapeles",
       "successDelete": "Guía eliminada exitosamente",
       "errorDelete": "Error al eliminar la guía"
+    },
+    "errorLoading": "No pudimos cargar las gu�as",
+    "errorLoadingDesc": "Reintenta en unos segundos. Si el problema persiste, revisa la conexi�n a la base de datos.",
+    "retry": "Reintentar",
+    "noTenant": "No hay tenant asignado",
+    "noTenantDesc": "Debes completar el onboarding para ver tus gu�as de talles."
+  },
+  "Analytics": {
+    "badge": "An�lisis e Insights",
+    "title": "Business Intelligence",
+    "description": "Monitorea el rendimiento de tus prendas 3D, el comportamiento de los usuarios y la salud de nuestra infraestructura en tiempo real.",
+    "tabs": {
+      "conversion": "M�tricas de Conversi�n",
+      "ecosystem": "Ecosistema y Comunidad",
+      "health": "Salud Operativa"
+    },
+    "conversion": {
+      "widgetViews": "Vistas del Widget",
+      "tryOnInitiated": "Try-On Iniciados",
+      "addedToCart": "Agregados al Carrito",
+      "completedPurchases": "Compras Finalizadas",
+      "highImpact": "(Alto Impacto)",
+      "funnelTitle": "Embudo de Conversi�n (Funnel)",
+      "funnelDesc": "An�lisis de abandono desde la visualizaci�n del widget 3D hasta la compra final."
+    },
+    "ecosystem": {
+      "adoptionTitle": "Adopci�n y Usuarios Activos",
+      "adoptionDesc": "Evoluci�n de usuarios �nicos interactuando con los modelos 3D esta semana.",
+      "totalUsers": "Total Usuarios",
+      "topModelsTitle": "Modelos con m�s Engagement",
+      "interactions": "Interacciones",
+      "demographicsTitle": "Demograf�a y Dispositivos",
+      "mobile": "Dispositivos M�viles (iOS/Android)",
+      "desktop": "Escritorio (Windows/Mac)",
+      "performanceNote": "El rendimiento de WebGL en m�viles se mantiene estable en un promedio de 45 FPS, garantizando una excelente experiencia para la mayor�a de tus compradores."
+    },
+    "health": {
+      "apiStatusTitle": "Estado de la API",
+      "online": "100% Online",
+      "normalOp": "Operaci�n Normal",
+      "latencyTitle": "Latencia Promedio",
+      "latencyDesc": "Respuesta en la CDN de modelos 3D",
+      "queueTitle": "Cola de Inngest (AiJobs)",
+      "queueDesc": "Trabajos de generaci�n de mallas pendientes",
+      "processingTitle": "Latencia de Procesamiento (�ltimas 24h)",
+      "processingDesc": "Monitoreo de tiempos de respuesta del CDN que despacha los .GLB.",
+      "live": "Live",
+      "alertTitle": "Alerta Predictiva del Sistema",
+      "alertDesc": "Basado en el crecimiento del tr�fico, recomendamos configurar <str>Cloudflare R2 Tier 2</str> para el pr�ximo mes. El volumen de descargas simult�neas de modelos 3D podr�a experimentar latencias superiores a 500ms durante picos de ventas de fin de semana."
     }
+  },
+  "Organization": {
+    "title": "Configuraci�n de la organizaci�n",
+    "description": "Gestiona el perfil de tu empresa y preferencias generales.",
+    "configTitle": "Configuraci�n Visual",
+    "configDesc": "Personaliza c�mo se ve el visor 3D en tu tienda.",
+    "widgetTheme": "Tema del Widget",
+    "lightMode": "Modo Claro",
+    "darkMode": "Modo Oscuro",
+    "primaryColor": "Color Principal de Marca",
+    "zoom": "Habilitar Zoom 3D",
+    "zoomDesc": "Permite a los usuarios inspeccionar detalles de la prenda de cerca.",
+    "advancedTitle": "Configuraciones Avanzadas",
+    "advancedDesc": "Configuraci�n t�cnica y l�mites del sistema.",
+    "proRequired": "Requiere Plan Pro",
+    "rateLimit": "Monitor de Rate Limiting",
+    "optimal": "�ptimo",
+    "rateDesc1": "Promedio �ltimos 60 minutos",
+    "rateDesc2": "Max 100 rpm",
+    "assetProtection": "Protecci�n de Assets",
+    "assetDesc": "Tiempo hasta que caducan las URLs temporales de assets 3D para proteger tus modelos.",
+    "gdpr": "Aviso de Consentimiento GDPR",
+    "gdprDesc": "Mostrar consentimiento de cookies antes de cargar assets 3D.",
+    "save": "Guardar Cambios",
+    "errorLoading": "Error al cargar la configuraci�n"
+  },
+  "Account": {
+    "title": "Informaci�n de la Cuenta",
+    "description": "Gestiona la configuraci�n personal de tu cuenta, seguridad y sesiones activas."
+  },
+  "GarmentsNew": {
+    "title": "Crear Prenda 3D",
+    "description": "Sigue los pasos para procesar tu prenda"
+  },
+  "Products": {
+    "syncCatalog": "Sincronizar Cat�logo",
+    "syncing": "Sincronizando...",
+    "searchPlaceholder": "Buscar por SKU o nombre...",
+    "table": {
+      "img": "Img",
+      "product": "Producto",
+      "category": "Categor�a",
+      "mappingStatus": "Estado de Mapeo",
+      "actions": "Acciones 3D",
+      "noProducts": "No se encontraron productos con ese filtro.",
+      "mapped": "Mapeado",
+      "unmapped": "Sin Mapear",
+      "link3d": "Vincular a 3D",
+      "preview": "Previsualizar Param�tricamente",
+      "unlink": "Desvincular"
+    },
+    "syncMessages": {
+      "errorTitle": "Error de Sincronizaci�n",
+      "noNewsTitle": "Sin novedades",
+      "noNewsDesc": "No se encontraron productos nuevos en tus tiendas conectadas para sincronizar.",
+      "successTitle": "�Sincronizaci�n Exitosa!",
+      "successDesc": "Se han importado o actualizado {count} productos en tu cat�logo. La p�gina se actualizar� enseguida...",
+      "problemTitle": "Ocurri� un problema",
+      "problemDesc": "Hubo un error de conexi�n al intentar sincronizar el cat�logo."
+    },
+    "mapping": {
+      "title": "Mapeo Inteligente (Binding)",
+      "desc": "Selecciona a qu� modelo 3D base corresponde el producto",
+      "ownModels": "Mis Modelos",
+      "community": "Comunidad",
+      "onlyFavorites": "Solo mis favoritos",
+      "loading": "Cargando modelos 3D...",
+      "noName": "Sin nombre",
+      "noModels": "No se encontraron modelos 3D que coincidan con la b�squeda.",
+      "loadMore": "Cargar m�s",
+      "saveErrorTitle": "Error al mapear",
+      "networkErrorTitle": "Error de red",
+      "networkErrorDesc": "Hubo un problema al guardar el mapeo."
+    },
+    "unmap": {
+      "title": "�Est�s seguro que quer�s desvincular?",
+      "desc": "Se eliminar� el modelo 3D asignado para el producto {name}. Los clientes en la tienda ya no podr�n usar el probador virtual para este art�culo.",
+      "cancel": "Cancelar",
+      "confirm": "Desvincular Prenda",
+      "errorTitle": "Error al desvincular",
+      "networkErrorDesc": "Hubo un problema al desvincular el producto."
+    },
+    "preview": {
+      "title": "Previsualizaci�n Param�trica 3D",
+      "loading": "Cargando modelo 3D y texturas...",
+      "testTitle": "Test Param�trico",
+      "testDesc": "Valid� combinaciones",
+      "variant": "Variante",
+      "none": "Ninguna",
+      "size": "Talle"
+    }
+  },
+  "Loading": {
+    "dashboard": "Cargando dashboard..."
+  },
+  "GarmentWizard": {
+    "step1": {
+      "title": "Identidad de la prenda",
+      "desc": "Ingresa el nombre de la prenda y el SKU identificador que se utilizar� para mapear el producto.",
+      "nameLabel": "Nombre de la Prenda",
+      "namePlaceholder": "Ej: Camiseta Oversize Essential",
+      "brandLabel": "Marca",
+      "brandPlaceholder": "Ej: Nike, Adidas, Zara",
+      "brandHelp": "Escrib� la marca o seleccion� una existente. Se formatea autom�ticamente.",
+      "skuLabel": "SKU (Identificador �nico)",
+      "skuPlaceholder": "Ej: TSHIRT-OVS-001",
+      "skuErrorUnique": "Este SKU ya existe en tu tienda. Usa un SKU �nico.",
+      "skuErrorValidate": "Error validando SKU.",
+      "skuHelp": "Este c�digo debe coincidir con el SKU de tu producto en Shopify o WooCommerce.",
+      "categoryLabel": "Categor�a",
+      "categoryPlaceholder": "Selecciona una categor�a",
+      "catTshirts": "Remeras / T-Shirts",
+      "catPants": "Pantalones",
+      "catCoats": "Abrigos",
+      "nextStep": "Siguiente Paso"
+    },
+    "step2": {
+      "title": "Foto base y generaci�n del modelo 3D",
+      "desc": "Sube una foto frontal y trasera de la prenda. Esto permitir� a nuestra IA entender la forma, corte y silueta para generar el modelo 3D.",
+      "frontPhoto": "Foto Frontal",
+      "backPhoto": "Foto Trasera",
+      "clickToUpload": "Haz clic para subir foto",
+      "uploadLimits": "PNG, JPG hasta 5MB",
+      "back": "Volver",
+      "generating": "Procesando...",
+      "generateBtn": "Generar Modelo",
+      "processingDesc": "Subiendo im�genes y preparando IA. Esto puede tardar unos segundos...",
+      "uploadError": "Error al subir im�genes"
+    },
+    "step3": {
+      "title": "Variantes de Color / Dise�o",
+      "desc": "El modelo 3D ya se est� procesando. Ahora agreg� los colores o estampados disponibles para esta prenda.",
+      "variantTitle": "Variante",
+      "variantName": "Nombre de Variante",
+      "variantNamePlaceholder": "Ej: Rojo Pasi�n, Estampado Floral",
+      "designType": "Tipo de Dise�o",
+      "solidColor": "Color S�lido",
+      "textureImage": "Textura/Imagen",
+      "selectColor": "Selecciona el color",
+      "textureFront": "Textura (Frente)",
+      "textureBack": "Textura (Espalda)",
+      "optional": "(Opcional)",
+      "front": "Frente",
+      "back": "Espalda",
+      "addVariant": "Agregar otra variante",
+      "saving": "Guardando...",
+      "saveError": "Error al guardar variantes"
+    },
+    "step4": {
+      "title": "Matriz de Talles y Medidas",
+      "desc": "Agreg� las medidas reales de la prenda para que el modelo 3D se escale autom�ticamente a cada talle.",
+      "systemTitle": "Sistema de Talles",
+      "sysAlpha": "Alfanum�rico (S, M, L)",
+      "sysNumeric": "Num�rico (38, 40, 42)",
+      "importGuide": "Importar Gu�a Predefinida",
+      "selectGuide": "Selecciona una gu�a para autocompletar",
+      "noGuide": "Sin gu�a (manual)",
+      "sizesTitle": "Talles Disponibles",
+      "selectSizesDesc": "Selecciona los talles que deseas configurar para esta prenda.",
+      "measurementsTitle": "Medidas Exactas (cm)",
+      "fillMeasurementsDesc": "Completa las medidas para cada talle seleccionado.",
+      "chest": "Ancho Pecho",
+      "shoulders": "Ancho Hombros",
+      "length": "Largo Total",
+      "waist": "Ancho Cintura",
+      "hips": "Ancho Cadera",
+      "inseam": "Largo Entrepierna",
+      "sleeve": "Largo Manga",
+      "saveError": "Error al guardar talles",
+      "autoCompleteLabel": "Autocompletar con Gu�a de Talles",
+      "selectGuidePlaceholder": "Selecciona una gu�a guardada...",
+      "noneClear": "Ninguna (Limpiar)",
+      "autoCompleteDesc": "Esto llenar� autom�ticamente los talles y medidas. Puedes modificarlos luego.",
+      "noGuidesSaved": "No ten�s gu�as de talles guardadas en tu cuenta. Pod�s crearlas desde el men� principal 'Gu�as de Talle' para acelerar este paso en el futuro.",
+      "measurementsCm": "Medidas (en cm)",
+      "back": "Volver",
+      "saving": "Guardando...",
+      "nextStep": "Siguiente Paso"
+    },
+    "step5": {
+      "title": "Combinaciones Disponibles",
+      "desc": "Selecciona qu� variantes est�n disponibles en qu� talles. Desmarca las combinaciones que no existan.",
+      "variantSizes": "Talles para",
+      "allSizes": "Todos los talles",
+      "finishTitle": "Finalizar Configuraci�n",
+      "finishDesc": "Una vez que confirmes, se iniciar� el proceso de generaci�n del modelo 3D con todas las variantes.",
+      "saving": "Creando...",
+      "finishBtn": "Confirmar y Crear",
+      "saveError": "Error al guardar combinaciones",
+      "combinationsSkus": "Combinaciones (SKUs)",
+      "selectCombinations": "Seleccion� qu� combinaciones de Variante/Talle vas a comercializar. Las desactivadas no se mostrar�n en la tienda.",
+      "tableHeader": "Variante \\ Talle",
+      "back": "Volver",
+      "finishing": "Finalizando...",
+      "completeCreation": "Completar Creaci�n"
+    },
+    "success": {
+      "title": "�Prenda Creada Exitosamente!",
+      "desc": "El modelo 3D base est� proces�ndose en Inngest, y las texturas y escalas est�n listas para el Probador Virtual.",
+      "goToGarments": "Ir a Mis Prendas"
+    }
+  },
+  "GarmentEdit": {
+    "title": "Editar Prenda 3D",
+    "subtitle": "Modifica las propiedades de tu modelo sin afectar la malla 3D base.",
+    "saveBtn": "Guardar Cambios",
+    "saving": "Guardando...",
+    "identity": {
+      "title": "Identidad",
+      "name": "Nombre",
+      "brand": "Marca",
+      "sku": "SKU",
+      "category": "Categor�a",
+      "brandPlaceholder": "Ej: Nike"
+    },
+    "variants": {
+      "title": "Variantes",
+      "add": "Agregar Variante",
+      "variantName": "Variante",
+      "name": "Nombre",
+      "solid": "S�lido",
+      "texture": "Textura",
+      "uploadImage": "Subir imagen"
+    },
+    "sizes": {
+      "title": "Matriz de Talles",
+      "add": "Agregar Talle",
+      "alpha": "Alfanum�rico",
+      "numeric": "Num�rico",
+      "headerSize": "Talle"
+    },
+    "availability": {
+      "title": "Disponibilidad (Variante x Talle)",
+      "tableHeader": "Variante \\ Talle",
+      "noName": "Sin nombre"
+    },
+    "errors": {
+      "unexpected": "Error inesperado al guardar la prenda"
+    }
+  },
+  "RequestsList": {
+    "backToModels": "Volver a mis modelos",
+    "noImage": "Sin Imagen",
+    "requestedBy": "Solicitado por",
+    "goToEdit": "Ir a Editar"
   }
 }

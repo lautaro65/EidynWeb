@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 import { Loader2, Check, X, Edit, MessageSquare, Clock, ArrowLeft } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
@@ -29,6 +30,7 @@ type Props = {
 };
 
 export function RequestsList({ requests }: Props) {
+  const t = useTranslations("RequestsList");
   const [resolvingRequestId, setResolvingRequestId] = useState<string | null>(null);
 
   const handleResolveRequest = async (id: string, status: "resolved" | "rejected") => {
@@ -73,8 +75,7 @@ export function RequestsList({ requests }: Props) {
           No tienes solicitudes de cambio pendientes. ¡Todo está al día!
         </p>
         <Link href="/dashboard/garments" className="mt-6 flex items-center gap-2 rounded-xl bg-muted/50 hover:bg-muted px-5 py-2.5 font-semibold text-muted-foreground transition-colors border border-border/50">
-          <ArrowLeft className="w-4 h-4" /> Volver a mis modelos
-        </Link>
+          <ArrowLeft className="w-4 h-4" />{t("backToModels")} </Link>
       </div>
     );
   }
@@ -103,7 +104,7 @@ export function RequestsList({ requests }: Props) {
               {previewUrl ? (
                 <Image src={previewUrl} alt={req.garment.name || "Garment"} fill className="object-cover" />
               ) : (
-                <div className="text-xs text-muted-foreground">Sin Imagen</div>
+                <div className="text-xs text-muted-foreground">{t("noImage")}</div>
               )}
             </div>
 
@@ -129,8 +130,7 @@ export function RequestsList({ requests }: Props) {
               <h4 className="text-lg font-bold text-foreground truncate">
                 {req.garment.name || "Untitled Garment"}
               </h4>
-              <p className="text-sm text-muted-foreground mt-1 mb-2">
-                Solicitado por <strong className="text-foreground">{req.requestingTenant.name || "Tienda Anónima"}</strong>
+              <p className="text-sm text-muted-foreground mt-1 mb-2">{t("requestedBy")} <strong className="text-foreground">{req.requestingTenant.name || "Tienda Anónima"}</strong>
               </p>
               
               <div className="bg-muted/50 rounded-xl p-3 border border-border/50 text-sm whitespace-pre-wrap flex items-start gap-2">
@@ -147,8 +147,7 @@ export function RequestsList({ requests }: Props) {
                     href={`/dashboard/garments/${req.garmentId}/edit`}
                     className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-4 py-2.5 rounded-xl font-bold transition-all border border-primary/20 hover:border-transparent shadow-sm"
                   >
-                    <Edit className="w-4 h-4" /> Ir a Editar
-                  </Link>
+                    <Edit className="w-4 h-4" />{t("goToEdit")} </Link>
 
                   <div className="flex gap-2 w-full sm:w-auto">
                     <button 

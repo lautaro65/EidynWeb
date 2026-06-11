@@ -9,13 +9,15 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
-export default function AccountPage() {
+export default async function AccountPage() {
+  const t = await getTranslations("Account");
+  
   return (
     <div className="max-w-5xl mx-auto py-8 px-6 lg:px-8 space-y-8 min-h-[calc(100vh-6rem)]">
       <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Account Info</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">{t("title", { fallback: "Account Info" })}</h1>
         <p className="text-muted-foreground mt-2">
-          Manage your personal account settings, security, and active sessions.
+          {t("description", { fallback: "Manage your personal account settings, security, and active sessions." })}
         </p>
       </div>
 

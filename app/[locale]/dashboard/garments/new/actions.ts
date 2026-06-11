@@ -2,358 +2,104 @@
 
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
-import { revalidatePath } from "next/cache";
 
-export async function checkSkuUnique(sku: string) {
-  try {
-    const { userId, sessionClaims } = await auth();
-    if (!userId) return { error: "Unauthorized" };
+async function getTenantId() {
+  const { userId, sessionClaims } = await auth();
+  if (!userId) throw new Error("Unauthorized");
 
-    let tenantId = (sessionClaims?.metadata as { tenantId?: string })?.tenantId;
-    if (!tenantId) {
-      const mem = await db.membership.findFirst({ where: { user: { clerkId: userId } } });
-      if (!mem) return { error: "No tenant" };
-      tenantId = mem.tenantId;
-    }
-
-    const existing = await db.garmentTemplate.findFirst({
-      where: {
-        sku: sku
-      }
-    });
-
-    return { isUnique: !existing };
-  } catch (error) {
-    console.error("Error checking SKU:", error);
-    return { error: "Failed to validate SKU" };
+  let tenantId = (sessionClaims?.metadata as { tenantId?: string })?.tenantId;
+  if (!tenantId) {
+    const mem = await db.membership.findFirst({ where: { user: { clerkId: userId } } });
+    if (!mem) throw new Error("No tenant");
+    tenantId = mem.tenantId;
   }
+  return tenantId;
 }
 
-import { uploadToR2 } from "@/lib/r2";
-import { inngest } from "@/inngest/client";
-import { removeBackground } from "@/lib/image-processing";
-
-/**
- * Fetch all existing GarmentBrand names for autocomplete suggestions.
- */
 export async function getBrandsAction() {
   try {
     const brands = await db.garmentBrand.findMany({
-      select: { name: true },
-      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" }
     });
-    return { success: true, brands: brands.map((b) => b.name) };
-  } catch (error) {
-    console.error("Error fetching brands:", error);
-    return { error: "Failed to fetch brands" };
+    return { brands };
+  } catch (error: any) {
+    return { error: error.message };
   }
 }
 
-export async function createGarmentTemplateAction(formData: FormData) {
+export async function validateGarmentSkuAction(sku: string) {
   try {
-    const { userId, sessionClaims } = await auth();
-    if (!userId) return { error: "Unauthorized" };
-
-    let tenantId = (sessionClaims?.metadata as { tenantId?: string })?.tenantId;
-    if (!tenantId) {
-      const mem = await db.membership.findFirst({ where: { user: { clerkId: userId } } });
-      if (!mem) return { error: "No tenant" };
-      tenantId = mem.tenantId;
+    if (!sku || sku.trim() === "") {
+      return { error: "El SKU no puede estar vacío." };
     }
 
-    const name = formData.get("name") as string;
-    const sku = formData.get("sku") as string;
-    const category = formData.get("category") as string | null;
-    const brandName = (formData.get("brand") as string | null)?.trim() || null;
-    const frontImage = formData.get("frontImage") as File;
-    const backImage = formData.get("backImage") as File;
+    const existingGarment = await db.garmentTemplate.findUnique({
+      where: { sku: sku.trim() }
+    });
 
-    if (!name || !sku || !frontImage || !backImage || !category) {
-      return { error: "Missing required fields" };
+    if (existingGarment) {
+      return { inUse: true };
     }
 
-    // Find or create the GarmentBrand
-    let brandId: string | null = null;
-    if (brandName) {
-      // Format: first letter uppercase, rest lowercase
-      const formatted = brandName.charAt(0).toUpperCase() + brandName.slice(1).toLowerCase();
-      const existing = await db.garmentBrand.findUnique({ where: { name: formatted } });
-      if (existing) {
-        brandId = existing.id;
-      } else {
-        const created = await db.garmentBrand.create({ data: { name: formatted } });
-        brandId = created.id;
+    return { inUse: false };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
+export async function createGarmentTemplateAction(data: {
+  name: string;
+  brandName: string;
+  sku: string;
+  category: string;
+}) {
+  try {
+    const tenantId = await getTenantId();
+
+    // Validar SKU de nuevo por seguridad
+    const existingSku = await db.garmentTemplate.findUnique({
+      where: { sku: data.sku.trim() }
+    });
+    if (existingSku) {
+      throw new Error("El SKU ya está en uso.");
+    }
+
+    // Gestionar la marca (buscar o crear)
+    let brandId = null;
+    if (data.brandName && data.brandName.trim() !== "") {
+      // Capitalizar primera letra:
+      const formattedBrandName = data.brandName.trim().charAt(0).toUpperCase() + data.brandName.trim().slice(1).toLowerCase();
+      
+      let brand = await db.garmentBrand.findUnique({
+        where: { name: formattedBrandName }
+      });
+
+      if (!brand) {
+        brand = await db.garmentBrand.create({
+          data: { name: formattedBrandName }
+        });
       }
+      brandId = brand.id;
     }
 
-    // Convert files to Buffer, remove background, and upload to R2
-    const originalFrontBuffer = Buffer.from(await frontImage.arrayBuffer());
-    const originalBackBuffer = Buffer.from(await backImage.arrayBuffer());
+    // Por ahora apuntamos al modelo local base. Luego esto se subirá a Cloudflare R2
+    const baseModelUrl = data.category.toLowerCase() === "remera" ? "/models/remera.glb" : null;
 
-    const { buffer: frontBuffer, mimeType: frontMime } = await removeBackground(originalFrontBuffer, frontImage.type);
-    const { buffer: backBuffer, mimeType: backMime } = await removeBackground(originalBackBuffer, backImage.type);
-
-    const timestamp = Date.now();
-    const frontExt = frontMime === "image/png" ? "png" : frontImage.name.split('.').pop();
-    const backExt = backMime === "image/png" ? "png" : backImage.name.split('.').pop();
-
-    const frontKey = `garments/uploads/${tenantId}/${timestamp}_front.${frontExt}`;
-    const backKey = `garments/uploads/${tenantId}/${timestamp}_back.${backExt}`;
-
-    const frontUrl = await uploadToR2(frontBuffer, frontKey, frontMime);
-    const backUrl = await uploadToR2(backBuffer, backKey, backMime);
-
-    // Create GarmentTemplate with mock model directly assigned
-    const template = await db.garmentTemplate.create({
+    const garment = await db.garmentTemplate.create({
       data: {
         ownerId: tenantId,
-        brandId,
-        name,
-        sku,
-        category,
-        status: "base_ready", // Set to ready since we provide the model immediately
-        sourceImageUrl: frontUrl,
-        sourceImageBackUrl: backUrl,
-        baseModelUrl: "/models/remera.glb" // MOCK SYNCHRONOUSLY
+        brandId: brandId,
+        sku: data.sku.trim(),
+        name: data.name.trim(),
+        category: data.category.toLowerCase(),
+        baseModelUrl: baseModelUrl,
+        status: "complete", // Lo marcamos completo porque ya tiene un GLB base local
       }
     });
 
-    // Create AiJob
-    const aiJob = await db.aiJob.create({
-      data: {
-        tenantId,
-        type: "garment_model",
-        status: "pending",
-        inputData: { sourceImageUrl: frontUrl, sourceImageBackUrl: backUrl }
-      }
-    });
-
-    // Trigger Inngest
-    await inngest.send({
-      name: "garment.process",
-      data: {
-        aiJobId: aiJob.id,
-        templateId: template.id,
-        sourceImageUrl: frontUrl
-      }
-    });
-
-    revalidatePath("/dashboard/garments");
-    return { success: true, templateId: template.id };
-  } catch (error) {
-    console.error("Error creating GarmentTemplate:", error);
-    return { error: error instanceof Error ? error.message : "Failed to create garment template" };
-  }
-}
-
-export async function createGarmentVariantsAction(templateId: string, formData: FormData) {
-  try {
-    const { userId, sessionClaims } = await auth();
-    if (!userId) return { error: "Unauthorized" };
-
-    let tenantId = (sessionClaims?.metadata as { tenantId?: string })?.tenantId;
-    if (!tenantId) {
-      const mem = await db.membership.findFirst({ where: { user: { clerkId: userId } } });
-      if (!mem) return { error: "No tenant" };
-      tenantId = mem.tenantId;
-    }
-
-    const template = await db.garmentTemplate.findUnique({ where: { id: templateId } });
-    if (!template || template.ownerId !== tenantId) {
-      return { error: "Template not found or unauthorized" };
-    }
-
-    const variantsCount = Number(formData.get("variantsCount"));
-    const createdVariants = [];
-
-    for (let i = 0; i < variantsCount; i++) {
-      const name = formData.get(`variant_${i}_name`) as string;
-      const type = formData.get(`variant_${i}_type`) as string; // 'solid' or 'texture'
-      const colorHex = formData.get(`variant_${i}_colorHex`) as string | null;
-      const fileFront = formData.get(`variant_${i}_fileFront`) as File | null;
-      const fileBack = formData.get(`variant_${i}_fileBack`) as File | null;
-
-      let textureUrl = null;
-      let backTextureUrl = null;
-
-      if (type === 'texture') {
-        if (fileFront && fileFront.size > 0) {
-          const originalBuffer = Buffer.from(await fileFront.arrayBuffer());
-          const { buffer, mimeType } = await removeBackground(originalBuffer, fileFront.type);
-          
-          const timestamp = Date.now();
-          const ext = mimeType === "image/png" ? "png" : fileFront.name.split('.').pop();
-          const key = `garments/${templateId}/textures/${timestamp}_front.${ext}`;
-          textureUrl = await uploadToR2(buffer, key, mimeType);
-        }
-        if (fileBack && fileBack.size > 0) {
-          const originalBuffer = Buffer.from(await fileBack.arrayBuffer());
-          const { buffer, mimeType } = await removeBackground(originalBuffer, fileBack.type);
-          
-          const timestamp = Date.now();
-          const ext = mimeType === "image/png" ? "png" : fileBack.name.split('.').pop();
-          const key = `garments/${templateId}/textures/${timestamp}_back.${ext}`;
-          backTextureUrl = await uploadToR2(buffer, key, mimeType);
-        }
-      }
-
-      const variant = await db.garmentVariant.create({
-        data: {
-          garmentId: templateId,
-          name,
-          type, // Save the type ('solid' or 'texture')
-          colorHex: type === 'solid' ? colorHex : null,
-          textureUrl: textureUrl,
-          backTextureUrl: backTextureUrl,
-          previewImageUrl: textureUrl, // Use the texture URL as the preview image
-          status: "completed",
-        }
-      });
-      createdVariants.push(variant.id);
-    }
-
-    return { success: true, count: createdVariants.length };
-  } catch (error) {
-    console.error("Error creating variants:", error);
-    return { error: "Failed to create variants" };
-  }
-}
-
-export async function createGarmentSizesAction(templateId: string, sizesData: { label: string; system: string; chest?: number; shoulders?: number; length?: number; waist?: number; hips?: number; inseam?: number; sleeve?: number }[]) {
-  try {
-    const { userId, sessionClaims } = await auth();
-    if (!userId) return { error: "Unauthorized" };
-
-    let tenantId = (sessionClaims?.metadata as { tenantId?: string })?.tenantId;
-    if (!tenantId) {
-      const mem = await db.membership.findFirst({ where: { user: { clerkId: userId } } });
-      if (!mem) return { error: "No tenant" };
-      tenantId = mem.tenantId;
-    }
-
-    const template = await db.garmentTemplate.findUnique({
-      where: { id: templateId },
-      include: { variants: true }
-    });
-    
-    if (!template || template.ownerId !== tenantId) {
-      return { error: "Template not found or unauthorized" };
-    }
-
-    if (!sizesData || sizesData.length === 0) {
-      return { error: "No sizes provided" };
-    }
-
-    // Find the middle size index for scale reference
-    const middleIndex = Math.floor(sizesData.length / 2);
-    const refSize = sizesData[middleIndex];
-    const refWidth = refSize.chest || refSize.waist || 1;
-    const refLength = refSize.length || refSize.inseam || 1;
-
-    const createdSizes = [];
-
-    for (const s of sizesData) {
-      // Calculate scales
-      // X and Z scale proportionally to Chest or Waist
-      // Y scales proportionally to Length or Inseam
-      const currentWidth = s.chest || s.waist || 1;
-      const currentLength = s.length || s.inseam || 1;
-      
-      const scaleX = currentWidth / refWidth;
-      const scaleZ = currentWidth / refWidth; // Usually depth scales with width
-      const scaleY = currentLength / refLength;
-
-      const size = await db.garmentSize.create({
-        data: {
-          garmentId: templateId,
-          label: s.label,
-          system: s.system,
-          chest: s.chest,
-          shoulders: s.shoulders,
-          length: s.length,
-          waist: s.waist,
-          hips: s.hips,
-          inseam: s.inseam,
-          sleeve: s.sleeve,
-          scaleX,
-          scaleY,
-          scaleZ,
-        }
-      });
-      createdSizes.push(size);
-    }
-
-    // We do NOT create GarmentVariantSize here anymore. That happens in Step 5.
-
-    return { success: true, createdSizes, variants: template.variants, sku: template.sku };
-  } catch (error) {
-    console.error("Error creating sizes:", error);
-    return { error: "Failed to create sizes" };
-  }
-}
-
-export async function createGarmentVariantSizesAction(templateId: string, cartesianData: { variantId: string; sizeId: string; active: boolean }[]) {
-  try {
-    const { userId, sessionClaims } = await auth();
-    if (!userId) return { error: "Unauthorized" };
-
-    let tenantId = (sessionClaims?.metadata as { tenantId?: string })?.tenantId;
-    if (!tenantId) {
-      const mem = await db.membership.findFirst({ where: { user: { clerkId: userId } } });
-      if (!mem) return { error: "No tenant" };
-      tenantId = mem.tenantId;
-    }
-
-    const template = await db.garmentTemplate.findUnique({
-      where: { id: templateId }
-    });
-    
-    if (!template || template.ownerId !== tenantId) {
-      return { error: "Template not found or unauthorized" };
-    }
-
-    if (cartesianData.length > 0) {
-      await db.garmentVariantSize.createMany({
-        data: cartesianData.map(d => ({
-          variantId: d.variantId,
-          sizeId: d.sizeId,
-          active: d.active
-        }))
-      });
-    }
-
-    // Mark template as fully configured
-    await db.garmentTemplate.update({
-      where: { id: templateId },
-      data: { status: "complete" }
-    });
-
-    return { success: true };
-  } catch (error) {
-    console.error("Error creating sizes:", error);
-    return { error: "Failed to create sizes" };
-  }
-}
-
-export async function getSizeGuidesAction() {
-  try {
-    const { userId, sessionClaims } = await auth();
-    if (!userId) return { error: "Unauthorized" };
-
-    let tenantId = (sessionClaims?.metadata as { tenantId?: string })?.tenantId;
-    if (!tenantId) {
-      const mem = await db.membership.findFirst({ where: { user: { clerkId: userId } } });
-      if (!mem) return { error: "No tenant" };
-      tenantId = mem.tenantId;
-    }
-
-    const sizeGuides = await db.sizeGuide.findMany({
-      where: { tenantId }
-    });
-
-    return { success: true, data: sizeGuides };
-  } catch (error) {
-    console.error("Error fetching size guides:", error);
-    return { error: "Failed to fetch size guides" };
+    return { success: true, garmentId: garment.id };
+  } catch (error: any) {
+    return { error: error.message || "Error al guardar la prenda" };
   }
 }

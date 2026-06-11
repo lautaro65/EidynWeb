@@ -48,7 +48,8 @@ export async function getOrganizationConfigAction() {
           watermark: true,
           allowZoom: true,
           sessionTtlMinutes: 30,
-          consentText: "Al probar esta prenda con nuestro probador virtual, autorizas el procesamiento temporal de tus datos para generar el modelo 3D. Tus datos están protegidos y expiran automáticamente."
+          consentText: "Al probar esta prenda con nuestro probador virtual, autorizas el procesamiento temporal de tus datos para generar el modelo 3D. Tus datos están protegidos y expiran automáticamente.",
+          authorizedDomains: []
         },
         storeName: store?.name || "",
         currency: store?.currency || "USD",

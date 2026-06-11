@@ -4,11 +4,13 @@ import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { Bell, ArrowLeft } from "lucide-react";
 import { Link } from "@/i18n/routing";
+import { getTranslations } from "next-intl/server";
 import { RequestsList } from "@/components/dashboard/requests-list";
 
 type SessionMetadata = { tenantId?: string };
 
 export default async function GarmentRequestsPage() {
+  const t = await getTranslations("Garments");
   const { userId, sessionClaims } = await auth();
   if (!userId) redirect("/sign-in");
 
@@ -61,8 +63,7 @@ export default async function GarmentRequestsPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <Link href="/dashboard/garments" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-2 transition-colors w-fit">
-            <ArrowLeft className="w-4 h-4" /> Volver a Modelos
-          </Link>
+            <ArrowLeft className="w-4 h-4" />{t("requests.backToModels")} </Link>
           <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
             <Bell className="w-8 h-8 text-primary" />
             Bandeja de Solicitudes
@@ -72,9 +73,7 @@ export default async function GarmentRequestsPage() {
               </span>
             )}
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Gestiona los cambios y adiciones sugeridas por otras tiendas para tus modelos 3D.
-          </p>
+          <p className="text-muted-foreground mt-1 text-sm">{t("requests.desc")}</p>
         </div>
       </div>
 

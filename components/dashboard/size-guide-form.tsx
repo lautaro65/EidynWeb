@@ -551,7 +551,7 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-background/50 border border-border/50 p-6 rounded-2xl shadow-sm mb-8">
                 <div className="space-y-3">
-                  <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider text-[10px]">Sistema de Talles</label>
+                  <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider text-[10px]">{t("form.systemTitle")}</label>
                   <Select 
                     value={sizingSystem} 
                     onValueChange={(val) => {
@@ -560,7 +560,7 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
                     }}
                   >
                     <SelectTrigger className="w-full bg-muted/50 dark:bg-black/20 border border-border/60 dark:border-white/10 focus:border-primary/50 rounded-xl px-4 py-6 text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all">
-                      <SelectValue placeholder="Sistema de Talles">
+                      <SelectValue placeholder={t("form.systemTitle")}>
                         {sizingSystem === "alpha" ? "Alfanumérico (S, M, L, XL)" : "Numérico (38, 40, 42, 44)"}
                       </SelectValue>
                     </SelectTrigger>
@@ -572,7 +572,7 @@ export function SizeGuideForm({ isEditing = false, initialData }: SizeGuideFormP
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider text-[10px]">Talles Disponibles</label>
+                  <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider text-[10px]">{t("form.availableSizes")}</label>
                   <div className="flex flex-wrap gap-3">
                     {sizingSystem === "alpha" 
                       ? ["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"].map(label => (

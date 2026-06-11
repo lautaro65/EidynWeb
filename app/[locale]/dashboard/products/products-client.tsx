@@ -1,6 +1,8 @@
 "use client";
 
+import * as React from "react";
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { 
   Table, 
@@ -68,6 +70,7 @@ interface Props {
 }
 
 export function ProductsClient({ initialProducts }: Props) {
+  const t = useTranslations("Products");
   const [searchTerm, setSearchTerm] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
   const [products, setProducts] = useState<MockProduct[]>(initialProducts);
@@ -259,10 +262,13 @@ export function ProductsClient({ initialProducts }: Props) {
     setUnmapModalOpen(true);
   };
 
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.sku.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = React.useMemo(() => {
+    const lowerSearch = searchTerm.toLowerCase();
+    return products.filter(p => 
+      p.name.toLowerCase().includes(lowerSearch) || 
+      p.sku.toLowerCase().includes(lowerSearch)
+    );
+  }, [products, searchTerm]);
 
   return (
     <div className="space-y-6">
@@ -272,10 +278,11 @@ export function ProductsClient({ initialProducts }: Props) {
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input 
-            placeholder="Buscar por SKU o nombre..." 
+            placeholder={t("searchPlaceholder", { fallback: "Buscar por SKU o nombre..." })} 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 h-12 rounded-xl bg-background/50 border-white/10 focus-visible:ring-primary/30"
+            aria-label="Buscar productos"
           />
         </div>
 
@@ -312,11 +319,11 @@ export function ProductsClient({ initialProducts }: Props) {
         <Table>
           <TableHeader className="bg-muted/30">
             <TableRow className="border-white/10 hover:bg-transparent">
-              <TableHead className="w-[80px] text-center">Img</TableHead>
-              <TableHead>Producto</TableHead>
+              <TableHead className="w-[80px] text-center">{t("table.img", { fallback: "Img" })}</TableHead>
+              <TableHead>{t("table.product", { fallback: "Producto" })}</TableHead>
               <TableHead>Categoría</TableHead>
-              <TableHead className="text-center">Estado de Mapeo</TableHead>
-              <TableHead className="text-right pr-6">Acciones 3D</TableHead>
+              <TableHead className="text-center">{t("table.mappingStatus", { fallback: "Estado de Mapeo" })}</TableHead>
+              <TableHead className="text-right pr-6">{t("table.actions", { fallback: "Acciones 3D" })}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -356,6 +363,7 @@ export function ProductsClient({ initialProducts }: Props) {
                       variant="default" 
                       className="rounded-xl font-semibold shadow-md shadow-primary/20 hover:scale-105 transition-transform"
                       onClick={() => openMappingModal(product)}
+                      aria-label={`Vincular a 3D ${product.name}`}
                     >
                       <Link2 className="w-4 h-4 mr-2" />
                       Vincular a 3D
@@ -368,6 +376,7 @@ export function ProductsClient({ initialProducts }: Props) {
                         className="rounded-xl hover:bg-primary/20 hover:text-primary transition-colors"
                         title="Previsualizar Paramétricamente"
                         onClick={() => handleOpenPreview(product.mappedGarmentId)}
+                        aria-label={`Previsualizar modelo 3D de ${product.name}`}
                       >
                         {isPreviewLoading && previewModalOpen ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                       </Button>
@@ -377,6 +386,7 @@ export function ProductsClient({ initialProducts }: Props) {
                         className="rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                         title="Desvincular"
                         onClick={() => confirmUnmap(product)}
+                        aria-label={`Desvincular modelo 3D de ${product.name}`}
                       >
                         <Link2 className="w-4 h-4" />
                       </Button>
@@ -518,8 +528,8 @@ export function ProductsClient({ initialProducts }: Props) {
               <Eye className="w-5 h-5 text-primary" />
               Previsualización Paramétrica 3D
             </h2>
-            <Button variant="ghost" size="icon" onClick={() => setPreviewModalOpen(false)} className="rounded-xl">
-              <X className="w-5 h-5" />
+            <Button variant="ghost" size="icon" onClick={() => setPreviewModalOpen(false)} className="rounded-xl" aria-label="Cerrar modal">
+              <X className="w-5 h-5" aria-hidden="true" />
             </Button>
           </div>
           
@@ -566,8 +576,9 @@ export function ProductsClient({ initialProducts }: Props) {
                         size="icon" 
                         className="rounded-full hover:bg-white/10 h-8 w-8 transition-colors"
                         onClick={() => setIsVariationsMenuOpen(false)}
+                        aria-label="Cerrar menú de variaciones"
                       >
-                        <ChevronDown className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />
+                        <ChevronDown className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" aria-hidden="true" />
                       </Button>
                     </div>
 

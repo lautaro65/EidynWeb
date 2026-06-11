@@ -3,6 +3,16 @@ import { Link } from "@/i18n/routing";
 import { buttonVariants } from "@/components/ui/button";
 import { Sparkles, Shirt, Plug, ShieldCheck, ChevronRight, ShoppingCart, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getTranslations } from "next-intl/server";
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Home" });
+  return {
+    title: "Eidyn - The Next Gen Try-On API",
+    description: t("heroSubtitle"),
+  };
+}
 
 export default function Home() {
   const t = useTranslations("Home");
@@ -18,7 +28,7 @@ export default function Home() {
         <div className="container px-4 sm:px-6 mx-auto flex flex-col items-center text-center max-w-5xl z-10">
           
           <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary mb-10 backdrop-blur-md shadow-sm hover:bg-primary/10 transition-colors cursor-default">
-            <Sparkles className="mr-2 h-4 w-4" />
+            <Sparkles aria-hidden="true" className="mr-2 h-4 w-4" />
             <span>V1.0 - The Next Gen Try-On API</span>
           </div>
           
@@ -39,7 +49,7 @@ export default function Home() {
               )}
             >
               {t("ctaStart")}
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight aria-hidden="true" className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Link>
             
             <Link 
@@ -68,7 +78,7 @@ export default function Home() {
             {/* Feature 1 */}
             <div className="group flex flex-col p-8 rounded-[2rem] bg-gradient-to-b from-white/5 to-transparent border border-white/5 hover:border-primary/20 transition-colors">
               <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-8 group-hover:scale-110 transition-transform duration-300">
-                <Shirt className="h-7 w-7" />
+                <Shirt aria-hidden="true" className="h-7 w-7" />
               </div>
               <h3 className="text-2xl font-bold mb-4">{t("feature1Title")}</h3>
               <p className="text-muted-foreground/80 font-light leading-relaxed">
@@ -79,7 +89,7 @@ export default function Home() {
             {/* Feature 2 */}
             <div className="group flex flex-col p-8 rounded-[2rem] bg-gradient-to-b from-white/5 to-transparent border border-white/5 hover:border-primary/20 transition-colors">
               <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-8 group-hover:scale-110 transition-transform duration-300">
-                <Plug className="h-7 w-7" />
+                <Plug aria-hidden="true" className="h-7 w-7" />
               </div>
               <h3 className="text-2xl font-bold mb-4">{t("feature2Title")}</h3>
               <p className="text-muted-foreground/80 font-light leading-relaxed">
@@ -90,7 +100,7 @@ export default function Home() {
             {/* Feature 3 */}
             <div className="group flex flex-col p-8 rounded-[2rem] bg-gradient-to-b from-white/5 to-transparent border border-white/5 hover:border-primary/20 transition-colors">
               <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-8 group-hover:scale-110 transition-transform duration-300">
-                <ShieldCheck className="h-7 w-7" />
+                <ShieldCheck aria-hidden="true" className="h-7 w-7" />
               </div>
               <h3 className="text-2xl font-bold mb-4">{t("feature3Title")}</h3>
               <p className="text-muted-foreground/80 font-light leading-relaxed">
@@ -107,7 +117,7 @@ export default function Home() {
         
         <div className="container px-4 sm:px-6 mx-auto relative z-10 text-center flex flex-col items-center max-w-3xl">
           <div className="h-24 w-24 rounded-full bg-background/50 backdrop-blur-xl flex items-center justify-center shadow-2xl mb-10 border border-white/10">
-            <ShoppingCart className="h-10 w-10 text-primary" />
+            <ShoppingCart aria-hidden="true" className="h-10 w-10 text-primary" />
           </div>
           <h2 className="text-5xl md:text-6xl font-black tracking-tighter mb-8 text-transparent bg-clip-text bg-gradient-to-b from-foreground to-foreground/70">
             {t("finalCtaTitle")}

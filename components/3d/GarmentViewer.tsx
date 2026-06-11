@@ -440,6 +440,7 @@ export function GarmentViewer({
   colorHex,
   textureUrl,
   backTextureUrl,
+  avatarUrl,
   scale = [1, 1, 1]
 }: { 
   url: string; 
@@ -447,6 +448,7 @@ export function GarmentViewer({
   colorHex?: string;
   textureUrl?: string;
   backTextureUrl?: string;
+  avatarUrl?: string;
   scale?: [number, number, number];
 }) {
   if (!url) return <div className={`h-full w-full flex items-center justify-center bg-white/5 rounded-3xl border border-dashed border-white/10 text-muted-foreground ${className || 'min-h-[500px]'}`}>Modelo 3D no disponible</div>;
@@ -457,6 +459,9 @@ export function GarmentViewer({
         <Canvas shadows={{ type: THREE.PCFShadowMap }} camera={{ position: [0, 0, 15], fov: 45 }}>
           <Suspense fallback={<ModelLoader />}>
             <Stage environment="city" intensity={0.8} adjustCamera>
+              {avatarUrl && (
+                <Model url={avatarUrl} />
+              )}
               <Model url={url} colorHex={colorHex} textureUrl={textureUrl} backTextureUrl={backTextureUrl} scale={scale} />
             </Stage>
           </Suspense>

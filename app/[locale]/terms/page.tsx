@@ -1,5 +1,12 @@
 import { getLocale } from "next-intl/server";
 import { LegalPageShell, type LegalSection } from "@/components/legal-page-shell";
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return {
+    title: locale === "es" ? "Términos - Eidyn" : "Terms - Eidyn",
+    description: locale === "es" ? "Términos y condiciones de uso de Eidyn." : "Eidyn terms and conditions of use.",
+  };
+}
 
 export default async function TermsPage() {
   const locale = await getLocale();

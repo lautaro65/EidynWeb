@@ -7,12 +7,22 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
-import { GarmentsTabsWrapper } from "@/components/dashboard/garments-tabs-wrapper";
+import dynamic from "next/dynamic";
+const GarmentsTabsWrapper = dynamic(() => import("@/components/dashboard/garments-tabs-wrapper").then(mod => mod.GarmentsTabsWrapper));
 import { GarmentsPagination } from "@/components/dashboard/garments-pagination";
 
 type Props = {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{ category?: string; search?: string; tab?: string; minePage?: string; globalPage?: string }>;
 };
+
+export async function generateMetadata({ params }: Props) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "DashboardSidebar" });
+  return {
+    title: `${t("garments")} - Eidyn`,
+  };
+}
 
 type SessionMetadata = { tenantId?: string };
 
@@ -38,9 +48,9 @@ export default async function GarmentsPage({ searchParams }: Props) {
           <div className="h-20 w-20 rounded-full bg-muted/50 flex items-center justify-center mb-6 shadow-inner ring-1 ring-border/50">
             <Shirt className="h-10 w-10 text-muted-foreground opacity-50" />
           </div>
-          <h3 className="text-xl font-bold text-foreground">No tenant assigned</h3>
+          <h3 className="text-xl font-bold text-foreground">{t("noTenant", { fallback: "No tenant assigned" })}</h3>
           <p className="text-muted-foreground max-w-sm mx-auto mt-2 font-light">
-            You need to complete onboarding to view your garments.
+            {t("noTenantDesc", { fallback: "You need to complete onboarding to view your garments." })}
           </p>
           <Link href="/dashboard/onboarding" className="mt-6 rounded-xl bg-foreground text-background px-5 py-2.5 font-semibold">
             Completar onboarding
@@ -119,9 +129,9 @@ export default async function GarmentsPage({ searchParams }: Props) {
           <div className="h-20 w-20 rounded-full bg-destructive/10 flex items-center justify-center mb-6 ring-1 ring-destructive/30">
             <Shirt className="h-10 w-10 text-destructive/70" />
           </div>
-          <h3 className="text-xl font-bold text-foreground">Error loading garments</h3>
+          <h3 className="text-xl font-bold text-foreground">{t("errorLoading", { fallback: "Error loading garments" })}</h3>
           <p className="text-muted-foreground max-w-sm mx-auto mt-2 font-light">
-            Please try again later.
+            {t("tryAgain", { fallback: "Please try again later." })}
           </p>
         </div>
       </div>

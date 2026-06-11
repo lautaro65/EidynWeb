@@ -88,6 +88,7 @@ export function LanguageToggle() {
       size="sm"
       onClick={toggleLocale}
       disabled={isSwitching}
+      aria-label={t("toggleLanguage")}
       className="font-semibold text-primary hover:text-primary/80 disabled:opacity-70"
     >
       {locale === "es" ? "EN" : "ES"}

@@ -62,10 +62,12 @@ model Tenant {
   slug       String?   @unique
   logoUrl    String?   @map("logo_url")
   brandColor String?   @map("brand_color")
-  widgetConfig Json?   @map("widget_config")
-  plan       String?
-  status     String?
-  isVerified Boolean   @default(false) @map("is_verified")
+  widgetConfig         Json?     @map("widget_config")
+  plan                 String?
+  status               String?
+  stripeCustomerId     String?   @unique @map("stripe_customer_id")
+  stripeSubscriptionId String?   @unique @map("stripe_subscription_id")
+  isVerified           Boolean   @default(false) @map("is_verified")
   verifiedBy String?   @map("verified_by")
   verifiedAt DateTime? @map("verified_at")
   createdAt  DateTime  @default(now()) @map("created_at")

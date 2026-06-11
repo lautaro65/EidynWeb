@@ -70,9 +70,9 @@ export default async function SizeGuidesPage({ searchParams }: Props) {
           <div className="h-20 w-20 rounded-full bg-muted/50 flex items-center justify-center mb-6 shadow-inner ring-1 ring-border/50">
             <Ruler className="h-10 w-10 text-muted-foreground opacity-50" />
           </div>
-          <h3 className="text-xl font-bold text-foreground">{t("noResults.title")}</h3>
+          <h3 className="text-xl font-bold text-foreground">{t("noTenant")}</h3>
           <p className="text-muted-foreground max-w-sm mx-auto mt-2 font-light">
-            {t("noResults.desc")}
+            {t("noTenantDesc")}
           </p>
           <Link href="/dashboard/onboarding" className="mt-6 rounded-xl bg-foreground text-background px-5 py-2.5 font-semibold">
             Completar onboarding
@@ -101,12 +101,12 @@ export default async function SizeGuidesPage({ searchParams }: Props) {
           <div className="h-20 w-20 rounded-full bg-destructive/10 flex items-center justify-center mb-6 ring-1 ring-destructive/30">
             <Ruler className="h-10 w-10 text-destructive/70" />
           </div>
-          <h3 className="text-xl font-bold text-foreground">No pudimos cargar las guias</h3>
+          <h3 className="text-xl font-bold text-foreground">{t("errorLoading", { fallback: "No pudimos cargar las guias" })}</h3>
           <p className="text-muted-foreground max-w-sm mx-auto mt-2 font-light">
-            Reintenta en unos segundos. Si el problema persiste, revisa la conexion a la base de datos.
+            {t("errorLoadingDesc", { fallback: "Reintenta en unos segundos. Si el problema persiste, revisa la conexion a la base de datos." })}
           </p>
           <Link href="/dashboard/size-guides" className="mt-6 rounded-xl bg-foreground text-background px-5 py-2.5 font-semibold">
-            Reintentar
+            {t("retry", { fallback: "Reintentar" })}
           </Link>
         </div>
       </div>

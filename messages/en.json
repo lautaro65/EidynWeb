@@ -1,11 +1,20 @@
 {
+  "Metadata": {
+    "title": "Eidyn",
+    "description": "Virtual Try-On SaaS. Transform e-commerce with 3D virtual clothing try-on."
+  },
   "Navigation": {
     "about": "About Us",
     "contact": "Contact",
     "dashboard": "Dashboard",
     "login": "Sign In",
     "signup": "Create Account",
-    "switchingLanguage": "Switching language..."
+    "switchingLanguage": "Switching language...",
+    "home": "Home",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "toggleTheme": "Toggle theme",
+    "toggleLanguage": "Switch language"
   },
   "Footer": {
     "description": "Transforming e-commerce with 3D virtual clothing try-on.",
@@ -38,29 +47,8 @@
     "finalCtaSubtitle": "Join the brands already using Eidyn to revolutionize their online store."
   },
   "Onboarding": {
-    "step1Title": "Welcome to Eidyn",
-    "step1Subtitle": "How are you planning to use the platform?",
-    "shopperTitle": "I want to try on clothes",
-    "shopperDesc": "Create your 3D avatar and try on garments from hundreds of brands instantly.",
-    "storeTitle": "I have a clothing brand",
-    "storeDesc": "Digitize your catalog to 3D and integrate our try-on API into your store.",
-    "step2Title": "Create your Store",
-    "step2Subtitle": "Let's set up your virtual try-on experience.",
-    "storeNameLabel": "Store Name",
-    "storeNamePlaceholder": "e.g. Acme Studio",
-    "selectPlanLabel": "Select your Plan",
-    "freePlanTitle": "Starter (Free)",
-    "freePlanFeature1": "Watermark on all 3D Try-ons",
-    "freePlanFeature2": "Up to 50 Garments",
-    "freePlanFeature3": "Basic API Access",
-    "proPlanTitle": "Pro",
-    "proPlanFeature1": "No Watermarks",
-    "proPlanFeature2": "Unlimited Garments",
-    "proPlanFeature3": "Full API & Webhooks Access",
-    "backBtn": "Back",
-    "completeSetupBtn": "Complete Setup",
-    "continueBtn": "Continue",
-    "launchStoreBtn": "Launch Store"
+    "welcome": "Welcome to Eidyn",
+    "yourStore": "Your store"
   },
   "Settings": {
     "title": "Store Settings",
@@ -197,7 +185,13 @@
       "statusPrivate": "Private",
       "statusPending": "Pending",
       "statusActive": "Active",
-      "variants": "Variants"
+      "variants": "Variants",
+      "delete": "Delete",
+      "untitled": "Untitled Garment"
+    },
+    "requests": {
+      "backToModels": "Back to Models",
+      "desc": "Manage the changes and additions suggested by other stores for your 3D models."
     }
   },
   "Overview": {
@@ -233,36 +227,56 @@
     "revokeConfirm": "Are you sure you want to revoke this API Key? Any integrations using it will immediately stop working."
   },
   "Billing": {
-    "title": "Billing & Plans",
-    "subtitle": "Manage your subscription, view your current usage, and download past invoices.",
-    "currentPlan": "Current Plan",
-    "generations": "3D Generations",
-    "used": "{current} / {total} used",
-    "generationsDesc": "You have {left} generation left this month. Upgrade for unlimited generations.",
-    "apiRequests": "API Requests",
-    "apiDesc": "API limits reset on {date}.",
-    "availablePlans": "Available Plans",
-    "currentPlanBtn": "Current Plan",
-    "recommended": "Recommended",
-    "upgradeToPro": "Upgrade to Pro",
-    "billingHistory": "Billing History",
-    "invoice": "Invoice",
-    "date": "Date",
-    "amount": "Amount",
-    "status": "Status",
-    "receipt": "Receipt",
-    "month": "month",
-    "hobbyDesc": "Perfect for exploring the platform and testing 3D generations.",
-    "proDesc": "For growing stores looking to automate their 3D pipelines."
+    "title": "Plans and Billing",
+    "description": "Manage your subscription, compute usage and transaction history.",
+    "currentPlanTitle": "Current Plan",
+    "currentPlanDesc": "You are currently on the plan",
+    "starter": "Starter",
+    "starterDesc": "For small brands starting with 3D.",
+    "pro": "Pro",
+    "proDesc": "For growing brands with higher volume.",
+    "enterprise": "Enterprise",
+    "enterpriseDesc": "For large retailers needing dedicated resources.",
+    "computeTitle": "Compute Usage",
+    "computeDesc": "Monthly mesh generation limits.",
+    "paymentTitle": "Payment Methods",
+    "paymentDesc": "Manage your credit cards.",
+    "primary": "Primary",
+    "edit": "Edit",
+    "historyTitle": "Billing History",
+    "historyDesc": "View your past invoices.",
+    "securityTitle": "Financial Security",
+    "securityDesc": "Your transactions are encrypted and processed securely.",
+    "table": {
+      "invoice": "Invoice",
+      "date": "Date",
+      "plan": "Plan",
+      "amount": "Amount",
+      "status": "Status"
+    },
+    "paid": "Paid",
+    "failed": "Failed",
+    "pending": "Pending"
   },
   "Connections": {
-    "title": "Connections",
-    "subtitle": "Integrate Eidyn seamlessly with your favorite e-commerce platforms. Sync products, automate 3D generations, and embed the viewer in one click.",
-    "connected": "Connected",
-    "comingSoon": "Coming Soon",
-    "manageSettings": "Manage Settings",
-    "connect": "Connect",
-    "notifyMe": "Notify Me"
+    "title": "Connections & API",
+    "description": "Connect your store and manage your API keys.",
+    "storeTitle": "Store Integration",
+    "storeDesc": "Connect your Shopify or VTEX store.",
+    "apiTitle": "API Keys",
+    "apiDesc": "Generate access credentials for custom developments or external CMS.",
+    "noKeys": "You have no active API keys.",
+    "storeUrl": "Store URL",
+    "connecting": "Connecting...",
+    "authorize": "Authorize Connection",
+    "keyName": "Key Name",
+    "generating": "Generating...",
+    "generateKey": "Generate Key",
+    "disconnecting": "Disconnecting...",
+    "disconnect": "Yes, Disconnect",
+    "disconnectTitle": "Disconnect Store",
+    "disconnectDesc": "Are you sure you want to disconnect this store? This will stop 3D synchronization.",
+    "noTenant": "No tenant assigned"
   },
   "Dashboard": {
     "title": "Dashboard",
@@ -369,7 +383,11 @@
       "successCreate": "Size guide created successfully",
       "successUpdate": "Size guide updated successfully",
       "error": "An error occurred while saving the guide",
-      "errorServer": "Unexpected error while communicating with the server"
+      "errorServer": "Unexpected error while communicating with the server",
+      "systemTitle": "Sizing System",
+      "availableSizes": "Available Sizes",
+      "sysAlpha": "Alphanumeric (S, M, L, XL)",
+      "sysNumeric": "Numeric (38, 40, 42, 44)"
     },
     "card": {
       "draft": "Draft",
@@ -391,6 +409,300 @@
       "successCopy": "Information copied to clipboard",
       "successDelete": "Guide deleted successfully",
       "errorDelete": "Error deleting the guide"
+    },
+    "errorLoading": "Could not load guides",
+    "errorLoadingDesc": "Retry in a few seconds. If the problem persists, check the database connection.",
+    "retry": "Retry",
+    "noTenant": "No tenant assigned",
+    "noTenantDesc": "You need to complete onboarding to view your size guides."
+  },
+  "Analytics": {
+    "badge": "Analysis & Insights",
+    "title": "Business Intelligence",
+    "description": "Monitor the performance of your 3D garments, user behavior, and the health of our infrastructure in real-time.",
+    "tabs": {
+      "conversion": "Conversion Metrics",
+      "ecosystem": "Ecosystem & Community",
+      "health": "Operational Health"
+    },
+    "conversion": {
+      "widgetViews": "Widget Views",
+      "tryOnInitiated": "Try-Ons Initiated",
+      "addedToCart": "Added to Cart",
+      "completedPurchases": "Completed Purchases",
+      "highImpact": "(High Impact)",
+      "funnelTitle": "Conversion Funnel",
+      "funnelDesc": "Drop-off analysis from 3D widget visualization to final purchase."
+    },
+    "ecosystem": {
+      "adoptionTitle": "Adoption & Active Users",
+      "adoptionDesc": "Evolution of unique users interacting with 3D models this week.",
+      "totalUsers": "Total Users",
+      "topModelsTitle": "Highest Engagement Models",
+      "interactions": "Interactions",
+      "demographicsTitle": "Demographics & Devices",
+      "mobile": "Mobile Devices (iOS/Android)",
+      "desktop": "Desktop (Windows/Mac)",
+      "performanceNote": "WebGL performance on mobile remains stable at an average of 45 FPS, ensuring an excellent experience for most of your buyers."
+    },
+    "health": {
+      "apiStatusTitle": "API Status",
+      "online": "100% Online",
+      "normalOp": "Normal Operation",
+      "latencyTitle": "Average Latency",
+      "latencyDesc": "3D model CDN response time",
+      "queueTitle": "Inngest Queue (AiJobs)",
+      "queueDesc": "Pending mesh generation jobs",
+      "processingTitle": "Processing Latency (Last 24h)",
+      "processingDesc": "Monitoring of response times for the CDN delivering .GLB files.",
+      "live": "Live",
+      "alertTitle": "Predictive System Alert",
+      "alertDesc": "Based on traffic growth, we recommend configuring <str>Cloudflare R2 Tier 2</str> for next month. Concurrent download volume of 3D models could experience latencies over 500ms during weekend sales peaks."
     }
+  },
+  "Organization": {
+    "title": "Organization settings",
+    "description": "Manage your company profile and overall preferences.",
+    "configTitle": "Visual Configuration",
+    "configDesc": "Customize how the 3D viewer looks in your store.",
+    "widgetTheme": "Widget Theme",
+    "lightMode": "Light Mode",
+    "darkMode": "Dark Mode",
+    "primaryColor": "Primary Brand Color",
+    "zoom": "Enable 3D Zoom",
+    "zoomDesc": "Allows users to inspect garment details up close.",
+    "advancedTitle": "Advanced Settings",
+    "advancedDesc": "Technical configuration and system limits.",
+    "proRequired": "Pro Plan Required",
+    "rateLimit": "Rate Limiting Monitor",
+    "optimal": "Optimal",
+    "rateDesc1": "Last 60 minutes average",
+    "rateDesc2": "Max 100 rpm",
+    "assetProtection": "Asset Protection",
+    "assetDesc": "Time until temporary 3D asset URLs expire to protect your models.",
+    "gdpr": "GDPR Consent Disclaimer",
+    "gdprDesc": "Show cookie consent before loading 3D assets.",
+    "save": "Save Changes",
+    "errorLoading": "Error Loading Configuration"
+  },
+  "Account": {
+    "title": "Account Info",
+    "description": "Manage your personal account settings, security, and active sessions."
+  },
+  "GarmentsNew": {
+    "title": "Create 3D Garment",
+    "description": "Follow the steps to process your garment"
+  },
+  "Products": {
+    "syncCatalog": "Sync Catalog",
+    "syncing": "Syncing...",
+    "searchPlaceholder": "Search by SKU or name...",
+    "table": {
+      "img": "Img",
+      "product": "Product",
+      "category": "Category",
+      "mappingStatus": "Mapping Status",
+      "actions": "3D Actions",
+      "noProducts": "No products found with that filter.",
+      "mapped": "Mapped",
+      "unmapped": "Unmapped",
+      "link3d": "Link to 3D",
+      "preview": "Preview Parametrically",
+      "unlink": "Unlink"
+    },
+    "syncMessages": {
+      "errorTitle": "Sync Error",
+      "noNewsTitle": "No news",
+      "noNewsDesc": "No new products found in your connected stores to sync.",
+      "successTitle": "Successful Sync!",
+      "successDesc": "Imported or updated {count} products in your catalog. Page will refresh shortly...",
+      "problemTitle": "A problem occurred",
+      "problemDesc": "Connection error when trying to sync catalog."
+    },
+    "mapping": {
+      "title": "Smart Mapping (Binding)",
+      "desc": "Select which base 3D model corresponds to the product",
+      "ownModels": "My Models",
+      "community": "Community",
+      "onlyFavorites": "Only my favorites",
+      "loading": "Loading 3D models...",
+      "noName": "No name",
+      "noModels": "No 3D models found matching the search.",
+      "loadMore": "Load more",
+      "saveErrorTitle": "Mapping Error",
+      "networkErrorTitle": "Network Error",
+      "networkErrorDesc": "There was a problem saving the mapping."
+    },
+    "unmap": {
+      "title": "Are you sure you want to unlink?",
+      "desc": "The assigned 3D model for product {name} will be removed. Customers in the store will no longer be able to use the virtual try-on for this item.",
+      "cancel": "Cancel",
+      "confirm": "Unlink Garment",
+      "errorTitle": "Unlink Error",
+      "networkErrorDesc": "There was a problem unlinking the product."
+    },
+    "preview": {
+      "title": "3D Parametric Preview",
+      "loading": "Loading 3D model and textures...",
+      "testTitle": "Parametric Test",
+      "testDesc": "Validate combinations",
+      "variant": "Variant",
+      "none": "None",
+      "size": "Size"
+    }
+  },
+  "Loading": {
+    "dashboard": "Loading dashboard..."
+  },
+  "GarmentWizard": {
+    "step1": {
+      "title": "Garment Identity",
+      "desc": "Enter the name of the garment and the SKU identifier that will be used to map the product.",
+      "nameLabel": "Garment Name",
+      "namePlaceholder": "e.g. Essential Oversize T-Shirt",
+      "brandLabel": "Brand",
+      "brandPlaceholder": "e.g. Nike, Adidas, Zara",
+      "brandHelp": "Type the brand or select an existing one. It will be formatted automatically.",
+      "skuLabel": "SKU (Unique Identifier)",
+      "skuPlaceholder": "e.g. TSHIRT-OVS-001",
+      "skuErrorUnique": "This SKU already exists for your store. Please use a unique SKU.",
+      "skuErrorValidate": "Error validating SKU.",
+      "skuHelp": "This code must match your product's SKU in Shopify or WooCommerce.",
+      "categoryLabel": "Category",
+      "categoryPlaceholder": "Select a category",
+      "catTshirts": "T-Shirts",
+      "catPants": "Pants",
+      "catCoats": "Coats",
+      "nextStep": "Next Step"
+    },
+    "step2": {
+      "title": "Base Photo & 3D Generation",
+      "desc": "Upload a front and back photo of the garment. This will allow our AI to understand the shape, cut, and silhouette to generate the 3D model.",
+      "frontPhoto": "Front Photo",
+      "backPhoto": "Back Photo",
+      "clickToUpload": "Click to upload photo",
+      "uploadLimits": "PNG, JPG up to 5MB",
+      "back": "Back",
+      "generating": "Processing...",
+      "generateBtn": "Generate Model",
+      "processingDesc": "Uploading images and preparing AI. This may take a few seconds...",
+      "uploadError": "Error uploading images"
+    },
+    "step3": {
+      "title": "Color / Design Variants",
+      "desc": "The 3D model is processing. Now add the available colors or patterns for this garment.",
+      "variantTitle": "Variant",
+      "variantName": "Variant Name",
+      "variantNamePlaceholder": "e.g. Passion Red, Floral Print",
+      "designType": "Design Type",
+      "solidColor": "Solid Color",
+      "textureImage": "Texture/Image",
+      "selectColor": "Select Color",
+      "textureFront": "Texture (Front)",
+      "textureBack": "Texture (Back)",
+      "optional": "(Optional)",
+      "front": "Front",
+      "back": "Back",
+      "addVariant": "Add another variant",
+      "saving": "Saving...",
+      "saveError": "Error saving variants"
+    },
+    "step4": {
+      "title": "Size and Measurement Matrix",
+      "desc": "Add the real measurements of the garment so the 3D model scales automatically to each size.",
+      "systemTitle": "Sizing System",
+      "sysAlpha": "Alphanumeric (S, M, L)",
+      "sysNumeric": "Numeric (38, 40, 42)",
+      "importGuide": "Import Pre-defined Guide",
+      "selectGuide": "Select a size guide to autofill",
+      "noGuide": "No guide (manual)",
+      "sizesTitle": "Available Sizes",
+      "selectSizesDesc": "Select the sizes you want to configure for this garment.",
+      "measurementsTitle": "Exact Measurements (cm)",
+      "fillMeasurementsDesc": "Complete the measurements for each selected size.",
+      "chest": "Chest Width",
+      "shoulders": "Shoulders Width",
+      "length": "Total Length",
+      "waist": "Waist Width",
+      "hips": "Hips Width",
+      "inseam": "Inseam Length",
+      "sleeve": "Sleeve Length",
+      "saveError": "Error saving sizes",
+      "autoCompleteLabel": "Autocomplete with Size Guide",
+      "selectGuidePlaceholder": "Select a saved guide...",
+      "noneClear": "None (Clear)",
+      "autoCompleteDesc": "This will automatically fill the sizes and measurements. You can modify them later.",
+      "noGuidesSaved": "You don't have any size guides saved in your account. You can create them from the main 'Size Guides' menu to speed up this step in the future.",
+      "measurementsCm": "Measurements (in cm)",
+      "back": "Back",
+      "saving": "Saving...",
+      "nextStep": "Next Step"
+    },
+    "step5": {
+      "title": "Available Combinations",
+      "desc": "Select which variants are available in which sizes. Uncheck combinations that don't exist.",
+      "variantSizes": "Sizes for",
+      "allSizes": "All Sizes",
+      "finishTitle": "Finish Setup",
+      "finishDesc": "Once you confirm, the 3D model generation process will start with all variants.",
+      "saving": "Creating...",
+      "finishBtn": "Confirm and Create",
+      "saveError": "Error saving combinations",
+      "combinationsSkus": "Combinations (SKUs)",
+      "selectCombinations": "Select which Variant/Size combinations you will sell. Unchecked ones will not be shown in the store.",
+      "tableHeader": "Variant \\ Size",
+      "back": "Back",
+      "finishing": "Finishing...",
+      "completeCreation": "Complete Creation"
+    },
+    "success": {
+      "title": "Garment Created Successfully!",
+      "desc": "The base 3D model is processing in Inngest, and the textures and scales are ready for the Virtual Try-On.",
+      "goToGarments": "Go to My Garments"
+    }
+  },
+  "GarmentEdit": {
+    "title": "Edit 3D Garment",
+    "subtitle": "Modify the properties of your model without affecting the base 3D mesh.",
+    "saveBtn": "Save Changes",
+    "saving": "Saving...",
+    "identity": {
+      "title": "Identity",
+      "name": "Name",
+      "brand": "Brand",
+      "sku": "SKU",
+      "category": "Category",
+      "brandPlaceholder": "e.g. Nike"
+    },
+    "variants": {
+      "title": "Variants",
+      "add": "Add Variant",
+      "variantName": "Variant",
+      "name": "Name",
+      "solid": "Solid",
+      "texture": "Texture",
+      "uploadImage": "Upload image"
+    },
+    "sizes": {
+      "title": "Size Matrix",
+      "add": "Add Size",
+      "alpha": "Alphanumeric",
+      "numeric": "Numeric",
+      "headerSize": "Size"
+    },
+    "availability": {
+      "title": "Availability (Variant x Size)",
+      "tableHeader": "Variant \\ Size",
+      "noName": "No name"
+    },
+    "errors": {
+      "unexpected": "Unexpected error while saving the garment"
+    }
+  },
+  "RequestsList": {
+    "backToModels": "Back to my models",
+    "noImage": "No Image",
+    "requestedBy": "Requested by",
+    "goToEdit": "Go to Edit"
   }
 }

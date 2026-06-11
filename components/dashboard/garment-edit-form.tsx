@@ -9,6 +9,7 @@ import { useRouter } from "@/i18n/routing";
 import { updateGarmentAction } from "@/app/[locale]/dashboard/garments/[id]/edit/actions";
 import { getBrandsAction } from "@/app/[locale]/dashboard/garments/new/actions";
 import { Link } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 
 function getAssetUrl(url: string | undefined | null): string | undefined {
   if (!url) return undefined;
@@ -100,6 +101,7 @@ export function GarmentEditForm({ initialData }: { initialData: {
   }[];
 } }) {
   const router = useRouter();
+  const t = useTranslations("GarmentEdit");
   
   // Step 1: Basic Info
   const [name, setName] = useState(initialData.name || "");
@@ -290,7 +292,7 @@ export function GarmentEditForm({ initialData }: { initialData: {
       }
     } catch (e) {
       console.error(e);
-      alert("Error inesperado al guardar la prenda");
+      alert(t("errors.unexpected"));
       setIsSubmitting(false);
     }
   };
@@ -306,8 +308,8 @@ export function GarmentEditForm({ initialData }: { initialData: {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Editar Prenda 3D</h1>
-            <p className="text-muted-foreground mt-1 text-sm">Modifica las propiedades de tu modelo sin afectar la malla 3D base.</p>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">{t("title")}</h1>
+            <p className="text-muted-foreground mt-1 text-sm">{t("subtitle")}</p>
           </div>
         </div>
         <button
@@ -315,7 +317,7 @@ export function GarmentEditForm({ initialData }: { initialData: {
           disabled={isSubmitting}
           className="flex items-center gap-2 bg-foreground text-background px-6 py-3 rounded-xl font-bold shadow-[0_0_20px_-5px_var(--tw-shadow-color)] shadow-foreground/30 hover:scale-[1.02] disabled:opacity-50 transition-all duration-300"
         >
-          {isSubmitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Guardando...</> : <><Save className="w-5 h-5" /> Guardar Cambios</>}
+          {isSubmitting ? <><Loader2 className="w-5 h-5 animate-spin" />{t("saving")}</> : <><Save className="w-5 h-5" />{t("saveBtn")}</>}
         </button>
       </div>
 
@@ -327,15 +329,15 @@ export function GarmentEditForm({ initialData }: { initialData: {
             <div className="p-3 rounded-xl bg-primary/10 text-primary">
               <Shirt className="w-6 h-6" />
             </div>
-            <h2 className="text-2xl font-bold">Identidad</h2>
+            <h2 className="text-2xl font-bold">{t("identity.title")}</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="space-y-3">
-              <Label className="text-sm font-semibold ml-1">Nombre</Label>
+              <Label className="text-sm font-semibold ml-1">{t("identity.name")}</Label>
               <Input value={name} onChange={e => setName(e.target.value)} className="h-12 bg-background/50 rounded-xl" />
             </div>
             <div className="space-y-3">
-              <Label className="text-sm font-semibold ml-1">Marca</Label>
+              <Label className="text-sm font-semibold ml-1">{t("identity.brand")}</Label>
               <div className="relative">
                 <BadgeCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -349,7 +351,7 @@ export function GarmentEditForm({ initialData }: { initialData: {
                     setTimeout(() => setIsBrandDropdownOpen(false), 200);
                   }}
                   onFocus={() => { if (brand.length > 0) setIsBrandDropdownOpen(true); }}
-                  placeholder="Ej: Nike"
+                  placeholder={t("form.systemTitle")}
                   className="h-12 pl-9 bg-background/50 rounded-xl"
                   autoComplete="off"
                 />
@@ -378,7 +380,7 @@ export function GarmentEditForm({ initialData }: { initialData: {
               </div>
             </div>
             <div className="space-y-3">
-              <Label className="text-sm font-semibold ml-1">SKU</Label>
+              <Label className="text-sm font-semibold ml-1">{t("identity.sku")}</Label>
               <div className="relative">
                 <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input value={sku} onChange={e => setSku(e.target.value)} className="h-12 pl-10 bg-background/50 rounded-xl" />
@@ -407,10 +409,10 @@ export function GarmentEditForm({ initialData }: { initialData: {
               <div className="p-3 rounded-xl bg-primary/10 text-primary">
                 <Palette className="w-6 h-6" />
               </div>
-              <h2 className="text-2xl font-bold">Variantes</h2>
+              <h2 className="text-2xl font-bold">{t("variants.title")}</h2>
             </div>
             <button onClick={addVariant} className="flex items-center gap-2 text-primary hover:bg-primary/10 px-4 py-2 rounded-xl font-bold transition-colors">
-              <Plus className="w-4 h-4" /> Agregar Variante
+              <Plus className="w-4 h-4" />{t("variants.add")}
             </button>
           </div>
           
@@ -424,17 +426,17 @@ export function GarmentEditForm({ initialData }: { initialData: {
                     </button>
                   )}
                 </div>
-                <h4 className="font-semibold mb-4 text-primary">Variante {idx + 1}</h4>
+                <h4 className="font-semibold mb-4 text-primary">{t("variants.variantName")} {idx + 1}</h4>
                 
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-xs mb-1 block">Nombre</Label>
+                    <Label className="text-xs mb-1 block">{t("variants.name")}</Label>
                     <Input value={v.name} onChange={e => updateVariant(v.id, "name", e.target.value)} className="h-10 bg-background/80" />
                   </div>
                   
                   <div className="flex gap-4">
                     <button onClick={() => updateVariant(v.id, "type", "solid")} className={`flex-1 py-1.5 text-sm rounded-lg border-2 ${v.type === "solid" ? "border-primary bg-primary/10 text-primary" : "border-transparent text-muted-foreground"}`}>Sólido</button>
-                    <button onClick={() => updateVariant(v.id, "type", "texture")} className={`flex-1 py-1.5 text-sm rounded-lg border-2 ${v.type === "texture" ? "border-primary bg-primary/10 text-primary" : "border-transparent text-muted-foreground"}`}>Textura</button>
+                    <button onClick={() => updateVariant(v.id, "type", "texture")} className={`flex-1 py-1.5 text-sm rounded-lg border-2 ${v.type === "texture" ? "border-primary bg-primary/10 text-primary" : "border-transparent text-muted-foreground"}`}>{t("variants.texture")}</button>
                   </div>
 
                   {v.type === "solid" ? (
@@ -453,7 +455,7 @@ export function GarmentEditForm({ initialData }: { initialData: {
                         ) : (
                           <div className="text-center text-muted-foreground flex flex-col items-center">
                             <UploadCloud className="w-6 h-6 mb-1" />
-                            <span className="text-[10px]">Subir imagen</span>
+                            <span className="text-[10px]">{t("variants.uploadImage")}</span>
                           </div>
                         )}
                       </div>
@@ -472,7 +474,7 @@ export function GarmentEditForm({ initialData }: { initialData: {
               <div className="p-3 rounded-xl bg-primary/10 text-primary">
                 <Ruler className="w-6 h-6" />
               </div>
-              <h2 className="text-2xl font-bold">Matriz de Talles</h2>
+              <h2 className="text-2xl font-bold">{t("sizes.title")}</h2>
             </div>
             <div className="flex items-center gap-4">
               <Select value={sizingSystem} onValueChange={(v) => setSizingSystem(v || "alpha")}>
@@ -485,7 +487,7 @@ export function GarmentEditForm({ initialData }: { initialData: {
                 </SelectContent>
               </Select>
               <button onClick={addSize} className="flex items-center gap-2 text-primary hover:bg-primary/10 px-4 py-2 rounded-xl font-bold transition-colors">
-                <Plus className="w-4 h-4" /> Agregar Talle
+                <Plus className="w-4 h-4" />{t("sizes.add")}
               </button>
             </div>
           </div>
@@ -493,7 +495,7 @@ export function GarmentEditForm({ initialData }: { initialData: {
           <div className="overflow-x-auto">
             <div className="grid gap-4 min-w-[600px]">
               <div className="grid grid-cols-[80px_repeat(auto-fit,minmax(120px,1fr))_40px] gap-4 px-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                <div>Talle</div>
+                <div>{t("sizes.headerSize")}</div>
                 {CATEGORY_MEASUREMENTS[category]?.map(m => (
                   <div key={m.id}>{m.label}</div>
                 ))}
@@ -537,14 +539,14 @@ export function GarmentEditForm({ initialData }: { initialData: {
             <div className="p-3 rounded-xl bg-primary/10 text-primary">
               <Layers className="w-6 h-6" />
             </div>
-            <h2 className="text-2xl font-bold">Disponibilidad (Variante x Talle)</h2>
+            <h2 className="text-2xl font-bold">{t("availability.title")}</h2>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr>
-                  <th className="p-4 border-b border-white/10 font-medium text-muted-foreground w-[200px]">Variante \ Talle</th>
+                  <th className="p-4 border-b border-white/10 font-medium text-muted-foreground w-[200px]">{t("availability.tableHeader")}</th>
                   {sizes.map(s => (
                     <th key={s.id} className="p-4 border-b border-white/10 font-bold text-center">
                       <div className="bg-background/80 px-3 py-1 rounded-md inline-block border border-border/50">{s.label || "?"}</div>
@@ -565,7 +567,7 @@ export function GarmentEditForm({ initialData }: { initialData: {
                             {v.previewFront && <img src={getAssetUrl(v.previewFront)} alt="" className="w-full h-full object-cover" />}
                           </div>
                         )}
-                        {v.name || "Sin nombre"}
+                        {v.name || t("availability.noName")}
                       </div>
                     </td>
                     {sizes.map(s => {

@@ -94,7 +94,7 @@ export function DashboardSidebar() {
   ];
 
   return (
-    <div className="w-72 hidden lg:flex flex-col h-fit sticky top-24 pr-6">
+    <aside className="w-72 hidden lg:flex flex-col h-fit sticky top-24 pr-6">
       <div className="bg-background/50 backdrop-blur-2xl border border-white/10 rounded-[2rem] flex flex-col overflow-hidden shadow-2xl relative">
         
         {/* Glow effect */}
@@ -111,7 +111,7 @@ export function DashboardSidebar() {
         </div>
 
         {/* Navigation */}
-        <div className="flex-1 overflow-y-auto py-4 px-4">
+        <nav aria-label={t("navigation")} className="flex-1 overflow-y-auto py-4 px-4">
           {navSections.map((section, sectionIndex) => (
             <div key={section.key}>
               {/* Divider between sections */}
@@ -120,7 +120,7 @@ export function DashboardSidebar() {
               )}
 
               {/* Section label */}
-              <div className="text-[10px] font-semibold text-muted-foreground/40 uppercase tracking-widest px-4 mb-2 mt-1">
+              <div aria-hidden="true" className="text-[10px] font-semibold text-muted-foreground/40 uppercase tracking-widest px-4 mb-2 mt-1">
                 {section.label}
               </div>
 
@@ -166,9 +166,9 @@ export function DashboardSidebar() {
                   return (
                     <div key={item.label} className="space-y-1">
                       {item.disabled ? (
-                        <div className={itemClasses}>{itemContent}</div>
+                        <div className={itemClasses} aria-disabled="true">{itemContent}</div>
                       ) : (
-                        <Link href={item.href} className={itemClasses}>
+                        <Link href={item.href} aria-current={isParentActive ? "page" : undefined} className={itemClasses}>
                           {itemContent}
                         </Link>
                       )}
@@ -187,6 +187,7 @@ export function DashboardSidebar() {
                               <Link
                                 key={subItem.label}
                                 href={subItem.href}
+                                aria-current={isSubActive ? "page" : undefined}
                                 className={cn(
                                   "block py-2.5 text-xs font-medium rounded-lg transition-colors relative",
                                   isSubActive
@@ -219,7 +220,7 @@ export function DashboardSidebar() {
               </div>
             </div>
           ))}
-        </div>
+        </nav>
 
         {/* Footer */}
         <div className="p-4 border-t border-border/40 bg-muted/40 dark:border-white/5 dark:bg-black/10">
@@ -240,6 +241,6 @@ export function DashboardSidebar() {
           </button>
         </div>
       </div>
-    </div>
+    </aside>
   );
 }

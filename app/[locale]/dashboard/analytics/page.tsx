@@ -1,5 +1,7 @@
-import { AnalyticsClient } from "./analytics-client";
+import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
+
+const AnalyticsClient = dynamic(() => import("./analytics-client").then(mod => mod.AnalyticsClient));
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

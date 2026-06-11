@@ -22,10 +22,42 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
+import { useTheme } from "next-themes";
+import { useRouter, usePathname } from "@/i18n/routing";
+import { useLocale } from "next-intl";
+import { updateStoreTimezoneAction } from "./actions";
+import toast from "react-hot-toast";
 
-export function SettingsClient() {
+const mockAuditLogs = [
+  { event: "Actualización de Webhook URL", date: "Hoy, 10:42 AM", ip: "190.18.32.4", status: "Exitoso" },
+  { event: "Revocación de API Key", date: "Ayer, 18:20 PM", ip: "190.18.32.4", status: "Exitoso" },
+  { event: "Intento de inicio de sesión fallido", date: "05/06/2026, 03:15 AM", ip: "45.22.11.9", status: "Bloqueado" },
+  { event: "Cambio de Plan a Pro", date: "01/06/2026, 12:00 PM", ip: "190.18.32.4", status: "Exitoso" },
+];
+
+export function SettingsClient({ initialTimezone = "UTC" }: { initialTimezone?: string }) {
   const [activeTab, setActiveTab] = useState<"preferences" | "security" | "privacy">("preferences");
-  const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
+  const { theme, setTheme } = useTheme();
+  const router = useRouter();
+  const pathname = usePathname();
+  const currentLocale = useLocale();
+
+  const [timezone, setTimezone] = useState(initialTimezone);
+
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    router.replace(pathname, { locale: e.target.value as "en" | "es" });
+  };
+
+  const handleTimezoneChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newTz = e.target.value;
+    setTimezone(newTz);
+    const res = await updateStoreTimezoneAction(newTz);
+    if (res.error) {
+      toast.error(res.error);
+    } else {
+      toast.success("Timezone updated");
+    }
+  };
 
   const renderTabButton = (id: "preferences" | "security" | "privacy", label: string, Icon: LucideIcon) => (
     <button
@@ -103,15 +135,25 @@ export function SettingsClient() {
               
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-semibold text-foreground block mb-2">Idioma del Dashboard</label>
-                  <select className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow">
+                  <label htmlFor="dashboardLanguage" className="text-sm font-semibold text-foreground block mb-2">Idioma del Dashboard</label>
+                  <select 
+                    id="dashboardLanguage" 
+                    value={currentLocale}
+                    onChange={handleLanguageChange}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
+                  >
                     <option value="es">Español (Argentina)</option>
                     <option value="en">English (US)</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-foreground block mb-2">Zona Horaria</label>
-                  <select className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow">
+                  <label htmlFor="dashboardTimezone" className="text-sm font-semibold text-foreground block mb-2">Zona Horaria</label>
+                  <select 
+                    id="dashboardTimezone" 
+                    value={timezone}
+                    onChange={handleTimezoneChange}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
+                  >
                     <option value="ART">Buenos Aires (GMT-3)</option>
                     <option value="UTC">UTC Universal</option>
                   </select>
@@ -133,21 +175,21 @@ export function SettingsClient() {
                     <h3 className="font-semibold text-foreground">Alertas de Seguridad</h3>
                     <p className="text-xs text-muted-foreground">Inicios de sesión desde nuevos dispositivos.</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch aria-label="Activar Alertas de Seguridad" defaultChecked />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold text-foreground">Reportes Semanales</h3>
                     <p className="text-xs text-muted-foreground">Resumen de conversiones y engagement de tu ropa 3D.</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch aria-label="Activar Reportes Semanales" defaultChecked />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold text-foreground">Actualizaciones de Producto</h3>
                     <p className="text-xs text-muted-foreground">Nuevas características y releases de Eidyn.</p>
                   </div>
-                  <Switch />
+                  <Switch aria-label="Activar Actualizaciones de Producto" />
                 </div>
               </div>
             </div>
@@ -259,12 +301,7 @@ export function SettingsClient() {
                   </tr>
                 </thead>
                 <tbody className="text-sm">
-                  {[
-                    { event: "Actualización de Webhook URL", date: "Hoy, 10:42 AM", ip: "190.18.32.4", status: "Exitoso" },
-                    { event: "Revocación de API Key", date: "Ayer, 18:20 PM", ip: "190.18.32.4", status: "Exitoso" },
-                    { event: "Intento de inicio de sesión fallido", date: "05/06/2026, 03:15 AM", ip: "45.22.11.9", status: "Bloqueado" },
-                    { event: "Cambio de Plan a Pro", date: "01/06/2026, 12:00 PM", ip: "190.18.32.4", status: "Exitoso" },
-                  ].map((log, i) => (
+                  {mockAuditLogs.map((log, i) => (
                     <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                       <td className="p-4 flex items-center gap-3">
                         <FileTerminal className="w-4 h-4 text-muted-foreground" />

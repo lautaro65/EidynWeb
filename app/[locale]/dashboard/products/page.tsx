@@ -1,13 +1,23 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { ProductsClient } from "./products-client";
+import dynamic from "next/dynamic";
+const ProductsClient = dynamic(() => import("./products-client").then(mod => mod.ProductsClient));
 import { PlugZap, Store } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { getTranslations } from "next-intl/server";
 
 interface Props {
   params: Promise<{ locale: string }>;
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "DashboardSidebar" });
+  return {
+    title: `${t("products")} - Eidyn`,
+  };
 }
 
 export default async function ProductsPage({ params }: Props) {

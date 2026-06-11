@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { 
   CreditCard, 
   BarChart3, 
@@ -16,12 +17,9 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
-// Mock data para ilustrar el comportamiento en esta iteración de diseño UI
-const mockUsage = {
-  garments: { current: 15, max: 50, label: "Prendas Procesadas" },
-  storage: { current: 3.2, max: 10, label: "Almacenamiento (GB)" },
-  apiCalls: { current: 12500, max: 50000, label: "Peticiones API" },
-};
+import { createCheckoutSessionAction, createCustomerPortalAction } from "./actions";
+import { useLocale } from "next-intl";
+import toast from "react-hot-toast";
 
 const mockPaymentMethods = [
   { id: 1, type: "Visa", last4: "4242", expiry: "12/26", isDefault: true },
@@ -47,7 +45,7 @@ const plans = [
       "Soporte comunitario"
     ],
     highlight: false,
-    current: true,
+    slug: "free",
   },
   {
     name: "Pro",
@@ -63,7 +61,7 @@ const plans = [
       "Soporte prioritario 24/7"
     ],
     highlight: true,
-    current: false,
+    slug: "pro",
   },
   {
     name: "Enterprise",
@@ -78,12 +76,50 @@ const plans = [
       "Ingeniero de éxito dedicado"
     ],
     highlight: false,
-    current: false,
+    slug: "enterprise",
   }
 ];
 
-export function BillingClient() {
+export function BillingClient({ currentPlan = "free" }: { currentPlan?: string }) {
+  const t = useTranslations("Billing");
+  const locale = useLocale();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const mockUsage = useMemo(() => ({
+    garments: { current: 15, max: 50, label: t("garmentsProcessed", { fallback: "Prendas Procesadas" }) },
+    storage: { current: 3.2, max: 10, label: t("storage", { fallback: "Almacenamiento (GB)" }) },
+    apiCalls: { current: 12500, max: 50000, label: t("apiCalls", { fallback: "Peticiones API" }) },
+  }), [t]);
+
   const [activeTab, setActiveTab] = useState<"overview" | "history">("overview");
+
+  const handlePlanAction = async (planSlug: string) => {
+    try {
+      setLoadingPlan(planSlug);
+
+      if (planSlug === currentPlan) {
+        // Ir al portal si ya es el plan actual (y no es free)
+        if (currentPlan !== "free") {
+          const res = await createCustomerPortalAction(locale);
+          if (res.error) throw new Error(res.error);
+          if (res.url) window.location.href = res.url;
+        }
+        return;
+      }
+
+      if (planSlug === "pro") {
+        const res = await createCheckoutSessionAction(locale);
+        if (res.error) throw new Error(res.error);
+        if (res.url) window.location.href = res.url;
+      } else if (planSlug === "enterprise") {
+        toast.success("Contactando a ventas...");
+      }
+
+    } catch (err: any) {
+      toast.error(err.message || "Error al procesar la solicitud");
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
 
   return (
     <div className="w-full space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -139,7 +175,7 @@ export function BillingClient() {
                   <div className="p-3 bg-primary/10 rounded-xl">
                     <BarChart3 className="w-5 h-5 text-primary" />
                   </div>
-                  <span className="text-xs font-semibold bg-white/5 px-2 py-1 rounded-md text-muted-foreground border border-white/10">Plan Starter</span>
+                  <span className="text-xs font-semibold bg-white/5 px-2 py-1 rounded-md text-muted-foreground border border-white/10">{t("starter")}</span>
                 </div>
                 <h3 className="text-muted-foreground font-medium mb-1">{mockUsage.garments.label}</h3>
                 <div className="flex items-end gap-2 mb-4">
@@ -231,17 +267,26 @@ export function BillingClient() {
                   </ul>
 
                   <button 
-                    disabled={plan.current}
+                    onClick={() => handlePlanAction(plan.slug)}
+                    disabled={loadingPlan !== null || (plan.slug === "free" && currentPlan === "free")}
                     className={cn(
-                      "w-full py-4 rounded-xl font-bold transition-all duration-300",
-                      plan.current 
-                        ? "bg-white/5 text-muted-foreground border border-white/5 cursor-default" 
+                      "w-full py-4 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2",
+                      plan.slug === currentPlan 
+                        ? (currentPlan === "free" ? "bg-white/5 text-muted-foreground border border-white/5 cursor-default" : "bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30") 
                         : plan.highlight 
                           ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20" 
                           : "bg-white/10 text-foreground hover:bg-white/20 border border-white/10"
                     )}
                   >
-                    {plan.current ? "Plan Actual" : `Mejorar a ${plan.name}`}
+                    {loadingPlan === plan.slug ? (
+                      <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    ) : plan.slug === currentPlan ? (
+                      currentPlan === "free" ? t("currentPlanTitle", { fallback: "Plan Actual" }) : "Administrar Suscripción"
+                    ) : plan.slug === "enterprise" ? (
+                      "Contactar a Ventas"
+                    ) : (
+                      `${t("upgradeTo", { fallback: "Mejorar a " })}${plan.name}`
+                    )}
                   </button>
                 </div>
               ))}
@@ -269,9 +314,9 @@ export function BillingClient() {
                       </div>
                       <div className="flex items-center gap-4">
                         {method.isDefault && (
-                          <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-md">Principal</span>
+                          <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-md">{t("primary")}</span>
                         )}
-                        <button className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors">Editar</button>
+                        <button aria-label={`${t("edit")} ${method.type} ${method.last4}`} className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors">{t("edit")}</button>
                       </div>
                     </div>
                   ))}
@@ -287,7 +332,7 @@ export function BillingClient() {
                   <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center mb-4">
                     <ShieldCheck className="w-5 h-5 text-foreground" />
                   </div>
-                  <h3 className="font-bold text-lg mb-2">Seguridad Financiera</h3>
+                  <h3 className="font-bold text-lg mb-2">{t("securityTitle")}</h3>
                   <p className="text-sm text-muted-foreground">Tus transacciones están encriptadas con cifrado de 256 bits y procesadas por Stripe.</p>
                 </div>
                 <div className="mt-6 flex justify-between items-center text-xs text-muted-foreground">
@@ -320,11 +365,11 @@ export function BillingClient() {
             <table className="w-full text-left">
               <thead className="bg-white/5 border-b border-white/10">
                 <tr>
-                  <th className="p-4 font-semibold text-muted-foreground text-sm">Comprobante</th>
-                  <th className="p-4 font-semibold text-muted-foreground text-sm">Fecha</th>
-                  <th className="p-4 font-semibold text-muted-foreground text-sm">Plan</th>
-                  <th className="p-4 font-semibold text-muted-foreground text-sm">Monto</th>
-                  <th className="p-4 font-semibold text-muted-foreground text-sm">Estado</th>
+                  <th className="p-4 font-semibold text-muted-foreground text-sm">{t("table.invoice")}</th>
+                  <th className="p-4 font-semibold text-muted-foreground text-sm">{t("table.date")}</th>
+                  <th className="p-4 font-semibold text-muted-foreground text-sm">{t("table.plan")}</th>
+                  <th className="p-4 font-semibold text-muted-foreground text-sm">{t("table.amount")}</th>
+                  <th className="p-4 font-semibold text-muted-foreground text-sm">{t("table.status")}</th>
                   <th className="p-4 font-semibold text-muted-foreground text-sm text-right">Acción</th>
                 </tr>
               </thead>
@@ -342,8 +387,8 @@ export function BillingClient() {
                         </span>
                       </td>
                       <td className="p-4 text-right">
-                        <button className="p-2 text-muted-foreground hover:text-primary transition-colors bg-white/5 rounded-lg hover:bg-primary/10">
-                          <Download className="w-4 h-4" />
+                        <button aria-label={`Descargar factura ${tx.id}`} className="p-2 text-muted-foreground hover:text-primary transition-colors bg-white/5 rounded-lg hover:bg-primary/10">
+                          <Download className="w-4 h-4" aria-hidden="true" />
                         </button>
                       </td>
                     </tr>

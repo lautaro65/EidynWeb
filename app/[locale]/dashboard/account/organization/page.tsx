@@ -1,6 +1,9 @@
 import { getOrganizationConfigAction } from "./actions";
-import { OrganizationClient, ConfigData } from "./organization-client";
+import type { ConfigData } from "./organization-client";
 import { getTranslations } from "next-intl/server";
+import dynamic from "next/dynamic";
+
+const OrganizationClient = dynamic(() => import("./organization-client").then(mod => mod.OrganizationClient));
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -13,10 +16,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function OrganizationPage() {
   const res = await getOrganizationConfigAction();
 
+  const t = await getTranslations("Organization");
+
   if (res.error || !res.data) {
     return (
       <div className="p-8">
-        <h1 className="text-2xl font-bold text-red-500">Error Loading Configuration</h1>
+        <h1 className="text-2xl font-bold text-red-500">{t("errorLoading", { fallback: "Error Loading Configuration" })}</h1>
         <p className="text-muted-foreground mt-2">{res.error || "Unknown error"}</p>
       </div>
     );
