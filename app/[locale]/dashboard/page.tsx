@@ -1,8 +1,24 @@
 import { Shirt, Link as LinkIcon, Users, Ruler, ArrowUpRight, CheckCircle2, AlertCircle, BarChart3, Smartphone, Eye } from "lucide-react";
 import { Link } from "@/i18n/routing";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
+import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { db } from "@/lib/db";
 
 export default async function DashboardPage() {
+  const user = await currentUser();
+  if (!user) return null;
+
+  const membership = await db.membership.findFirst({
+    where: { user: { clerkId: user.id } },
+    include: { tenant: true }
+  });
+
+  if (membership?.tenant.type === "brand") {
+    const locale = await getLocale();
+    redirect(`/${locale}/dashboard/brand`);
+  }
+
   const t = await getTranslations("Dashboard");
   
   // Datos mockeados para la interfaz inicial

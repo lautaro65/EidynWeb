@@ -8,7 +8,6 @@ import {
   Settings, 
   BarChart3, 
   LogOut,
-  CreditCard,
   User,
   type LucideIcon,
 } from "lucide-react";
@@ -71,7 +70,6 @@ export function BrandSidebar() {
       label: t("sectionAccount"),
       items: [
         { icon: User, label: t("accountInfo"), href: "/dashboard/brand/account" },
-        { icon: CreditCard, label: t("billing"), href: "/dashboard/brand/billing" },
       ],
     },
   ];
