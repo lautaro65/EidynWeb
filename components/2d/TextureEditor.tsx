@@ -37,6 +37,21 @@ export default function TextureEditor({
   const trRef = useRef<Konva.Transformer>(null);
   const imageRef = useRef<Konva.Image>(null);
 
+  const [showImage, setShowImage] = useState(true);
+  const [imageNode, setImageNode] = useState({
+    x: 128,
+    y: 128,
+    width: 256,
+    height: 256,
+    rotation: 0,
+    scaleX: 1,
+    scaleY: 1
+  });
+
+  useEffect(() => {
+    setShowImage(!!imageUrl);
+  }, [imageUrl]);
+
   // Update parent when lines change
   useEffect(() => {
     if (stageRef.current) {
@@ -139,6 +154,15 @@ export default function TextureEditor({
           />
         </div>
 
+        {img && showImage && (
+          <button 
+            onClick={() => { setShowImage(false); setSelectedId(null); setLines([...lines]); }}
+            className="ml-4 px-3 py-1.5 text-xs font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors"
+          >
+            Eliminar Imagen
+          </button>
+        )}
+
         <button 
           onClick={clearCanvas} 
           className="ml-auto px-3 py-1.5 text-xs font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors"
@@ -167,23 +191,42 @@ export default function TextureEditor({
             <Rect x={0} y={0} width={512} height={512} fill={baseColor} name="background" />
             
             {/* Image Proxy */}
-            {img && (
+            {img && showImage && (
               <KonvaImage 
                 ref={imageRef}
                 image={img} 
-                x={128} 
-                y={128} 
-                width={256} 
-                height={256} 
+                x={imageNode.x}
+                y={imageNode.y}
+                width={imageNode.width}
+                height={imageNode.height}
+                rotation={imageNode.rotation}
+                scaleX={imageNode.scaleX}
+                scaleY={imageNode.scaleY}
                 draggable 
                 name="image"
                 onClick={() => setSelectedId('image')}
                 onTap={() => setSelectedId('image')}
-                onDragEnd={() => {
+                onDragEnd={(e) => {
+                  setImageNode({
+                    ...imageNode,
+                    x: e.target.x(),
+                    y: e.target.y(),
+                  });
                   // Trigger re-render to update texture
                   setLines([...lines]);
                 }}
                 onTransformEnd={() => {
+                  const node = imageRef.current;
+                  if (node) {
+                    setImageNode({
+                      ...imageNode,
+                      x: node.x(),
+                      y: node.y(),
+                      rotation: node.rotation(),
+                      scaleX: node.scaleX(),
+                      scaleY: node.scaleY(),
+                    });
+                  }
                   setLines([...lines]);
                 }}
               />
@@ -219,6 +262,17 @@ export default function TextureEditor({
             ))}
           </Layer>
         </Stage>
+
+        {/* T-Shirt Silhouette Overlay Mask */}
+        <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
+          <svg viewBox="0 0 512 512" className="w-full h-full opacity-80">
+            <path 
+              d="M0,0 L512,0 L512,512 L0,512 Z M170,50 Q256,120 342,50 L480,100 L440,260 L380,220 L360,500 L152,500 L132,220 L72,260 L32,100 Z" 
+              fill="#000" 
+              fillRule="evenodd" 
+            />
+          </svg>
+        </div>
 
       </div>
     </div>
