@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Search } from "lucide-react";
+import { Search, Shirt, Globe } from "lucide-react";
 import { useDebouncedCallback } from "use-debounce";
 import { useState } from "react";
 
@@ -36,26 +36,28 @@ export function GarmentsToolbar() {
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 relative z-10">
       
-      {/* Custom Pill Tabs */}
-      <div className="flex items-center p-1 bg-white/5 border border-white/10 rounded-2xl w-full sm:w-auto">
+      {/* Premium Segmented Tabs */}
+      <div className="flex items-center p-1.5 bg-black/40 backdrop-blur-md border border-white/10 rounded-[1.25rem] w-full sm:w-auto shadow-inner">
         <button
           onClick={() => handleTabChange("my-garments")}
-          className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${
+          className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-500 ease-out ${
             currentTab === "my-garments"
-              ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary),0.3)]"
-              : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+              ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_4px_20px_-4px_rgba(var(--primary),0.5)] scale-100"
+              : "text-muted-foreground hover:text-foreground hover:bg-white/5 scale-95 hover:scale-100"
           }`}
         >
+          <Shirt className={`w-4 h-4 transition-transform duration-500 ${currentTab === "my-garments" ? "scale-110" : ""}`} />
           {t("tabMyGarments")}
         </button>
         <button
           onClick={() => handleTabChange("community")}
-          className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${
+          className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-500 ease-out ${
             currentTab === "community"
-              ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary),0.3)]"
-              : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+              ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_4px_20px_-4px_rgba(var(--primary),0.5)] scale-100"
+              : "text-muted-foreground hover:text-foreground hover:bg-white/5 scale-95 hover:scale-100"
           }`}
         >
+          <Globe className={`w-4 h-4 transition-transform duration-500 ${currentTab === "community" ? "scale-110" : ""}`} />
           {t("tabCommunity")}
         </button>
       </div>
