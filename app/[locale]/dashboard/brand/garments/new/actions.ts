@@ -25,6 +25,7 @@ export async function checkSkuAvailability(sku: string) {
       sku: sku,
       ownerId: membership.tenantId 
     },
+    select: { id: true },
   });
 
   return { available: !existing };
@@ -77,6 +78,7 @@ export async function createGarmentTemplate(data: {
       sku: data.sku,
       ownerId: membership.tenantId
     },
+    select: { id: true },
   });
 
   if (existingSku) {

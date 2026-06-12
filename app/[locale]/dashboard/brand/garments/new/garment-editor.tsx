@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Shirt, Check, ChevronRight, ChevronLeft, Upload, Loader2, Layers, Wind, Sparkles, Footprints, Scissors, Accessibility, AlertCircle } from "lucide-react";
-import { GarmentViewer } from "@/components/3d/GarmentViewer";
+import { Shirt, Check, ChevronRight, ChevronLeft, Upload, Loader2, AlertCircle, Ghost, Columns2, AlignEndVertical, Shield, Hourglass, SportShoe } from "lucide-react";
 import { createGarmentTemplate, checkSkuAvailability, processImageWithRemoveBg } from "./actions";
 import { useDebouncedCallback } from "use-debounce";
 import dynamic from "next/dynamic";
@@ -18,16 +17,25 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TextureEditor = dynamic(() => import("@/components/2d/TextureEditor"), { ssr: false });
+const GarmentViewer = dynamic(() => import("@/components/3d/GarmentViewer").then(mod => mod.GarmentViewer), { 
+  ssr: false, 
+  loading: () => (
+    <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground gap-3" aria-live="polite">
+      <Loader2 className="w-8 h-8 animate-spin" />
+      <span className="text-sm font-medium">Cargando 3D...</span>
+    </div>
+  ) 
+});
 
 // Mock Base Models
 const BASE_MODELS = [
   { id: "tshirt", labelKey: "categoryTshirt", url: "/models/remera.glb", icon: Shirt },
-  { id: "hoodie", labelKey: "categoryHoodie", url: "/models/hoodie.glb", icon: Layers },
-  { id: "pants", labelKey: "categoryPants", url: "/models/pants.glb", icon: Accessibility },
-  { id: "shorts", labelKey: "categoryShorts", url: "/models/shorts.glb", icon: Scissors },
-  { id: "jacket", labelKey: "categoryJacket", url: "/models/jacket.glb", icon: Wind },
-  { id: "dress", labelKey: "categoryDress", url: "/models/dress.glb", icon: Sparkles },
-  { id: "shoes", labelKey: "categoryShoes", url: "/models/shoes.glb", icon: Footprints },
+  { id: "hoodie", labelKey: "categoryHoodie", url: "/models/hoodie.glb", icon: Ghost },
+  { id: "pants", labelKey: "categoryPants", url: "/models/pants.glb", icon: Columns2 },
+  { id: "shorts", labelKey: "categoryShorts", url: "/models/shorts.glb", icon: AlignEndVertical },
+  { id: "jacket", labelKey: "categoryJacket", url: "/models/jacket.glb", icon: Shield },
+  { id: "dress", labelKey: "categoryDress", url: "/models/dress.glb", icon: Hourglass },
+  { id: "shoes", labelKey: "categoryShoes", url: "/models/shoes.glb", icon: SportShoe },
 ];
 
 export function GarmentEditor() {
@@ -190,7 +198,7 @@ export function GarmentEditor() {
         {/* Dynamic Content Area */}
         <div className="p-6 space-y-8 relative">
           {error && (
-            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-sm">
+            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-sm" role="alert" aria-live="assertive">
               {error}
             </div>
           )}
@@ -202,10 +210,12 @@ export function GarmentEditor() {
                 <h3 className="text-xl font-medium">{t("selectBaseModel")}</h3>
                 <p className="text-muted-foreground text-sm mt-1">{t("baseModelDesc")}</p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4" role="radiogroup" aria-label={t("selectBaseModel")}>
                 {BASE_MODELS.map((model) => (
                   <button
                     key={model.id}
+                    role="radio"
+                    aria-checked={category === model.id}
                     onClick={() => setCategory(model.id)}
                     className={`flex flex-col items-center justify-center p-6 rounded-2xl border transition-all duration-300 ${category === model.id
                       ? "bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(var(--primary),0.2)]"
@@ -229,27 +239,31 @@ export function GarmentEditor() {
               </div>
 
               <div className="space-y-4">
-                <label className="text-sm font-medium">{t("baseColor")}</label>
+                <label htmlFor="baseColor" className="text-sm font-medium">{t("baseColor")}</label>
                 <div className="flex items-center gap-4">
                   <input
+                    id="baseColor"
                     type="color"
                     value={color}
+                    aria-label={t("baseColor")}
                     onChange={(e) => setColor(e.target.value)}
                     className="w-12 h-12 rounded-xl cursor-pointer bg-transparent border-0 p-0"
                   />
-                  <span className="font-mono text-sm uppercase text-muted-foreground">{color}</span>
+                  <span className="font-mono text-sm uppercase text-muted-foreground" aria-hidden="true">{color}</span>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <label className="text-sm font-medium">{t("frontImage")}</label>
-                <div className="border-2 border-dashed border-white/10 rounded-2xl p-6 text-center hover:bg-white/5 transition-colors relative">
+                <label htmlFor="frontImage" className="text-sm font-medium">{t("frontImage")}</label>
+                <div className="border-2 border-dashed border-white/10 rounded-2xl p-6 text-center hover:bg-white/5 transition-colors relative" aria-live="polite">
                   <input
+                    id="frontImage"
                     type="file"
                     accept="image/*"
                     onChange={(e) => handleFileUpload(e, setFrontImage, setIsUploadingFront)}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
                     disabled={isUploadingFront}
+                    aria-label={t("frontImage")}
                   />
                   {frontImage ? (
                     <div className="flex flex-col items-center">
@@ -259,7 +273,7 @@ export function GarmentEditor() {
                     </div>
                   ) : isUploadingFront ? (
                     <div className="flex flex-col items-center text-muted-foreground">
-                      <Loader2 className="w-8 h-8 mb-2 opacity-50 animate-spin" />
+                      <Loader2 className="w-8 h-8 mb-2 opacity-50 animate-spin" aria-label="Uploading front image..." />
                       <span className="text-sm">{t("processingAi")}</span>
                     </div>
                   ) : (
@@ -272,14 +286,16 @@ export function GarmentEditor() {
               </div>
 
               <div className="space-y-4">
-                <label className="text-sm font-medium">{t("backImage")}</label>
-                <div className="border-2 border-dashed border-white/10 rounded-2xl p-6 text-center hover:bg-white/5 transition-colors relative">
+                <label htmlFor="backImage" className="text-sm font-medium">{t("backImage")}</label>
+                <div className="border-2 border-dashed border-white/10 rounded-2xl p-6 text-center hover:bg-white/5 transition-colors relative" aria-live="polite">
                   <input
+                    id="backImage"
                     type="file"
                     accept="image/*"
                     onChange={(e) => handleFileUpload(e, setBackImage, setIsUploadingBack)}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
                     disabled={isUploadingBack}
+                    aria-label={t("backImage")}
                   />
                   {backImage ? (
                     <div className="flex flex-col items-center">
@@ -289,7 +305,7 @@ export function GarmentEditor() {
                     </div>
                   ) : isUploadingBack ? (
                     <div className="flex flex-col items-center text-muted-foreground">
-                      <Loader2 className="w-8 h-8 mb-2 opacity-50 animate-spin" />
+                      <Loader2 className="w-8 h-8 mb-2 opacity-50 animate-spin" aria-label="Uploading back image..." />
                       <span className="text-sm">{t("processingAi")}</span>
                     </div>
                   ) : (
@@ -346,8 +362,9 @@ export function GarmentEditor() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium block mb-1.5">{t("garmentName")}</label>
+                  <label htmlFor="garmentName" className="text-sm font-medium block mb-1.5">{t("garmentName")}</label>
                   <input
+                    id="garmentName"
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -356,22 +373,25 @@ export function GarmentEditor() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium block mb-1.5">{t("sku")}</label>
+                  <label htmlFor="sku" className="text-sm font-medium block mb-1.5">{t("sku")}</label>
                   <div className="relative">
                     <input
+                      id="sku"
                       type="text"
                       value={sku}
                       onChange={handleSkuChange}
+                      aria-invalid={!!skuError}
+                      aria-describedby={skuError ? "sku-error" : undefined}
                       placeholder={t("skuPlaceholder")}
                       className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/50 uppercase transition-colors ${skuError ? "border-red-500/50 focus:ring-red-500/50" : "border-white/10"
                         }`}
                     />
                     {isCheckingSku && (
-                      <Loader2 className="w-4 h-4 text-muted-foreground animate-spin absolute right-3 top-3.5" />
+                      <Loader2 className="w-4 h-4 text-muted-foreground animate-spin absolute right-3 top-3.5" aria-label="Checking availability..." />
                     )}
                   </div>
                   {skuError && (
-                    <p className="text-red-400 text-xs mt-1.5 flex items-center gap-1">
+                    <p id="sku-error" className="text-red-400 text-xs mt-1.5 flex items-center gap-1" role="alert">
                       <AlertCircle className="w-3 h-3" />
                       {skuError}
                     </p>
@@ -391,8 +411,9 @@ export function GarmentEditor() {
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium block mb-1.5">{t("garmentDesc")}</label>
+                  <label htmlFor="garmentDesc" className="text-sm font-medium block mb-1.5">{t("garmentDesc")}</label>
                   <textarea
+                    id="garmentDesc"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={3}

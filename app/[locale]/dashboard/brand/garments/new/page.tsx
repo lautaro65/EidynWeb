@@ -11,6 +11,17 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const t = await getTranslations({ locale, namespace: "GarmentsNew" });
   return {
     title: `${t("title")} - Eidyn`,
+    description: t("description"),
+    openGraph: {
+      title: `${t("title")} - Eidyn`,
+      description: t("description"),
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${t("title")} - Eidyn`,
+      description: t("description"),
+    },
   };
 }
 
@@ -37,10 +48,11 @@ export default async function NewGarmentPage({
   }
 
   return (
-    <div className="max-w-[1600px] mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
-      <div className="flex items-center gap-4">
+    <main className="max-w-[1600px] mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
+      <header className="flex items-center gap-4">
         <Link 
           href="/dashboard/brand/garments"
+          aria-label="Back to Garments"
           className="p-2 rounded-full hover:bg-white/5 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -51,9 +63,9 @@ export default async function NewGarmentPage({
           </h1>
           <p className="text-sm text-muted-foreground">{t("description")}</p>
         </div>
-      </div>
+      </header>
 
       <GarmentEditor />
-    </div>
+    </main>
   );
 }
