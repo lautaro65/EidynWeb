@@ -5,6 +5,7 @@ import { Stage, Layer, Rect, Line, Image as KonvaImage, Transformer } from "reac
 import Konva from "konva";
 import useImage from "use-image";
 import { useTranslations } from "next-intl";
+import { MousePointer2, Eraser, AlignCenter, Maximize, Trash2, RotateCcw } from "lucide-react";
 
 interface TextureEditorProps {
   onTextureUpdate: (dataUrl: string) => void;
@@ -132,67 +133,87 @@ export default function TextureEditor({
     <div className="flex flex-col h-full gap-4">
       
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-4 p-3 bg-white/5 border border-white/10 rounded-2xl">
-        <div className="flex items-center gap-2 border-r border-white/10 pr-4">
+      <div className="flex flex-wrap items-center gap-2 p-2 bg-white/5 border border-white/10 rounded-2xl shadow-lg backdrop-blur-md">
+        
+        {/* Core Tools */}
+        <div className="flex items-center gap-1 bg-black/20 p-1 rounded-xl border border-white/5">
           <button 
             onClick={() => setTool("move")} 
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${tool === "move" ? "bg-primary text-primary-foreground" : "hover:bg-white/10 text-muted-foreground"}`}
+            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg transition-all ${tool === "move" ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-white/10 text-muted-foreground hover:text-white"}`}
+            title="Mover y Ajustar"
           >
-            Mover
+            <MousePointer2 className="w-4 h-4" />
+            <span className="hidden sm:inline">Mover</span>
           </button>
           <button 
             onClick={() => setTool("eraser")} 
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${tool === "eraser" ? "bg-primary text-primary-foreground" : "hover:bg-white/10 text-muted-foreground"}`}
+            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg transition-all ${tool === "eraser" ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-white/10 text-muted-foreground hover:text-white"}`}
+            title="Borrar secciones de la imagen"
           >
-            {t("eraser")}
+            <Eraser className="w-4 h-4" />
+            <span className="hidden sm:inline">Goma</span>
           </button>
         </div>
         
-        <div className="flex items-center gap-2">
+        {/* Brush Size (only if eraser selected) */}
+        <div className={`flex items-center gap-3 px-4 py-2 bg-black/20 rounded-xl border border-white/5 transition-opacity ${tool === 'eraser' ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+          <div className="w-2 h-2 rounded-full bg-white/50" />
           <input 
             type="range" 
             min="1" 
             max="50" 
             value={brushSize} 
             onChange={(e) => setBrushSize(parseInt(e.target.value))}
-            className="w-24 accent-primary"
+            className="w-20 accent-primary"
           />
+          <div className="w-4 h-4 rounded-full bg-white" />
         </div>
 
+        {/* Image Actions */}
         {img && showImage && (
-          <div className="flex flex-wrap items-center gap-2 border-l border-white/10 pl-4">
+          <div className="flex items-center gap-1 bg-black/20 p-1 rounded-xl border border-white/5 ml-auto">
             <button 
               onClick={() => {
                 setImageNode({ x: 176, y: 176, width: 160, height: 160, rotation: 0, scaleX: 1, scaleY: 1 });
                 setLines([...lines]);
               }}
-              className="px-3 py-1.5 text-xs font-medium bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 py-2 text-xs font-medium bg-transparent hover:bg-white/10 rounded-lg transition-all text-white/80 hover:text-white"
+              title="Centrar Logo"
             >
-              Centrar Logo
+              <AlignCenter className="w-4 h-4" />
+              <span className="hidden sm:inline">Centrar Logo</span>
             </button>
             <button 
               onClick={() => {
                 setImageNode({ x: 0, y: 0, width: 512, height: 512, rotation: 0, scaleX: 1, scaleY: 1 });
                 setLines([...lines]);
               }}
-              className="px-3 py-1.5 text-xs font-medium bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 py-2 text-xs font-medium bg-transparent hover:bg-white/10 rounded-lg transition-all text-white/80 hover:text-white"
+              title="Cubrir Todo"
             >
-              Cubrir Todo
+              <Maximize className="w-4 h-4" />
+              <span className="hidden sm:inline">Cubrir Todo</span>
             </button>
+            <div className="w-px h-6 bg-white/10 mx-1" />
             <button 
               onClick={() => { setShowImage(false); setSelectedId(null); setLines([...lines]); }}
-              className="px-3 py-1.5 text-xs font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 py-2 text-xs font-medium bg-transparent hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-all"
+              title="Eliminar Imagen"
             >
-              Eliminar Imagen
+              <Trash2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Eliminar</span>
             </button>
           </div>
         )}
 
+        {/* Clear Canvas Action */}
         <button 
           onClick={clearCanvas} 
-          className="ml-auto px-3 py-1.5 text-xs font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors"
+          className={`flex items-center gap-2 px-3 py-2 text-xs font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-xl transition-all border border-red-500/20 ${!img || !showImage ? 'ml-auto' : ''}`}
+          title="Limpiar todo el lienzo"
         >
-          {t("clearCanvas")}
+          <RotateCcw className="w-4 h-4" />
+          <span className="hidden xl:inline">Limpiar Lienzo</span>
         </button>
       </div>
 

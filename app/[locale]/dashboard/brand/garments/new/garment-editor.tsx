@@ -39,6 +39,7 @@ export function GarmentEditor() {
   const [isUploadingFront, setIsUploadingFront] = useState(false);
   const [isUploadingBack, setIsUploadingBack] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("front");
 
   // Editor State
   const [category, setCategory] = useState<string>("tshirt");
@@ -302,25 +303,27 @@ export function GarmentEditor() {
               </div>
               
               <div className="flex-1 min-h-[400px]">
-                <Tabs defaultValue="front" className="w-full h-full flex flex-col">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
                   <TabsList className="w-full max-w-md grid grid-cols-2 bg-white/5 border border-white/10 mb-4">
                     <TabsTrigger value="front" className="data-[state=active]:bg-primary">Frente</TabsTrigger>
                     <TabsTrigger value="back" className="data-[state=active]:bg-primary">Espalda</TabsTrigger>
                   </TabsList>
-                  <TabsContent value="front" className="flex-1 mt-0">
+                  
+                  {/* We use hidden instead of TabsContent to prevent unmounting the Canvas and losing state */}
+                  <div className={`flex-1 mt-0 h-full ${activeTab === "front" ? "block" : "hidden"}`}>
                     <TextureEditor 
                       baseColor={color} 
                       imageUrl={frontImage}
                       onTextureUpdate={setGeneratedTexture} 
                     />
-                  </TabsContent>
-                  <TabsContent value="back" className="flex-1 mt-0">
+                  </div>
+                  <div className={`flex-1 mt-0 h-full ${activeTab === "back" ? "block" : "hidden"}`}>
                     <TextureEditor 
                       baseColor={color} 
                       imageUrl={backImage}
                       onTextureUpdate={setGeneratedBackTexture} 
                     />
-                  </TabsContent>
+                  </div>
                 </Tabs>
               </div>
             </div>
