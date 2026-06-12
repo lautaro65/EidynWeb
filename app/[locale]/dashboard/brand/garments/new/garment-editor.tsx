@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Shirt, Check, ChevronRight, ChevronLeft, Upload, Loader2, AlertCircle, Ghost, Columns2, AlignEndVertical, Shield, Hourglass, SportShoe } from "lucide-react";
+import { Shirt, Check, ChevronRight, ChevronLeft, Upload, Loader2, AlertCircle, Ghost, Columns2, AlignEndVertical, Shield, Hourglass, SportShoe, Plus } from "lucide-react";
 import { createGarmentTemplate, checkSkuAvailability, processImageWithRemoveBg } from "./actions";
 import { useDebouncedCallback } from "use-debounce";
 import dynamic from "next/dynamic";
@@ -17,14 +17,19 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TextureEditor = dynamic(() => import("@/components/2d/TextureEditor"), { ssr: false });
+const LoaderComponent = () => {
+  const t = useTranslations("GarmentsNew");
+  return (
+    <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground gap-3" aria-live="polite" aria-busy="true">
+      <Loader2 className="w-8 h-8 animate-spin" />
+      <span className="text-sm font-medium">{t("loading3D")}</span>
+    </div>
+  );
+};
+
 const GarmentViewer = dynamic(() => import("@/components/3d/GarmentViewer").then(mod => mod.GarmentViewer), {
   ssr: false,
-  loading: () => (
-    <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground gap-3" aria-live="polite">
-      <Loader2 className="w-8 h-8 animate-spin" />
-      <span className="text-sm font-medium">Cargando 3D...</span>
-    </div>
-  )
+  loading: LoaderComponent
 });
 
 // Mock Base Models
@@ -92,17 +97,33 @@ const COMPONENT_OPTIONS = {
   ],
 } as const;
 
+export type GarmentVariant = {
+  id: string;
+  name: string;
+  color: string;
+  frontImage: string;
+  backImage: string;
+  generatedTexture: string;
+  generatedBackTexture: string;
+};
+
 export function GarmentEditor() {
   const t = useTranslations("GarmentsNew");
   const router = useRouter();
 
-  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingFront, setIsUploadingFront] = useState(false);
   const [isUploadingBack, setIsUploadingBack] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("front");
   const [activeComponentTab, setActiveComponentTab] = useState<keyof typeof COMPONENT_OPTIONS>("collarType");
+
+  // Size Grading State
+  const [baseSizeName, setBaseSizeName] = useState("M");
+  const [activeSizes, setActiveSizes] = useState<string[]>([]);
+  const [sizeChart, setSizeChart] = useState<Record<string, Record<string, number>>>({});
+  const [newSizeInput, setNewSizeInput] = useState("");
 
   // Editor State
   const [measurements, setMeasurements] = useState({
@@ -124,6 +145,58 @@ export function GarmentEditor() {
     setMeasurements(prev => ({ ...prev, [key]: value }));
   };
 
+  const handleAddSize = () => {
+    const size = newSizeInput.trim().toUpperCase();
+    if (!size || size === baseSizeName.toUpperCase() || activeSizes.includes(size)) return;
+    
+    const newMeasurements = { ...measurements };
+    // Start with a generic delta of +2 per size for auto-fill
+    Object.keys(newMeasurements).forEach(k => {
+       const key = k as keyof typeof measurements;
+       newMeasurements[key] = measurements[key] + (activeSizes.length + 1) * 2;
+    });
+
+    setActiveSizes(prev => [...prev, size]);
+    setSizeChart(prev => ({ ...prev, [size]: newMeasurements }));
+    setNewSizeInput("");
+  };
+
+  const removeSize = (sizeToRemove: string) => {
+    setActiveSizes(prev => prev.filter(s => s !== sizeToRemove));
+    setSizeChart(prev => {
+      const newChart = { ...prev };
+      delete newChart[sizeToRemove];
+      return newChart;
+    });
+  };
+
+  const handleSizeMeasurementChange = (sizeName: string, key: string, value: number) => {
+    setSizeChart(prev => ({
+      ...prev,
+      [sizeName]: { ...prev[sizeName], [key]: value }
+    }));
+  };
+
+  const handleRecalibrate = () => {
+    if (activeSizes.length === 0) return;
+    const refSize = activeSizes[0];
+    const refChart = sizeChart[refSize];
+    const newChart = { ...sizeChart };
+    
+    Object.keys(measurements).forEach(k => {
+       const key = k as keyof typeof measurements;
+       const delta = refChart[key] - measurements[key];
+       if (delta !== 0) {
+         activeSizes.forEach((size, idx) => {
+            if (size !== refSize) {
+               newChart[size][key] = measurements[key] + (delta * (idx + 1));
+            }
+         });
+       }
+    });
+    setSizeChart(newChart);
+  };
+
   const [components, setComponents] = useState({
     collarType: "crew",
     pocketType: "none",
@@ -135,15 +208,28 @@ export function GarmentEditor() {
   });
 
   const [category, setCategory] = useState<string>("tshirt");
-  const [color, setColor] = useState<string>("#ffffff");
-  const [frontImage, setFrontImage] = useState<string>("");
-  const [backImage, setBackImage] = useState<string>("");
+  const [variants, setVariants] = useState<GarmentVariant[]>([
+    {
+      id: "var-1",
+      name: "Default",
+      color: "#ffffff",
+      frontImage: "",
+      backImage: "",
+      generatedTexture: "",
+      generatedBackTexture: ""
+    }
+  ]);
+  const [activeVariantId, setActiveVariantId] = useState<string>("var-1");
+  const activeVariant = variants.find(v => v.id === activeVariantId) || variants[0];
+
+  const updateActiveVariant = (updates: Partial<GarmentVariant>) => {
+    setVariants(prev => prev.map(v => v.id === activeVariantId ? { ...v, ...updates } : v));
+  };
+
   const [name, setName] = useState<string>("");
   const [sku, setSku] = useState<string>("");
   const [gender, setGender] = useState<string>("unisex");
   const [description, setDescription] = useState<string>("");
-  const [generatedTexture, setGeneratedTexture] = useState<string>("");
-  const [generatedBackTexture, setGeneratedBackTexture] = useState<string>("");
 
   const [skuError, setSkuError] = useState<string | null>(null);
   const [isCheckingSku, setIsCheckingSku] = useState(false);
@@ -221,11 +307,11 @@ export function GarmentEditor() {
         category,
         gender,
         description,
-        baseColor: color,
-        // Guardamos el lienzo 2D procesado (que tiene la posición, rotación, borrados) 
-        // en lugar de la imagen cruda subida por el usuario
-        frontImage: generatedTexture || frontImage,
-        backImage: generatedBackTexture || backImage,
+        baseColor: activeVariant.color,
+        // We will need to update server action to accept an array of variants
+        // For now we just pass the active variant so it compiles
+        frontImage: activeVariant.generatedTexture || activeVariant.frontImage,
+        backImage: activeVariant.generatedBackTexture || activeVariant.backImage,
       });
       if (true) {
         router.push("/dashboard/brand/garments");
@@ -240,6 +326,48 @@ export function GarmentEditor() {
     }
   };
 
+  const renderColorwaysList = () => (
+    <div className="mb-6 space-y-3 p-4 bg-black/10 rounded-2xl border border-white/5">
+      <div className="flex justify-between items-center">
+        <label className="text-sm font-medium text-foreground">{t("colorways")}</label>
+        <span className="text-xs text-muted-foreground">{variants.length} / 5</span>
+      </div>
+      <div className="flex items-center gap-3 overflow-x-auto pb-2 custom-scrollbar" role="tablist" aria-label={t("colorways")}>
+        {variants.map(v => (
+          <button
+            key={v.id}
+            role="tab"
+            aria-selected={activeVariantId === v.id}
+            onClick={() => setActiveVariantId(v.id)}
+            className={`relative w-10 h-10 rounded-full shrink-0 border-2 transition-all ${activeVariantId === v.id ? 'border-primary scale-110 shadow-[0_0_15px_rgba(var(--primary),0.5)]' : 'border-white/10 hover:border-white/30 hover:scale-105'}`}
+            style={{ backgroundColor: v.color }}
+            title={v.name}
+            aria-label={v.name}
+          >
+            {activeVariantId === v.id && (
+               <div className="absolute inset-0 flex items-center justify-center mix-blend-difference" aria-hidden="true">
+                 <Check className="w-4 h-4 text-white opacity-80" />
+               </div>
+            )}
+          </button>
+        ))}
+        {variants.length < 5 && (
+          <button
+            onClick={() => {
+              const newId = `var-${Date.now()}`;
+              setVariants(prev => [...prev, { id: newId, name: `${t("defaultVariantName")} ${prev.length + 1}`, color: "#ffffff", frontImage: "", backImage: "", generatedTexture: "", generatedBackTexture: "" }]);
+              setActiveVariantId(newId);
+            }}
+            className="w-10 h-10 shrink-0 rounded-full border border-dashed border-white/20 bg-white/5 flex items-center justify-center hover:bg-white/10 hover:border-white/40 transition-colors"
+            title={t("addVariant")}
+          >
+            <Plus className="w-4 h-4 text-muted-foreground" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex flex-col lg:flex-row gap-6 items-start min-h-[calc(100vh-8rem)] animate-in fade-in duration-500">
 
@@ -247,9 +375,9 @@ export function GarmentEditor() {
       <div className="w-full lg:flex-1 lg:sticky lg:top-24 h-[500px] lg:h-[calc(100vh-8rem)] bg-background/50 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative">
         <GarmentViewer
           url={currentModelUrl}
-          colorHex={color}
-          textureUrl={step >= 4 && generatedTexture ? generatedTexture : undefined}
-          backTextureUrl={step >= 4 && generatedBackTexture ? generatedBackTexture : undefined}
+          colorHex={activeVariant.color}
+          textureUrl={step >= 5 && activeVariant.generatedTexture ? activeVariant.generatedTexture : undefined}
+          backTextureUrl={step >= 5 && activeVariant.generatedBackTexture ? activeVariant.generatedBackTexture : undefined}
         />
       </div>
 
@@ -261,20 +389,20 @@ export function GarmentEditor() {
           <div className="flex justify-between items-end mb-3">
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-1">
-                {t("step")} {step} {t("of")} 5
+                {t("step")} {step} {t("of")} 6
               </p>
               <h2 className="text-lg font-medium text-foreground">
-                {step === 1 ? t("step1") : step === 2 ? t("step2") : step === 3 ? t("step3") : step === 4 ? t("step4") : t("step5")}
+                {step === 1 ? t("step1") : step === 2 ? t("step2") : step === 3 ? t("step3") : step === 4 ? t("step4") : step === 5 ? t("step5") : t("step6")}
               </h2>
             </div>
             <span className="text-sm font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
-              {Math.round((step / 5) * 100)}%
+              {Math.round((step / 6) * 100)}%
             </span>
           </div>
           <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
             <div
               className="h-full bg-primary transition-all duration-500 ease-out"
-              style={{ width: `${(step / 5) * 100}%` }}
+              style={{ width: `${(step / 6) * 100}%` }}
             />
           </div>
         </div>
@@ -289,9 +417,9 @@ export function GarmentEditor() {
 
           {/* Step 1: Base Model */}
           {step === 1 && (
-            <div className="animate-in slide-in-from-right-4 duration-300 space-y-6">
+            <section className="animate-in slide-in-from-right-4 duration-300 space-y-6" aria-labelledby="step1-title">
               <div>
-                <h3 className="text-xl font-medium">{t("selectBaseModel")}</h3>
+                <h3 id="step1-title" className="text-xl font-medium">{t("selectBaseModel")}</h3>
                 <p className="text-muted-foreground text-sm mt-1">{t("baseModelDesc")}</p>
               </div>
               <div className="grid grid-cols-2 gap-4" role="radiogroup" aria-label={t("selectBaseModel")}>
@@ -311,14 +439,14 @@ export function GarmentEditor() {
                   </button>
                 ))}
               </div>
-            </div>
+            </section>
           )}
 
           {/* Step 2: Measurements */}
           {step === 2 && (
-            <div className="animate-in slide-in-from-right-4 duration-300 space-y-6">
+            <section className="animate-in slide-in-from-right-4 duration-300 space-y-6" aria-labelledby="step2-title">
               <div>
-                <h3 className="text-xl font-medium">{t("measurementsTitle")}</h3>
+                <h3 id="step2-title" className="text-xl font-medium">{t("measurementsTitle")}</h3>
                 <p className="text-muted-foreground text-sm mt-1">{t("measurementsDesc")}</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 overflow-y-auto pr-2 max-h-[50vh] custom-scrollbar">
@@ -347,7 +475,9 @@ export function GarmentEditor() {
                 <div className="mb-4">
                   <Select value={activeComponentTab} onValueChange={(val) => setActiveComponentTab(val as keyof typeof COMPONENT_OPTIONS)}>
                     <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
-                      <SelectValue />
+                      <SelectValue>
+                        {t(COMPONENT_CATEGORIES.find(c => c.id === activeComponentTab)?.labelKey as Parameters<typeof t>[0] || "collarType")}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {COMPONENT_CATEGORIES.map(cat => (
@@ -379,15 +509,119 @@ export function GarmentEditor() {
                   })}
                 </div>
               </div>
-            </div>
+            </section>
           )}
 
-          {/* Step 3: Design */}
+          {/* Step 3: Size Guide */}
           {step === 3 && (
-            <div className="animate-in slide-in-from-right-4 duration-300 space-y-6">
+            <section className="animate-in slide-in-from-right-4 duration-300 space-y-6" aria-labelledby="step3-title">
               <div>
-                <h3 className="text-xl font-medium">{t("designTitle")}</h3>
+                <h3 id="step3-title" className="text-xl font-medium">{t("sizeGuideTitle")}</h3>
+                <p className="text-muted-foreground text-sm mt-1">{t("sizeGuideDesc")}</p>
+              </div>
+
+              <div className="space-y-4">
+                <label className="text-sm font-medium block mb-1.5">{t("baseSizeName")}</label>
+                <input
+                  type="text"
+                  value={baseSizeName}
+                  onChange={(e) => setBaseSizeName(e.target.value.toUpperCase())}
+                  placeholder={t("sizeNamePlaceholder")}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 font-medium"
+                />
+              </div>
+
+              <div className="space-y-4">
+                <label className="text-sm font-medium block mb-1.5">{t("addSize")}</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newSizeInput}
+                    onChange={(e) => setNewSizeInput(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddSize()}
+                    placeholder={t("sizeNamePlaceholder")}
+                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 uppercase"
+                  />
+                  <button
+                    onClick={handleAddSize}
+                    disabled={!newSizeInput.trim() || activeSizes.includes(newSizeInput.trim().toUpperCase()) || newSizeInput.trim().toUpperCase() === baseSizeName.toUpperCase()}
+                    className="px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-white/10">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium">{t("sizeChart")}</h3>
+                  <button
+                    onClick={handleRecalibrate}
+                    disabled={activeSizes.length === 0}
+                    className="px-3 py-1.5 text-xs font-medium bg-primary/20 text-primary rounded-lg hover:bg-primary/30 transition-colors disabled:opacity-50"
+                  >
+                    {t("recalibrate")}
+                  </button>
+                </div>
+                
+                <div className="overflow-x-auto custom-scrollbar pb-4" aria-live="polite" aria-atomic="true">
+                  <table className="w-full text-sm text-left border-collapse">
+                    <thead>
+                      <tr>
+                        <th className="px-4 py-2 font-medium text-muted-foreground border-b border-white/10">{t("measureHeader")}</th>
+                        <th className="px-4 py-2 font-medium text-primary border-b border-white/10 text-center bg-primary/5 rounded-t-lg">{baseSizeName} (Base)</th>
+                        {activeSizes.map(size => (
+                          <th key={size} className="px-4 py-2 font-medium text-muted-foreground border-b border-white/10 text-center relative group">
+                            {size}
+                            <button onClick={() => removeSize(size)} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-xl px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity text-[10px]">×</button>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(Object.keys(measurements) as Array<keyof typeof measurements>).map(key => (
+                        <tr key={key} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                          <td className="px-4 py-3 text-muted-foreground">{t(key as Parameters<typeof t>[0])}</td>
+                          <td className="px-4 py-3 text-center font-mono text-primary bg-primary/5">{measurements[key]}</td>
+                          {activeSizes.map(size => (
+                            <td key={`${size}-${key}`} className="px-4 py-3">
+                              <input 
+                                type="number" 
+                                value={sizeChart[size]?.[key] || 0}
+                                onChange={(e) => handleSizeMeasurementChange(size, key, parseInt(e.target.value) || 0)}
+                                className="w-16 bg-transparent border-b border-white/20 text-center font-mono focus:outline-none focus:border-primary appearance-none m-0"
+                              />
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Step 4: Design */}
+          {step === 4 && (
+            <section className="animate-in slide-in-from-right-4 duration-300 space-y-6" aria-labelledby="step4-title">
+              <div>
+                <h3 id="step4-title" className="text-xl font-medium">{t("designTitle")}</h3>
                 <p className="text-muted-foreground text-sm mt-1">{t("designDesc")}</p>
+              </div>
+
+              {renderColorwaysList()}
+
+              <div className="space-y-4">
+                <label htmlFor="variantName" className="text-sm font-medium">{t("variantName")}</label>
+                <input
+                  id="variantName"
+                  type="text"
+                  value={activeVariant.name}
+                  onChange={(e) => updateActiveVariant({ name: e.target.value })}
+                  placeholder={t("variantName")}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
               </div>
 
               <div className="space-y-4">
@@ -396,12 +630,12 @@ export function GarmentEditor() {
                   <input
                     id="baseColor"
                     type="color"
-                    value={color}
+                    value={activeVariant.color}
                     aria-label={t("baseColor")}
-                    onChange={(e) => setColor(e.target.value)}
+                    onChange={(e) => updateActiveVariant({ color: e.target.value })}
                     className="w-12 h-12 rounded-xl cursor-pointer bg-transparent border-0 p-0"
                   />
-                  <span className="font-mono text-sm uppercase text-muted-foreground" aria-hidden="true">{color}</span>
+                  <span className="font-mono text-sm uppercase text-muted-foreground" aria-hidden="true">{activeVariant.color}</span>
                 </div>
               </div>
 
@@ -412,15 +646,15 @@ export function GarmentEditor() {
                     id="frontImage"
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleFileUpload(e, setFrontImage, setIsUploadingFront)}
+                    onChange={(e) => handleFileUpload(e, (url) => updateActiveVariant({ frontImage: url }), setIsUploadingFront)}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
                     disabled={isUploadingFront}
                     aria-label={t("frontImage")}
                   />
-                  {frontImage ? (
+                  {activeVariant.frontImage ? (
                     <div className="flex flex-col items-center">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={frontImage} alt="Front" className="h-20 object-contain mb-2 rounded" />
+                      <img src={activeVariant.frontImage} alt="Front" className="h-20 object-contain mb-2 rounded" loading="lazy" width="80" height="80" />
                       <span className="text-xs text-primary font-medium">{t("changeImage")}</span>
                     </div>
                   ) : isUploadingFront ? (
@@ -444,15 +678,15 @@ export function GarmentEditor() {
                     id="backImage"
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleFileUpload(e, setBackImage, setIsUploadingBack)}
+                    onChange={(e) => handleFileUpload(e, (url) => updateActiveVariant({ backImage: url }), setIsUploadingBack)}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
                     disabled={isUploadingBack}
                     aria-label={t("backImage")}
                   />
-                  {backImage ? (
+                  {activeVariant.backImage ? (
                     <div className="flex flex-col items-center">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={backImage} alt="Back" className="h-20 object-contain mb-2 rounded" />
+                      <img src={activeVariant.backImage} alt="Back" className="h-20 object-contain mb-2 rounded" loading="lazy" width="80" height="80" />
                       <span className="text-xs text-primary font-medium">{t("changeImage")}</span>
                     </div>
                   ) : isUploadingBack ? (
@@ -468,15 +702,17 @@ export function GarmentEditor() {
                   )}
                 </div>
               </div>
-            </div>
+            </section>
           )}
 
-          {/* Step 4: Editor 2D (Hidden strictly via CSS to preserve Konva Canvas state) */}
-          <div className={`flex-col ${step === 4 ? "flex animate-in slide-in-from-right-4 duration-300" : "hidden"}`}>
+          {/* Step 5: Editor 2D (Hidden strictly via CSS to preserve Konva Canvas state) */}
+          <section className={`flex-col ${step === 5 ? "flex animate-in slide-in-from-right-4 duration-300" : "hidden"}`} aria-labelledby="step5-title">
             <div className="mb-4">
-              <h3 className="text-xl font-medium">{t("editor2DTitle")}</h3>
+              <h3 id="step5-title" className="text-xl font-medium">{t("editor2DTitle")}</h3>
               <p className="text-muted-foreground text-sm mt-1">{t("editor2DDesc")}</p>
             </div>
+
+            {renderColorwaysList()}
 
             <div className="w-full relative aspect-[4/5]">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
@@ -488,27 +724,29 @@ export function GarmentEditor() {
                 {/* We use hidden instead of TabsContent to prevent unmounting the Canvas and losing state */}
                 <div className={`flex-1 min-h-0 w-full ${activeTab === "front" ? "block" : "hidden"}`}>
                   <TextureEditor
-                    baseColor={color}
-                    imageUrl={frontImage}
-                    onTextureUpdate={setGeneratedTexture}
+                    key={`front-${activeVariantId}`}
+                    baseColor={activeVariant.color}
+                    imageUrl={activeVariant.frontImage}
+                    onTextureUpdate={(url) => updateActiveVariant({ generatedTexture: url })}
                   />
                 </div>
                 <div className={`flex-1 min-h-0 w-full ${activeTab === "back" ? "block" : "hidden"}`}>
                   <TextureEditor
-                    baseColor={color}
-                    imageUrl={backImage}
-                    onTextureUpdate={setGeneratedBackTexture}
+                    key={`back-${activeVariantId}`}
+                    baseColor={activeVariant.color}
+                    imageUrl={activeVariant.backImage}
+                    onTextureUpdate={(url) => updateActiveVariant({ generatedBackTexture: url })}
                   />
                 </div>
               </Tabs>
             </div>
-          </div>
+          </section>
 
-          {/* Step 5: Details */}
-          {step === 5 && (
-            <div className="animate-in slide-in-from-right-4 duration-300 space-y-6">
+          {/* Step 6: Details */}
+          {step === 6 && (
+            <section className="animate-in slide-in-from-right-4 duration-300 space-y-6" aria-labelledby="step6-title">
               <div>
-                <h3 className="text-xl font-medium">{t("detailsTitle")}</h3>
+                <h3 id="step6-title" className="text-xl font-medium">{t("detailsTitle")}</h3>
                 <p className="text-muted-foreground text-sm mt-1">{t("detailsDesc")}</p>
               </div>
 
@@ -573,7 +811,7 @@ export function GarmentEditor() {
                   />
                 </div>
               </div>
-            </div>
+            </section>
           )}
         </div>
 
@@ -581,7 +819,7 @@ export function GarmentEditor() {
         <div className="p-4 border-t border-white/5 bg-black/20 flex items-center justify-between">
           {step > 1 ? (
             <button
-              onClick={() => setStep((s) => s - 1 as 1 | 2 | 3 | 4 | 5)}
+              onClick={() => setStep((s) => s - 1 as 1 | 2 | 3 | 4 | 5 | 6)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -596,9 +834,9 @@ export function GarmentEditor() {
             </button>
           )}
 
-          {step < 5 ? (
+          {step < 6 ? (
             <button
-              onClick={() => setStep((s) => s + 1 as 1 | 2 | 3 | 4 | 5)}
+              onClick={() => setStep((s) => s + 1 as 1 | 2 | 3 | 4 | 5 | 6)}
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium bg-white/10 text-foreground hover:bg-white/20 transition-all"
             >
               {t("next")}
