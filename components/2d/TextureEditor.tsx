@@ -1,23 +1,18 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import { Stage, Layer, Rect, Line, Image as KonvaImage } from "react-konva";
+import { Stage, Layer, Rect, Line } from "react-konva";
 import Konva from "konva";
-import useImage from "use-image";
 import { useTranslations } from "next-intl";
 
 interface TextureEditorProps {
   onTextureUpdate: (dataUrl: string) => void;
   baseColor: string;
-  frontImageUrl?: string;
-  backImageUrl?: string;
 }
 
 export default function TextureEditor({
   onTextureUpdate,
   baseColor,
-  frontImageUrl,
-  backImageUrl,
 }: TextureEditorProps) {
   const t = useTranslations("GarmentsNew");
   const stageRef = useRef<Konva.Stage>(null);
@@ -34,18 +29,13 @@ export default function TextureEditor({
   const [brushColor, setBrushColor] = useState("#000000");
   const [brushSize, setBrushSize] = useState(5);
   
-  const [frontImg] = useImage(frontImageUrl || "", "anonymous");
-  const [backImg] = useImage(backImageUrl || "", "anonymous");
-
-  // Removed mounted state as it is loaded via dynamic(ssr: false)
-
   // Update parent when lines change
   useEffect(() => {
     if (stageRef.current) {
       const dataUrl = stageRef.current.toDataURL({ pixelRatio: 2 });
       onTextureUpdate(dataUrl);
     }
-  }, [lines, baseColor, frontImg, backImg, onTextureUpdate]);
+  }, [lines, baseColor, onTextureUpdate]);
 
   const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
     setIsDrawing(true);
@@ -144,30 +134,6 @@ export default function TextureEditor({
           <Layer>
             {/* Base Color Background */}
             <Rect x={0} y={0} width={512} height={512} fill={baseColor} />
-            
-            {/* Front Image Proxy (Center) */}
-            {frontImg && (
-              <KonvaImage 
-                image={frontImg} 
-                x={128} 
-                y={128} 
-                width={256} 
-                height={256} 
-                draggable 
-              />
-            )}
-
-            {/* Back Image Proxy (Top Left for example, in a real UV map it depends on the template) */}
-            {backImg && (
-              <KonvaImage 
-                image={backImg} 
-                x={10} 
-                y={10} 
-                width={128} 
-                height={128} 
-                draggable 
-              />
-            )}
 
             {/* Drawn Lines */}
             {lines.map((line, i) => (

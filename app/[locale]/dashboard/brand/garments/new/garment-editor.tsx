@@ -132,8 +132,7 @@ export function GarmentEditor() {
         <GarmentViewer
           url={currentModelUrl}
           colorHex={color}
-          textureUrl={generatedTexture || frontImage}
-          backTextureUrl={backImage}
+          textureUrl={step >= 3 && generatedTexture ? generatedTexture : undefined}
         />
       </div>
 
@@ -273,8 +272,6 @@ export function GarmentEditor() {
               <div className="flex-1 min-h-[400px]">
                 <TextureEditor 
                   baseColor={color} 
-                  frontImageUrl={frontImage} 
-                  backImageUrl={backImage}
                   onTextureUpdate={setGeneratedTexture} 
                 />
               </div>
