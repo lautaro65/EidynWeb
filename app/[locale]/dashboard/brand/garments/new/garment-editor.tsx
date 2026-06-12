@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Shirt, Image as ImageIcon, Info, Check, ChevronRight, ChevronLeft, Upload, Loader2, Layers, Wind, Sparkles, Footprints, Scissors, Accessibility, AlertCircle, Palette } from "lucide-react";
+import { Shirt, Check, ChevronRight, ChevronLeft, Upload, Loader2, Layers, Wind, Sparkles, Footprints, Scissors, Accessibility, AlertCircle } from "lucide-react";
 import { GarmentViewer } from "@/components/3d/GarmentViewer";
 import { createGarmentTemplate, checkSkuAvailability, processImageWithRemoveBg } from "./actions";
 import { useDebouncedCallback } from "use-debounce";
@@ -91,7 +91,7 @@ export function GarmentEditor() {
       try {
         const formData = new FormData();
         formData.append("image", file);
-        
+
         // This server action uses remove.bg to clear the background and returns a base64 DataURL
         const res = await processImageWithRemoveBg(formData);
         if (res.success && res.dataUrl) {
@@ -164,23 +164,27 @@ export function GarmentEditor() {
       {/* Right Panel: Editor Controls */}
       <div className="w-full lg:w-[450px] flex flex-col bg-background/60 backdrop-blur-3xl border border-white/10 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden relative">
 
-        {/* Steps Header */}
-        <div className="flex p-3 bg-black/40 border-b border-white/10 relative z-10">
-          {[1, 2, 3, 4].map((s) => (
-            <div
-              key={s}
-              className={`flex-1 flex flex-col items-center justify-center py-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest rounded-xl transition-all duration-500 relative overflow-hidden ${step === s
-                  ? "text-primary bg-primary/10 shadow-[inset_0_0_20px_rgba(var(--primary),0.2)]"
-                  : step > s
-                    ? "text-foreground hover:bg-white/5"
-                    : "text-muted-foreground opacity-50"
-                }`}
-            >
-              {step === s && <div className="absolute top-0 left-0 w-full h-0.5 bg-primary shadow-[0_0_10px_var(--primary)]" />}
-              {s === 1 ? <Shirt className={`w-5 h-5 mb-1.5 ${step === s ? "animate-pulse" : ""}`} /> : s === 2 ? <ImageIcon className={`w-5 h-5 mb-1.5 ${step === s ? "animate-pulse" : ""}`} /> : s === 3 ? <Palette className={`w-5 h-5 mb-1.5 ${step === s ? "animate-pulse" : ""}`} /> : <Info className={`w-5 h-5 mb-1.5 ${step === s ? "animate-pulse" : ""}`} />}
-              {s === 1 ? t("step1") : s === 2 ? t("step2") : s === 3 ? t("step3") : t("step4")}
+        {/* Steps Header (Progress Bar) */}
+        <div className="p-6 pb-4 border-b border-white/5 bg-black/20">
+          <div className="flex justify-between items-end mb-3">
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-1">
+                {t("step")} {step} {t("of")} 4
+              </p>
+              <h2 className="text-lg font-medium text-foreground">
+                {step === 1 ? t("step1") : step === 2 ? t("step2") : step === 3 ? t("step3") : t("step4")}
+              </h2>
             </div>
-          ))}
+            <span className="text-sm font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
+              {Math.round((step / 4) * 100)}%
+            </span>
+          </div>
+          <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary transition-all duration-500 ease-out"
+              style={{ width: `${(step / 4) * 100}%` }}
+            />
+          </div>
         </div>
 
         {/* Dynamic Content Area */}
@@ -204,8 +208,8 @@ export function GarmentEditor() {
                     key={model.id}
                     onClick={() => setCategory(model.id)}
                     className={`flex flex-col items-center justify-center p-6 rounded-2xl border transition-all duration-300 ${category === model.id
-                        ? "bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(var(--primary),0.2)]"
-                        : "bg-white/5 border-white/10 hover:bg-white/10 text-muted-foreground hover:text-foreground"
+                      ? "bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(var(--primary),0.2)]"
+                      : "bg-white/5 border-white/10 hover:bg-white/10 text-muted-foreground hover:text-foreground"
                       }`}
                   >
                     <model.icon className={`w-8 h-8 mb-3 ${category === model.id ? "scale-110" : ""}`} />
@@ -305,27 +309,27 @@ export function GarmentEditor() {
               <h3 className="text-xl font-medium">{t("editor2DTitle")}</h3>
               <p className="text-muted-foreground text-sm mt-1">{t("editor2DDesc")}</p>
             </div>
-            
+
             <div className="flex-1 min-h-0 relative">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
                 <TabsList className="w-full max-w-md grid grid-cols-2 bg-white/5 border border-white/10 mb-4">
                   <TabsTrigger value="front" className="data-[state=active]:bg-primary">{t("tabFront")}</TabsTrigger>
                   <TabsTrigger value="back" className="data-[state=active]:bg-primary">{t("tabBack")}</TabsTrigger>
                 </TabsList>
-                
+
                 {/* We use hidden instead of TabsContent to prevent unmounting the Canvas and losing state */}
                 <div className={`flex-1 mt-0 h-full ${activeTab === "front" ? "block" : "hidden"}`}>
-                  <TextureEditor 
-                    baseColor={color} 
+                  <TextureEditor
+                    baseColor={color}
                     imageUrl={frontImage}
-                    onTextureUpdate={setGeneratedTexture} 
+                    onTextureUpdate={setGeneratedTexture}
                   />
                 </div>
                 <div className={`flex-1 mt-0 h-full ${activeTab === "back" ? "block" : "hidden"}`}>
-                  <TextureEditor 
-                    baseColor={color} 
+                  <TextureEditor
+                    baseColor={color}
                     imageUrl={backImage}
-                    onTextureUpdate={setGeneratedBackTexture} 
+                    onTextureUpdate={setGeneratedBackTexture}
                   />
                 </div>
               </Tabs>
