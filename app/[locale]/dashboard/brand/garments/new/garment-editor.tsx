@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Shirt, Check, ChevronRight, ChevronLeft, Upload, Loader2, AlertCircle, Ghost, Columns2, AlignEndVertical, Shield, Hourglass, SportShoe } from "lucide-react";
@@ -17,14 +17,14 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TextureEditor = dynamic(() => import("@/components/2d/TextureEditor"), { ssr: false });
-const GarmentViewer = dynamic(() => import("@/components/3d/GarmentViewer").then(mod => mod.GarmentViewer), { 
-  ssr: false, 
+const GarmentViewer = dynamic(() => import("@/components/3d/GarmentViewer").then(mod => mod.GarmentViewer), {
+  ssr: false,
   loading: () => (
     <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground gap-3" aria-live="polite">
       <Loader2 className="w-8 h-8 animate-spin" />
       <span className="text-sm font-medium">Cargando 3D...</span>
     </div>
-  ) 
+  )
 });
 
 // Mock Base Models
@@ -42,7 +42,7 @@ export function GarmentEditor() {
   const t = useTranslations("GarmentsNew");
   const router = useRouter();
 
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingFront, setIsUploadingFront] = useState(false);
   const [isUploadingBack, setIsUploadingBack] = useState(false);
@@ -50,6 +50,35 @@ export function GarmentEditor() {
   const [activeTab, setActiveTab] = useState("front");
 
   // Editor State
+  const [measurements, setMeasurements] = useState({
+    measureChest: 50,
+    measureLength: 50,
+    measureSleeve: 50,
+    measureShoulder: 50,
+    measureCollar: 50,
+    measureHem: 50,
+    measureWaist: 50,
+    measureFrontLength: 50,
+    measureBackLength: 50,
+    measureBicep: 50,
+    measureWrist: 50,
+    measureArmhole: 50
+  });
+
+  const handleMeasurementChange = (key: string, value: number) => {
+    setMeasurements(prev => ({ ...prev, [key]: value }));
+  };
+
+  const [components, setComponents] = useState({
+    collarType: "crew",
+    pocketType: "none",
+    sleevesType: "sleeveShort",
+    closureType: "closureNone",
+    hemType: "hemStraight",
+    hoodType: "hoodNone",
+    cuffType: "cuffSimple",
+  });
+
   const [category, setCategory] = useState<string>("tshirt");
   const [color, setColor] = useState<string>("#ffffff");
   const [frontImage, setFrontImage] = useState<string>("");
@@ -164,8 +193,8 @@ export function GarmentEditor() {
         <GarmentViewer
           url={currentModelUrl}
           colorHex={color}
-          textureUrl={step >= 3 && generatedTexture ? generatedTexture : undefined}
-          backTextureUrl={step >= 3 && generatedBackTexture ? generatedBackTexture : undefined}
+          textureUrl={step >= 4 && generatedTexture ? generatedTexture : undefined}
+          backTextureUrl={step >= 4 && generatedBackTexture ? generatedBackTexture : undefined}
         />
       </div>
 
@@ -177,20 +206,20 @@ export function GarmentEditor() {
           <div className="flex justify-between items-end mb-3">
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-1">
-                {t("step")} {step} {t("of")} 4
+                {t("step")} {step} {t("of")} 5
               </p>
               <h2 className="text-lg font-medium text-foreground">
-                {step === 1 ? t("step1") : step === 2 ? t("step2") : step === 3 ? t("step3") : t("step4")}
+                {step === 1 ? t("step1") : step === 2 ? t("step2") : step === 3 ? t("step3") : step === 4 ? t("step4") : t("step5")}
               </h2>
             </div>
             <span className="text-sm font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
-              {Math.round((step / 4) * 100)}%
+              {Math.round((step / 5) * 100)}%
             </span>
           </div>
           <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
             <div
               className="h-full bg-primary transition-all duration-500 ease-out"
-              style={{ width: `${(step / 4) * 100}%` }}
+              style={{ width: `${(step / 5) * 100}%` }}
             />
           </div>
         </div>
@@ -230,8 +259,146 @@ export function GarmentEditor() {
             </div>
           )}
 
-          {/* Step 2: Design */}
+          {/* Step 2: Measurements */}
           {step === 2 && (
+            <div className="animate-in slide-in-from-right-4 duration-300 space-y-6">
+              <div>
+                <h3 className="text-xl font-medium">{t("measurementsTitle")}</h3>
+                <p className="text-muted-foreground text-sm mt-1">{t("measurementsDesc")}</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 overflow-y-auto pr-2 max-h-[50vh] custom-scrollbar">
+                {(Object.keys(measurements) as Array<keyof typeof measurements>).map((key) => (
+                  <div key={key} className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <label htmlFor={key} className="font-medium text-foreground">{t(key as Parameters<typeof t>[0])}</label>
+                      <span className="text-muted-foreground font-mono">{measurements[key]}%</span>
+                    </div>
+                    <input
+                      id={key}
+                      type="range"
+                      min="0" max="100"
+                      value={measurements[key]}
+                      onChange={(e) => handleMeasurementChange(key, parseInt(e.target.value))}
+                      className="w-full accent-primary h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-6 border-t border-white/10">
+                <h3 className="text-lg font-medium">{t("componentsTitle")}</h3>
+                <p className="text-muted-foreground text-sm mt-1 mb-4">{t("componentsDesc")}</p>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium block mb-1.5">{t("collarType")}</label>
+                    <Select value={components.collarType} onValueChange={(val) => setComponents(prev => ({ ...prev, collarType: val || "crew" }))}>
+                      <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
+                        <SelectValue placeholder={t("collarType")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="crew">{t("collarCrew")}</SelectItem>
+                        <SelectItem value="vneck">{t("collarVneck")}</SelectItem>
+                        <SelectItem value="turtleneck">{t("collarTurtleneck")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium block mb-1.5">{t("pocketType")}</label>
+                    <Select value={components.pocketType} onValueChange={(val) => setComponents(prev => ({ ...prev, pocketType: val || "none" }))}>
+                      <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
+                        <SelectValue placeholder={t("pocketType")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">{t("pocketNone")}</SelectItem>
+                        <SelectItem value="chest_left">{t("pocketChestLeft")}</SelectItem>
+                        <SelectItem value="chest_right">{t("pocketChestRight")}</SelectItem>
+                        <SelectItem value="kangaroo">{t("pocketKangaroo")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium block mb-1.5">{t("sleevesType")}</label>
+                    <Select value={components.sleevesType} onValueChange={(val) => setComponents(prev => ({ ...prev, sleevesType: val || "sleeveShort" }))}>
+                      <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
+                        <SelectValue placeholder={t("sleevesType")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sleeveSleeveless">{t("sleeveSleeveless")}</SelectItem>
+                        <SelectItem value="sleeveShort">{t("sleeveShort")}</SelectItem>
+                        <SelectItem value="sleeve34">{t("sleeve34")}</SelectItem>
+                        <SelectItem value="sleeveLong">{t("sleeveLong")}</SelectItem>
+                        <SelectItem value="sleeveRaglan">{t("sleeveRaglan")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium block mb-1.5">{t("closureType")}</label>
+                    <Select value={components.closureType} onValueChange={(val) => setComponents(prev => ({ ...prev, closureType: val || "closureNone" }))}>
+                      <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
+                        <SelectValue placeholder={t("closureType")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="closureNone">{t("closureNone")}</SelectItem>
+                        <SelectItem value="closureFullZip">{t("closureFullZip")}</SelectItem>
+                        <SelectItem value="closureHalfZip">{t("closureHalfZip")}</SelectItem>
+                        <SelectItem value="closureButtons">{t("closureButtons")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium block mb-1.5">{t("hemType")}</label>
+                    <Select value={components.hemType} onValueChange={(val) => setComponents(prev => ({ ...prev, hemType: val || "hemStraight" }))}>
+                      <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
+                        <SelectValue placeholder={t("hemType")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hemStraight">{t("hemStraight")}</SelectItem>
+                        <SelectItem value="hemCurved">{t("hemCurved")}</SelectItem>
+                        <SelectItem value="hemCropped">{t("hemCropped")}</SelectItem>
+                        <SelectItem value="hemRibbed">{t("hemRibbed")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium block mb-1.5">{t("hoodType")}</label>
+                    <Select value={components.hoodType} onValueChange={(val) => setComponents(prev => ({ ...prev, hoodType: val || "hoodNone" }))}>
+                      <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
+                        <SelectValue placeholder={t("hoodType")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hoodNone">{t("hoodNone")}</SelectItem>
+                        <SelectItem value="hoodStandard">{t("hoodStandard")}</SelectItem>
+                        <SelectItem value="hoodOversize">{t("hoodOversize")}</SelectItem>
+                        <SelectItem value="hoodDrawstrings">{t("hoodDrawstrings")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium block mb-1.5">{t("cuffType")}</label>
+                    <Select value={components.cuffType} onValueChange={(val) => setComponents(prev => ({ ...prev, cuffType: val || "cuffSimple" }))}>
+                      <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
+                        <SelectValue placeholder={t("cuffType")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cuffSimple">{t("cuffSimple")}</SelectItem>
+                        <SelectItem value="cuffRibbed">{t("cuffRibbed")}</SelectItem>
+                        <SelectItem value="cuffThumbhole">{t("cuffThumbhole")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Design */}
+          {step === 3 && (
             <div className="animate-in slide-in-from-right-4 duration-300 space-y-6">
               <div>
                 <h3 className="text-xl font-medium">{t("designTitle")}</h3>
@@ -319,8 +486,8 @@ export function GarmentEditor() {
             </div>
           )}
 
-          {/* Step 3: Editor 2D (Hidden strictly via CSS to preserve Konva Canvas state) */}
-          <div className={`flex-col ${step === 3 ? "flex animate-in slide-in-from-right-4 duration-300" : "hidden"}`}>
+          {/* Step 4: Editor 2D (Hidden strictly via CSS to preserve Konva Canvas state) */}
+          <div className={`flex-col ${step === 4 ? "flex animate-in slide-in-from-right-4 duration-300" : "hidden"}`}>
             <div className="mb-4">
               <h3 className="text-xl font-medium">{t("editor2DTitle")}</h3>
               <p className="text-muted-foreground text-sm mt-1">{t("editor2DDesc")}</p>
@@ -352,8 +519,8 @@ export function GarmentEditor() {
             </div>
           </div>
 
-          {/* Step 4: Details */}
-          {step === 4 && (
+          {/* Step 5: Details */}
+          {step === 5 && (
             <div className="animate-in slide-in-from-right-4 duration-300 space-y-6">
               <div>
                 <h3 className="text-xl font-medium">{t("detailsTitle")}</h3>
@@ -429,7 +596,7 @@ export function GarmentEditor() {
         <div className="p-4 border-t border-white/5 bg-black/20 flex items-center justify-between">
           {step > 1 ? (
             <button
-              onClick={() => setStep((s) => s - 1 as 1 | 2 | 3)}
+              onClick={() => setStep((s) => s - 1 as 1 | 2 | 3 | 4 | 5)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -444,9 +611,9 @@ export function GarmentEditor() {
             </button>
           )}
 
-          {step < 4 ? (
+          {step < 5 ? (
             <button
-              onClick={() => setStep((s) => s + 1 as 1 | 2 | 3 | 4)}
+              onClick={() => setStep((s) => s + 1 as 1 | 2 | 3 | 4 | 5)}
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium bg-white/10 text-foreground hover:bg-white/20 transition-all"
             >
               {t("next")}
