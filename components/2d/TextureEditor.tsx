@@ -21,15 +21,14 @@ export default function TextureEditor({
   const stageRef = useRef<Konva.Stage>(null);
   
   interface LineData {
-    tool: "brush" | "eraser";
+    tool: "eraser" | "move";
     color: string;
     size: number;
     points: number[];
   }
   const [lines, setLines] = useState<LineData[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [tool, setTool] = useState<"brush" | "eraser">("brush");
-  const [brushColor, setBrushColor] = useState("#000000");
+  const [tool, setTool] = useState<"eraser" | "move">("move");
   const [brushSize, setBrushSize] = useState(5);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   
@@ -37,7 +36,14 @@ export default function TextureEditor({
   const trRef = useRef<Konva.Transformer>(null);
   const imageRef = useRef<Konva.Image>(null);
 
-  const [showImage, setShowImage] = useState(true);
+  const [showImage, setShowImage] = useState(!!imageUrl);
+  const [prevImageUrl, setPrevImageUrl] = useState(imageUrl);
+  
+  if (imageUrl !== prevImageUrl) {
+    setPrevImageUrl(imageUrl);
+    setShowImage(!!imageUrl);
+  }
+
   const [imageNode, setImageNode] = useState({
     x: 128,
     y: 128,
@@ -47,10 +53,6 @@ export default function TextureEditor({
     scaleX: 1,
     scaleY: 1
   });
-
-  useEffect(() => {
-    setShowImage(!!imageUrl);
-  }, [imageUrl]);
 
   // Update parent when lines change
   useEffect(() => {
@@ -70,18 +72,28 @@ export default function TextureEditor({
   }, [lines, baseColor, img, selectedId, onTextureUpdate]);
 
   const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+    // If we click on transformer, let it do its thing
+    const isTransformer = e.target.getParent()?.className === 'Transformer';
+    if (isTransformer) {
+      return;
+    }
+
+    // If eraser, start drawing regardless of what we clicked on
+    if (tool === 'eraser') {
+      setSelectedId(null);
+      setIsDrawing(true);
+      const stage = e.target.getStage();
+      const pos = stage?.getPointerPosition();
+      if (!pos) return;
+      setLines([...lines, { tool, color: "transparent", size: brushSize, points: [pos.x, pos.y] }]);
+      return;
+    }
+
+    // If move tool
     const clickedOnEmpty = e.target === e.target.getStage() || e.target.name() === 'background';
     if (clickedOnEmpty) {
       setSelectedId(null);
-      if (tool === 'brush' || tool === 'eraser') {
-        setIsDrawing(true);
-        const stage = e.target.getStage();
-        const pos = stage?.getPointerPosition();
-        if (!pos) return;
-        setLines([...lines, { tool, color: brushColor, size: brushSize, points: [pos.x, pos.y] }]);
-      }
     } else {
-      // Clicked on an image or line, check if it's an image
       const name = e.target.name();
       if (name === 'image') {
         setSelectedId(name);
@@ -123,10 +135,10 @@ export default function TextureEditor({
       <div className="flex flex-wrap items-center gap-4 p-3 bg-white/5 border border-white/10 rounded-2xl">
         <div className="flex items-center gap-2 border-r border-white/10 pr-4">
           <button 
-            onClick={() => setTool("brush")} 
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${tool === "brush" ? "bg-primary text-primary-foreground" : "hover:bg-white/10 text-muted-foreground"}`}
+            onClick={() => setTool("move")} 
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${tool === "move" ? "bg-primary text-primary-foreground" : "hover:bg-white/10 text-muted-foreground"}`}
           >
-            {t("brush")}
+            Mover
           </button>
           <button 
             onClick={() => setTool("eraser")} 
@@ -137,13 +149,6 @@ export default function TextureEditor({
         </div>
         
         <div className="flex items-center gap-2">
-          <input 
-            type="color" 
-            value={brushColor} 
-            onChange={(e) => setBrushColor(e.target.value)}
-            disabled={tool === "eraser"}
-            className="w-6 h-6 rounded cursor-pointer disabled:opacity-50"
-          />
           <input 
             type="range" 
             min="1" 
@@ -202,10 +207,14 @@ export default function TextureEditor({
                 rotation={imageNode.rotation}
                 scaleX={imageNode.scaleX}
                 scaleY={imageNode.scaleY}
-                draggable 
+                draggable={tool === "move"}
                 name="image"
-                onClick={() => setSelectedId('image')}
-                onTap={() => setSelectedId('image')}
+                onClick={() => {
+                  if (tool === "move") setSelectedId('image');
+                }}
+                onTap={() => {
+                  if (tool === "move") setSelectedId('image');
+                }}
                 onDragEnd={(e) => {
                   setImageNode({
                     ...imageNode,
