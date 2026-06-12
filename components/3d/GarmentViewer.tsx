@@ -457,7 +457,17 @@ export function GarmentViewer({
   return (
     <ErrorBoundary>
       <div className={`w-full h-full bg-gradient-to-b from-background/80 to-background/20 rounded-3xl overflow-hidden border border-white/10 relative shadow-2xl ${className || 'min-h-[500px]'}`}>
-        <Canvas shadows={{ type: THREE.PCFShadowMap }} camera={{ position: [0, 0, 15], fov: 45 }}>
+        <Canvas 
+          shadows={{ type: THREE.PCFShadowMap }} 
+          camera={{ position: [0, 0, 15], fov: 45 }}
+          gl={{ preserveDrawingBuffer: true, powerPreference: "high-performance", antialias: true }}
+          onCreated={({ gl }) => {
+            gl.getContext().canvas.addEventListener('webglcontextlost', (e) => {
+              e.preventDefault();
+              console.warn("WebGL Context Lost. ErrorBoundary should catch this or user can retry.");
+            });
+          }}
+        >
           <Suspense fallback={<ModelLoader />}>
             <Stage environment="city" intensity={0.8} adjustCamera>
               {avatarUrl && (
