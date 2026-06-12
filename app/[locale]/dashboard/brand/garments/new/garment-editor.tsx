@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TextureEditor = dynamic(() => import("@/components/2d/TextureEditor"), { ssr: false });
 
@@ -47,6 +48,7 @@ export function GarmentEditor() {
   const [gender, setGender] = useState<string>("unisex");
   const [description, setDescription] = useState<string>("");
   const [generatedTexture, setGeneratedTexture] = useState<string>("");
+  const [generatedBackTexture, setGeneratedBackTexture] = useState<string>("");
 
   const [skuError, setSkuError] = useState<string | null>(null);
   const [isCheckingSku, setIsCheckingSku] = useState(false);
@@ -133,6 +135,7 @@ export function GarmentEditor() {
           url={currentModelUrl}
           colorHex={color}
           textureUrl={step >= 3 && generatedTexture ? generatedTexture : undefined}
+          backTextureUrl={step >= 3 && generatedBackTexture ? generatedBackTexture : undefined}
         />
       </div>
 
@@ -270,12 +273,26 @@ export function GarmentEditor() {
               </div>
               
               <div className="flex-1 min-h-[400px]">
-                <TextureEditor 
-                  baseColor={color} 
-                  frontImageUrl={frontImage}
-                  backImageUrl={backImage}
-                  onTextureUpdate={setGeneratedTexture} 
-                />
+                <Tabs defaultValue="front" className="w-full h-full flex flex-col">
+                  <TabsList className="w-full max-w-md grid grid-cols-2 bg-white/5 border border-white/10 mb-4">
+                    <TabsTrigger value="front" className="data-[state=active]:bg-primary">Frente</TabsTrigger>
+                    <TabsTrigger value="back" className="data-[state=active]:bg-primary">Espalda</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="front" className="flex-1 mt-0">
+                    <TextureEditor 
+                      baseColor={color} 
+                      imageUrl={frontImage}
+                      onTextureUpdate={setGeneratedTexture} 
+                    />
+                  </TabsContent>
+                  <TabsContent value="back" className="flex-1 mt-0">
+                    <TextureEditor 
+                      baseColor={color} 
+                      imageUrl={backImage}
+                      onTextureUpdate={setGeneratedBackTexture} 
+                    />
+                  </TabsContent>
+                </Tabs>
               </div>
             </div>
           )}

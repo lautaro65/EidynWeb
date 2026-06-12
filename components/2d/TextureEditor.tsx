@@ -9,15 +9,13 @@ import { useTranslations } from "next-intl";
 interface TextureEditorProps {
   onTextureUpdate: (dataUrl: string) => void;
   baseColor: string;
-  frontImageUrl?: string;
-  backImageUrl?: string;
+  imageUrl?: string;
 }
 
 export default function TextureEditor({
   onTextureUpdate,
   baseColor,
-  frontImageUrl,
-  backImageUrl,
+  imageUrl,
 }: TextureEditorProps) {
   const t = useTranslations("GarmentsNew");
   const stageRef = useRef<Konva.Stage>(null);
@@ -35,11 +33,9 @@ export default function TextureEditor({
   const [brushSize, setBrushSize] = useState(5);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   
-  const [frontImg] = useImage(frontImageUrl || "", "anonymous");
-  const [backImg] = useImage(backImageUrl || "", "anonymous");
+  const [img] = useImage(imageUrl || "", "anonymous");
   const trRef = useRef<Konva.Transformer>(null);
-  const frontImageRef = useRef<Konva.Image>(null);
-  const backImageRef = useRef<Konva.Image>(null);
+  const imageRef = useRef<Konva.Image>(null);
 
   // Update parent when lines change
   useEffect(() => {
@@ -52,13 +48,11 @@ export default function TextureEditor({
       onTextureUpdate(dataUrl);
 
       // Restore transformer
-      if (tr && selectedId === 'front' && frontImageRef.current) {
-        tr.nodes([frontImageRef.current]);
-      } else if (tr && selectedId === 'back' && backImageRef.current) {
-        tr.nodes([backImageRef.current]);
+      if (tr && selectedId === 'image' && imageRef.current) {
+        tr.nodes([imageRef.current]);
       }
     }
-  }, [lines, baseColor, frontImg, backImg, selectedId, onTextureUpdate]);
+  }, [lines, baseColor, img, selectedId, onTextureUpdate]);
 
   const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
     const clickedOnEmpty = e.target === e.target.getStage() || e.target.name() === 'background';
@@ -74,7 +68,7 @@ export default function TextureEditor({
     } else {
       // Clicked on an image or line, check if it's an image
       const name = e.target.name();
-      if (name === 'front' || name === 'back') {
+      if (name === 'image') {
         setSelectedId(name);
       } else {
         setSelectedId(null);
@@ -172,43 +166,21 @@ export default function TextureEditor({
             {/* Base Color Background */}
             <Rect x={0} y={0} width={512} height={512} fill={baseColor} name="background" />
             
-            {/* Front Image Proxy */}
-            {frontImg && (
+            {/* Image Proxy */}
+            {img && (
               <KonvaImage 
-                ref={frontImageRef}
-                image={frontImg} 
+                ref={imageRef}
+                image={img} 
                 x={128} 
                 y={128} 
                 width={256} 
                 height={256} 
                 draggable 
-                name="front"
-                onClick={() => setSelectedId('front')}
-                onTap={() => setSelectedId('front')}
+                name="image"
+                onClick={() => setSelectedId('image')}
+                onTap={() => setSelectedId('image')}
                 onDragEnd={() => {
                   // Trigger re-render to update texture
-                  setLines([...lines]);
-                }}
-                onTransformEnd={() => {
-                  setLines([...lines]);
-                }}
-              />
-            )}
-
-            {/* Back Image Proxy */}
-            {backImg && (
-              <KonvaImage 
-                ref={backImageRef}
-                image={backImg} 
-                x={10} 
-                y={10} 
-                width={128} 
-                height={128} 
-                draggable 
-                name="back"
-                onClick={() => setSelectedId('back')}
-                onTap={() => setSelectedId('back')}
-                onDragEnd={() => {
                   setLines([...lines]);
                 }}
                 onTransformEnd={() => {
@@ -248,21 +220,6 @@ export default function TextureEditor({
           </Layer>
         </Stage>
 
-        {/* Overlay Grid/UV Helper */}
-        <div className="absolute inset-0 pointer-events-none flex opacity-20 mix-blend-overlay">
-          {/* Front Guide */}
-          <div className="flex-1 border-r border-dashed border-white flex flex-col items-center justify-center p-8">
-            <div className="w-full h-full border-2 border-white rounded-[40px] flex items-center justify-center">
-              <span className="text-white text-3xl font-black uppercase tracking-widest rotate-[-45deg]">Frente</span>
-            </div>
-          </div>
-          {/* Back Guide */}
-          <div className="flex-1 flex flex-col items-center justify-center p-8">
-             <div className="w-full h-full border-2 border-white rounded-[40px] flex items-center justify-center">
-              <span className="text-white text-3xl font-black uppercase tracking-widest rotate-[-45deg]">Espalda</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
