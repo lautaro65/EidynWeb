@@ -38,6 +38,60 @@ const BASE_MODELS = [
   { id: "shoes", labelKey: "categoryShoes", url: "/models/shoes.glb", icon: SportShoe },
 ];
 
+const COMPONENT_CATEGORIES = [
+  { id: "collarType", labelKey: "collarType" },
+  { id: "pocketType", labelKey: "pocketType" },
+  { id: "sleevesType", labelKey: "sleevesType" },
+  { id: "closureType", labelKey: "closureType" },
+  { id: "hemType", labelKey: "hemType" },
+  { id: "hoodType", labelKey: "hoodType" },
+  { id: "cuffType", labelKey: "cuffType" },
+] as const;
+
+const COMPONENT_OPTIONS = {
+  collarType: [
+    { id: "crew", labelKey: "collarCrew" },
+    { id: "vneck", labelKey: "collarVneck" },
+    { id: "turtleneck", labelKey: "collarTurtleneck" },
+  ],
+  pocketType: [
+    { id: "none", labelKey: "pocketNone" },
+    { id: "chest_left", labelKey: "pocketChestLeft" },
+    { id: "chest_right", labelKey: "pocketChestRight" },
+    { id: "kangaroo", labelKey: "pocketKangaroo" },
+  ],
+  sleevesType: [
+    { id: "sleeveSleeveless", labelKey: "sleeveSleeveless" },
+    { id: "sleeveShort", labelKey: "sleeveShort" },
+    { id: "sleeve34", labelKey: "sleeve34" },
+    { id: "sleeveLong", labelKey: "sleeveLong" },
+    { id: "sleeveRaglan", labelKey: "sleeveRaglan" },
+  ],
+  closureType: [
+    { id: "closureNone", labelKey: "closureNone" },
+    { id: "closureFullZip", labelKey: "closureFullZip" },
+    { id: "closureHalfZip", labelKey: "closureHalfZip" },
+    { id: "closureButtons", labelKey: "closureButtons" },
+  ],
+  hemType: [
+    { id: "hemStraight", labelKey: "hemStraight" },
+    { id: "hemCurved", labelKey: "hemCurved" },
+    { id: "hemCropped", labelKey: "hemCropped" },
+    { id: "hemRibbed", labelKey: "hemRibbed" },
+  ],
+  hoodType: [
+    { id: "hoodNone", labelKey: "hoodNone" },
+    { id: "hoodStandard", labelKey: "hoodStandard" },
+    { id: "hoodOversize", labelKey: "hoodOversize" },
+    { id: "hoodDrawstrings", labelKey: "hoodDrawstrings" },
+  ],
+  cuffType: [
+    { id: "cuffSimple", labelKey: "cuffSimple" },
+    { id: "cuffRibbed", labelKey: "cuffRibbed" },
+    { id: "cuffThumbhole", labelKey: "cuffThumbhole" },
+  ],
+} as const;
+
 export function GarmentEditor() {
   const t = useTranslations("GarmentsNew");
   const router = useRouter();
@@ -48,6 +102,7 @@ export function GarmentEditor() {
   const [isUploadingBack, setIsUploadingBack] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("front");
+  const [activeComponentTab, setActiveComponentTab] = useState<keyof typeof COMPONENT_OPTIONS>("collarType");
 
   // Editor State
   const [measurements, setMeasurements] = useState({
@@ -289,109 +344,36 @@ export function GarmentEditor() {
                 <h3 className="text-lg font-medium">{t("componentsTitle")}</h3>
                 <p className="text-muted-foreground text-sm mt-1 mb-4">{t("componentsDesc")}</p>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium block mb-1.5">{t("collarType")}</label>
-                    <Select value={components.collarType} onValueChange={(val) => setComponents(prev => ({ ...prev, collarType: val || "crew" }))}>
-                      <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
-                        <SelectValue placeholder={t("collarType")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="crew">{t("collarCrew")}</SelectItem>
-                        <SelectItem value="vneck">{t("collarVneck")}</SelectItem>
-                        <SelectItem value="turtleneck">{t("collarTurtleneck")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium block mb-1.5">{t("pocketType")}</label>
-                    <Select value={components.pocketType} onValueChange={(val) => setComponents(prev => ({ ...prev, pocketType: val || "none" }))}>
-                      <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
-                        <SelectValue placeholder={t("pocketType")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">{t("pocketNone")}</SelectItem>
-                        <SelectItem value="chest_left">{t("pocketChestLeft")}</SelectItem>
-                        <SelectItem value="chest_right">{t("pocketChestRight")}</SelectItem>
-                        <SelectItem value="kangaroo">{t("pocketKangaroo")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                  {COMPONENT_CATEGORIES.map(cat => (
+                    <button 
+                      key={cat.id} 
+                      onClick={() => setActiveComponentTab(cat.id)}
+                      className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${activeComponentTab === cat.id ? 'bg-primary text-primary-foreground shadow-md' : 'bg-white/5 hover:bg-white/10 text-muted-foreground'}`}
+                    >
+                      {t(cat.labelKey as Parameters<typeof t>[0])}
+                    </button>
+                  ))}
+                </div>
 
-                  <div>
-                    <label className="text-sm font-medium block mb-1.5">{t("sleevesType")}</label>
-                    <Select value={components.sleevesType} onValueChange={(val) => setComponents(prev => ({ ...prev, sleevesType: val || "sleeveShort" }))}>
-                      <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
-                        <SelectValue placeholder={t("sleevesType")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="sleeveSleeveless">{t("sleeveSleeveless")}</SelectItem>
-                        <SelectItem value="sleeveShort">{t("sleeveShort")}</SelectItem>
-                        <SelectItem value="sleeve34">{t("sleeve34")}</SelectItem>
-                        <SelectItem value="sleeveLong">{t("sleeveLong")}</SelectItem>
-                        <SelectItem value="sleeveRaglan">{t("sleeveRaglan")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium block mb-1.5">{t("closureType")}</label>
-                    <Select value={components.closureType} onValueChange={(val) => setComponents(prev => ({ ...prev, closureType: val || "closureNone" }))}>
-                      <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
-                        <SelectValue placeholder={t("closureType")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="closureNone">{t("closureNone")}</SelectItem>
-                        <SelectItem value="closureFullZip">{t("closureFullZip")}</SelectItem>
-                        <SelectItem value="closureHalfZip">{t("closureHalfZip")}</SelectItem>
-                        <SelectItem value="closureButtons">{t("closureButtons")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium block mb-1.5">{t("hemType")}</label>
-                    <Select value={components.hemType} onValueChange={(val) => setComponents(prev => ({ ...prev, hemType: val || "hemStraight" }))}>
-                      <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
-                        <SelectValue placeholder={t("hemType")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="hemStraight">{t("hemStraight")}</SelectItem>
-                        <SelectItem value="hemCurved">{t("hemCurved")}</SelectItem>
-                        <SelectItem value="hemCropped">{t("hemCropped")}</SelectItem>
-                        <SelectItem value="hemRibbed">{t("hemRibbed")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium block mb-1.5">{t("hoodType")}</label>
-                    <Select value={components.hoodType} onValueChange={(val) => setComponents(prev => ({ ...prev, hoodType: val || "hoodNone" }))}>
-                      <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
-                        <SelectValue placeholder={t("hoodType")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="hoodNone">{t("hoodNone")}</SelectItem>
-                        <SelectItem value="hoodStandard">{t("hoodStandard")}</SelectItem>
-                        <SelectItem value="hoodOversize">{t("hoodOversize")}</SelectItem>
-                        <SelectItem value="hoodDrawstrings">{t("hoodDrawstrings")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium block mb-1.5">{t("cuffType")}</label>
-                    <Select value={components.cuffType} onValueChange={(val) => setComponents(prev => ({ ...prev, cuffType: val || "cuffSimple" }))}>
-                      <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
-                        <SelectValue placeholder={t("cuffType")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="cuffSimple">{t("cuffSimple")}</SelectItem>
-                        <SelectItem value="cuffRibbed">{t("cuffRibbed")}</SelectItem>
-                        <SelectItem value="cuffThumbhole">{t("cuffThumbhole")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
+                  {COMPONENT_OPTIONS[activeComponentTab].map(option => {
+                    const isSelected = components[activeComponentTab] === option.id;
+                    return (
+                      <button
+                        key={option.id}
+                        onClick={() => setComponents(prev => ({ ...prev, [activeComponentTab]: option.id }))}
+                        className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 ${isSelected ? 'border-primary bg-primary/10 shadow-[0_0_15px_rgba(var(--primary),0.2)]' : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'}`}
+                      >
+                        <div className={`w-12 h-12 rounded-full mb-3 flex items-center justify-center transition-colors ${isSelected ? 'bg-primary/20 text-primary' : 'bg-white/5 text-muted-foreground'}`}>
+                          <Shirt className={`w-6 h-6 ${isSelected ? 'opacity-100' : 'opacity-50'}`} /> 
+                        </div>
+                        <span className={`text-sm text-center ${isSelected ? 'font-semibold text-primary' : 'font-medium text-foreground'}`}>
+                          {t(option.labelKey as Parameters<typeof t>[0])}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
