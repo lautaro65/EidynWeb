@@ -225,7 +225,7 @@ model GarmentTemplate {
   id          String  @id @default(uuid()) @db.Uuid
   ownerId     String? @map("owner_id") @db.Uuid // tenant que lo creó (null = modelo global de Eidyn)
   brandId     String? @map("brand_id") @db.Uuid // marca (ej: Nike, Adidas)
-  sku         String  @unique // código universal (ej: "NIKE-AM90-001")
+  sku         String  // código universal (ej: "NIKE-AM90-001")
   name        String?
   category    String? // shirt | pants | dress | shoes | etc.
   gender      String? // male | female | unisex
@@ -252,6 +252,7 @@ model GarmentTemplate {
   listings GarmentListing[] // en qué tiendas está publicado
   changeRequests GarmentChangeRequest[] // solicitudes de cambio de la comunidad
 
+  @@unique([sku, ownerId])
   @@map("garment_templates")
 }
 

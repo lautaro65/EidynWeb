@@ -4,6 +4,31 @@ import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
+export async function checkSkuAvailability(sku: string) {
+  if (!sku) return { available: true };
+  
+  const clerkUser = await currentUser();
+  if (!clerkUser) return { available: true };
+
+  const membership = await db.membership.findFirst({
+    where: { user: { clerkId: clerkUser.id } },
+    include: { tenant: true },
+  });
+
+  if (!membership || membership.tenant.type !== "brand") {
+    return { available: true };
+  }
+
+  const existing = await db.garmentTemplate.findFirst({
+    where: { 
+      sku: sku,
+      ownerId: membership.tenantId 
+    },
+  });
+
+  return { available: !existing };
+}
+
 export async function createGarmentTemplate(data: {
   sku: string;
   name: string;
@@ -26,9 +51,12 @@ export async function createGarmentTemplate(data: {
     throw new Error("Unauthorized");
   }
 
-  // Check SKU uniqueness globally (per current schema)
-  const existingSku = await db.garmentTemplate.findUnique({
-    where: { sku: data.sku },
+  // Check SKU uniqueness per tenant
+  const existingSku = await db.garmentTemplate.findFirst({
+    where: { 
+      sku: data.sku,
+      ownerId: membership.tenantId
+    },
   });
 
   if (existingSku) {

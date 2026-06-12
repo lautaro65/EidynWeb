@@ -3,16 +3,27 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Shirt, Image as ImageIcon, Info, Check, ChevronRight, ChevronLeft, Upload, Loader2 } from "lucide-react";
+import { Shirt, Image as ImageIcon, Info, Check, ChevronRight, ChevronLeft, Upload, Loader2, Layers, Wind, Sparkles, Footprints, Scissors, Accessibility, AlertCircle } from "lucide-react";
 import { GarmentViewer } from "@/components/3d/GarmentViewer";
-import { createGarmentTemplate } from "./actions";
+import { createGarmentTemplate, checkSkuAvailability } from "./actions";
+import { useDebouncedCallback } from "use-debounce";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Mock Base Models
 const BASE_MODELS = [
-  { id: "tshirt", labelKey: "categoryTshirt", url: "/models/tshirt.glb" },
-  { id: "hoodie", labelKey: "categoryHoodie", url: "/models/hoodie.glb" },
-  { id: "pants", labelKey: "categoryPants", url: "/models/pants.glb" },
-  { id: "jacket", labelKey: "categoryJacket", url: "/models/jacket.glb" },
+  { id: "tshirt", labelKey: "categoryTshirt", url: "/models/remera.glb", icon: Shirt },
+  { id: "hoodie", labelKey: "categoryHoodie", url: "/models/hoodie.glb", icon: Layers },
+  { id: "pants", labelKey: "categoryPants", url: "/models/pants.glb", icon: Accessibility },
+  { id: "shorts", labelKey: "categoryShorts", url: "/models/shorts.glb", icon: Scissors },
+  { id: "jacket", labelKey: "categoryJacket", url: "/models/jacket.glb", icon: Wind },
+  { id: "dress", labelKey: "categoryDress", url: "/models/dress.glb", icon: Sparkles },
+  { id: "shoes", labelKey: "categoryShoes", url: "/models/shoes.glb", icon: Footprints },
 ];
 
 export function GarmentEditor() {
@@ -33,7 +44,36 @@ export function GarmentEditor() {
   const [gender, setGender] = useState<string>("unisex");
   const [description, setDescription] = useState<string>("");
 
+  const [skuError, setSkuError] = useState<string | null>(null);
+  const [isCheckingSku, setIsCheckingSku] = useState(false);
+
   const currentModelUrl = BASE_MODELS.find(m => m.id === category)?.url || "";
+
+  const validateSku = useDebouncedCallback(async (value: string) => {
+    if (!value) {
+      setSkuError(null);
+      return;
+    }
+    setIsCheckingSku(true);
+    try {
+      const res = await checkSkuAvailability(value);
+      if (!res.available) {
+        setSkuError("Este SKU ya está en uso por otra de tus prendas.");
+      } else {
+        setSkuError(null);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsCheckingSku(false);
+    }
+  }, 500);
+
+  const handleSkuChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.toUpperCase();
+    setSku(val);
+    validateSku(val);
+  };
 
   // Mock File Upload (For visual purposes, a real implementation would upload to R2 here)
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, setUrl: (url: string) => void) => {
@@ -51,7 +91,11 @@ export function GarmentEditor() {
       setError("El Nombre y el SKU son obligatorios.");
       return;
     }
-    
+    if (skuError) {
+      setError("Por favor, corrige el SKU antes de guardar.");
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
     try {
@@ -78,32 +122,31 @@ export function GarmentEditor() {
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-8rem)] animate-in fade-in duration-500">
-      
+
       {/* Left Panel: 3D Viewer */}
       <div className="flex-1 bg-background/50 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative min-h-[400px]">
-        <GarmentViewer 
-          url={currentModelUrl} 
-          colorHex={color} 
-          textureUrl={frontImage} 
-          backTextureUrl={backImage} 
+        <GarmentViewer
+          url={currentModelUrl}
+          colorHex={color}
+          textureUrl={frontImage}
+          backTextureUrl={backImage}
         />
       </div>
 
       {/* Right Panel: Editor Controls */}
       <div className="w-full lg:w-[450px] flex flex-col bg-background/50 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
-        
+
         {/* Steps Header */}
         <div className="flex p-2 bg-black/20 border-b border-white/5">
           {[1, 2, 3].map((s) => (
-            <div 
-              key={s} 
-              className={`flex-1 text-center py-3 text-xs font-medium uppercase tracking-wider rounded-xl transition-all duration-300 ${
-                step === s 
-                  ? "bg-white/10 text-primary" 
-                  : step > s 
-                    ? "text-foreground" 
+            <div
+              key={s}
+              className={`flex-1 text-center py-3 text-xs font-medium uppercase tracking-wider rounded-xl transition-all duration-300 ${step === s
+                  ? "bg-white/10 text-primary"
+                  : step > s
+                    ? "text-foreground"
                     : "text-muted-foreground"
-              }`}
+                }`}
             >
               {s === 1 ? <Shirt className="w-4 h-4 mx-auto mb-1" /> : s === 2 ? <ImageIcon className="w-4 h-4 mx-auto mb-1" /> : <Info className="w-4 h-4 mx-auto mb-1" />}
               {s === 1 ? t("step1") : s === 2 ? t("step2") : t("step3")}
@@ -131,13 +174,12 @@ export function GarmentEditor() {
                   <button
                     key={model.id}
                     onClick={() => setCategory(model.id)}
-                    className={`flex flex-col items-center justify-center p-6 rounded-2xl border transition-all duration-300 ${
-                      category === model.id 
-                        ? "bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(var(--primary),0.2)]" 
+                    className={`flex flex-col items-center justify-center p-6 rounded-2xl border transition-all duration-300 ${category === model.id
+                        ? "bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(var(--primary),0.2)]"
                         : "bg-white/5 border-white/10 hover:bg-white/10 text-muted-foreground hover:text-foreground"
-                    }`}
+                      }`}
                   >
-                    <Shirt className={`w-8 h-8 mb-3 ${category === model.id ? "scale-110" : ""}`} />
+                    <model.icon className={`w-8 h-8 mb-3 ${category === model.id ? "scale-110" : ""}`} />
                     <span className="font-medium text-sm">{t(model.labelKey as Parameters<typeof t>[0])}</span>
                   </button>
                 ))}
@@ -156,9 +198,9 @@ export function GarmentEditor() {
               <div className="space-y-4">
                 <label className="text-sm font-medium">{t("baseColor")}</label>
                 <div className="flex items-center gap-4">
-                  <input 
-                    type="color" 
-                    value={color} 
+                  <input
+                    type="color"
+                    value={color}
                     onChange={(e) => setColor(e.target.value)}
                     className="w-12 h-12 rounded-xl cursor-pointer bg-transparent border-0 p-0"
                   />
@@ -169,9 +211,9 @@ export function GarmentEditor() {
               <div className="space-y-4">
                 <label className="text-sm font-medium">{t("frontImage")}</label>
                 <div className="border-2 border-dashed border-white/10 rounded-2xl p-6 text-center hover:bg-white/5 transition-colors relative">
-                  <input 
-                    type="file" 
-                    accept="image/*" 
+                  <input
+                    type="file"
+                    accept="image/*"
                     onChange={(e) => handleFileUpload(e, setFrontImage)}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
@@ -193,9 +235,9 @@ export function GarmentEditor() {
               <div className="space-y-4">
                 <label className="text-sm font-medium">{t("backImage")}</label>
                 <div className="border-2 border-dashed border-white/10 rounded-2xl p-6 text-center hover:bg-white/5 transition-colors relative">
-                  <input 
-                    type="file" 
-                    accept="image/*" 
+                  <input
+                    type="file"
+                    accept="image/*"
                     onChange={(e) => handleFileUpload(e, setBackImage)}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
@@ -227,8 +269,8 @@ export function GarmentEditor() {
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium block mb-1.5">{t("garmentName")}</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder={t("garmentNamePlaceholder")}
@@ -237,29 +279,42 @@ export function GarmentEditor() {
                 </div>
                 <div>
                   <label className="text-sm font-medium block mb-1.5">{t("sku")}</label>
-                  <input 
-                    type="text" 
-                    value={sku}
-                    onChange={(e) => setSku(e.target.value)}
-                    placeholder={t("skuPlaceholder")}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/50 uppercase"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={sku}
+                      onChange={handleSkuChange}
+                      placeholder={t("skuPlaceholder")}
+                      className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/50 uppercase transition-colors ${skuError ? "border-red-500/50 focus:ring-red-500/50" : "border-white/10"
+                        }`}
+                    />
+                    {isCheckingSku && (
+                      <Loader2 className="w-4 h-4 text-muted-foreground animate-spin absolute right-3 top-3.5" />
+                    )}
+                  </div>
+                  {skuError && (
+                    <p className="text-red-400 text-xs mt-1.5 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      {skuError}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="text-sm font-medium block mb-1.5">{t("gender")}</label>
-                  <select 
-                    value={gender}
-                    onChange={(e) => setGender(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none"
-                  >
-                    <option value="unisex">{t("genderUnisex")}</option>
-                    <option value="male">{t("genderMale")}</option>
-                    <option value="female">{t("genderFemale")}</option>
-                  </select>
+                  <Select value={gender} onValueChange={(val) => setGender(val || "unisex")}>
+                    <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
+                      <SelectValue placeholder={t("genderUnisex")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unisex">{t("genderUnisex")}</SelectItem>
+                      <SelectItem value="male">{t("genderMale")}</SelectItem>
+                      <SelectItem value="female">{t("genderFemale")}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label className="text-sm font-medium block mb-1.5">{t("garmentDesc")}</label>
-                  <textarea 
+                  <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={3}
@@ -274,15 +329,15 @@ export function GarmentEditor() {
         {/* Footer Controls */}
         <div className="p-4 border-t border-white/5 bg-black/20 flex items-center justify-between">
           {step > 1 ? (
-            <button 
-              onClick={() => setStep((s) => s - 1 as 1|2|3)}
+            <button
+              onClick={() => setStep((s) => s - 1 as 1 | 2 | 3)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
               {t("back")}
             </button>
           ) : (
-            <button 
+            <button
               onClick={() => router.push("/dashboard/brand/garments")}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-red-500/10 hover:text-red-500 transition-colors"
             >
@@ -291,17 +346,17 @@ export function GarmentEditor() {
           )}
 
           {step < 3 ? (
-            <button 
-              onClick={() => setStep((s) => s + 1 as 1|2|3)}
+            <button
+              onClick={() => setStep((s) => s + 1 as 1 | 2 | 3)}
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium bg-white/10 text-foreground hover:bg-white/20 transition-all"
             >
               {t("next")}
               <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
-            <button 
+            <button
               onClick={handleSave}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isCheckingSku || !!skuError}
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
             >
               {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
