@@ -121,11 +121,20 @@ export function GarmentEditor() {
 
   // Size Grading State
   const [baseSizeName, setBaseSizeName] = useState("M");
-  const [smallerSizes, setSmallerSizes] = useState<string[]>([]);
-  const [largerSizes, setLargerSizes] = useState<string[]>([]);
+  const [orderedSizes, setOrderedSizes] = useState<string[]>(["M"]);
   const [activeSizeTab, setActiveSizeTab] = useState<string | null>(null);
   const [sizeChart, setSizeChart] = useState<Record<string, Record<string, number>>>({});
   const [newSizeInput, setNewSizeInput] = useState("");
+  const [sizingSystem, setSizingSystem] = useState<"alphanumeric" | "numeric">("alphanumeric");
+  const [draggedSizeTab, setDraggedSizeTab] = useState<string | null>(null);
+
+  // Derived arrays for UI and logic separation if needed, but we mostly rely on index logic now.
+  const baseIdx = orderedSizes.indexOf(baseSizeName);
+  const smallerSizes = baseIdx !== -1 ? orderedSizes.slice(0, baseIdx) : [];
+  const largerSizes = baseIdx !== -1 ? orderedSizes.slice(baseIdx + 1) : [];
+
+  const ALPHANUMERIC_SIZES = ['XXS', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
+  const NUMERIC_SIZES = Array.from({length: 15}, (_, i) => String(32 + i * 2));
 
   // Editor State
   const [measurements, setMeasurements] = useState({
@@ -143,22 +152,49 @@ export function GarmentEditor() {
     measureArmhole: 50
   });
 
+  const handleSizingSystemChange = (system: "alphanumeric" | "numeric") => {
+    if (orderedSizes.length > 1) {
+       if (!confirm("Cambiar el Sistema de Talles reiniciará tu progresión actual. ¿Continuar?")) return;
+    }
+    setSizingSystem(system);
+    const newBase = system === "alphanumeric" ? "M" : "42";
+    setBaseSizeName(newBase);
+    setOrderedSizes([newBase]);
+    setSizeChart({});
+    setActiveSizeTab(null);
+    setNewSizeInput("");
+  };
+
+  const handleBaseSizeChange = (newBase: string | null) => {
+    if (!newBase) return;
+    if (orderedSizes.length > 1) {
+       if (!confirm("Cambiar el Talle Base reiniciará tu progresión actual. ¿Continuar?")) return;
+    }
+    setBaseSizeName(newBase);
+    setOrderedSizes([newBase]);
+    setSizeChart({});
+    setActiveSizeTab(null);
+  };
+
   const handleMeasurementChange = (key: string, value: number) => {
     setMeasurements(prev => ({ ...prev, [key]: value }));
   };
 
   const handleAddSmallerSize = () => {
     const size = newSizeInput.trim().toUpperCase();
-    if (!size || size === baseSizeName.toUpperCase() || smallerSizes.includes(size) || largerSizes.includes(size)) return;
+    if (!size || orderedSizes.includes(size)) return;
+    
+    const newSizes = [size, ...orderedSizes];
+    const newBaseIdx = newSizes.indexOf(baseSizeName);
+    const distance = newBaseIdx;
     
     const newMeasurements = { ...measurements };
-    const distance = smallerSizes.length + 1;
     Object.keys(newMeasurements).forEach(k => {
        const key = k as keyof typeof measurements;
        newMeasurements[key] = measurements[key] - (distance * 2);
     });
 
-    setSmallerSizes(prev => [...prev, size]);
+    setOrderedSizes(newSizes);
     setSizeChart(prev => ({ ...prev, [size]: newMeasurements }));
     setActiveSizeTab(size);
     setNewSizeInput("");
@@ -166,16 +202,19 @@ export function GarmentEditor() {
 
   const handleAddLargerSize = () => {
     const size = newSizeInput.trim().toUpperCase();
-    if (!size || size === baseSizeName.toUpperCase() || smallerSizes.includes(size) || largerSizes.includes(size)) return;
+    if (!size || orderedSizes.includes(size)) return;
+    
+    const newSizes = [...orderedSizes, size];
+    const newBaseIdx = newSizes.indexOf(baseSizeName);
+    const distance = newSizes.length - 1 - newBaseIdx;
     
     const newMeasurements = { ...measurements };
-    const distance = largerSizes.length + 1;
     Object.keys(newMeasurements).forEach(k => {
        const key = k as keyof typeof measurements;
        newMeasurements[key] = measurements[key] + (distance * 2);
     });
 
-    setLargerSizes(prev => [...prev, size]);
+    setOrderedSizes(newSizes);
     setSizeChart(prev => ({ ...prev, [size]: newMeasurements }));
     setActiveSizeTab(size);
     setNewSizeInput("");
@@ -188,46 +227,44 @@ export function GarmentEditor() {
     
     if (type === "alphanumeric") {
       base = "M";
-      s = ["S", "XS"];
+      s = ["XS", "S"];
       l = ["L", "XL", "2XL"];
     } else {
       base = "42";
-      s = ["40", "38"];
+      s = ["38", "40"];
       l = ["44", "46", "48"];
     }
     
     setBaseSizeName(base);
+    const allSizes = [...s, base, ...l];
+    setOrderedSizes(allSizes);
+    
     const newChart: Record<string, Record<string, number>> = {};
+    const bIdx = allSizes.indexOf(base);
     
-    s.forEach((sz, i) => {
+    allSizes.forEach((sz, i) => {
+      if (sz === base) return;
       const newMeasurements = { ...measurements };
-      const distance = i + 1;
+      const distance = Math.abs(i - bIdx);
+      const isSmaller = i < bIdx;
+      
       Object.keys(newMeasurements).forEach(k => {
          const key = k as keyof typeof measurements;
-         newMeasurements[key] = measurements[key] - (distance * 2);
+         if (isSmaller) {
+            newMeasurements[key] = measurements[key] - (distance * 2);
+         } else {
+            newMeasurements[key] = measurements[key] + (distance * 2);
+         }
       });
       newChart[sz] = newMeasurements;
     });
     
-    l.forEach((sz, i) => {
-      const newMeasurements = { ...measurements };
-      const distance = i + 1;
-      Object.keys(newMeasurements).forEach(k => {
-         const key = k as keyof typeof measurements;
-         newMeasurements[key] = measurements[key] + (distance * 2);
-      });
-      newChart[sz] = newMeasurements;
-    });
-    
-    setSmallerSizes(s);
-    setLargerSizes(l);
     setSizeChart(newChart);
     setActiveSizeTab(null);
   };
 
   const removeSize = (sizeToRemove: string) => {
-    setSmallerSizes(prev => prev.filter(s => s !== sizeToRemove));
-    setLargerSizes(prev => prev.filter(s => s !== sizeToRemove));
+    setOrderedSizes(prev => prev.filter(s => s !== sizeToRemove));
     setSizeChart(prev => {
       const newChart = { ...prev };
       delete newChart[sizeToRemove];
@@ -248,20 +285,13 @@ export function GarmentEditor() {
     const refChart = sizeChart[activeSizeTab];
     const newChart = { ...sizeChart };
     
-    let distance = 1;
-    let isSmaller = false;
+    const currentBaseIdx = orderedSizes.indexOf(baseSizeName);
+    const activeIdx = orderedSizes.indexOf(activeSizeTab);
     
-    const smallerIdx = smallerSizes.indexOf(activeSizeTab);
-    const largerIdx = largerSizes.indexOf(activeSizeTab);
+    if (currentBaseIdx === -1 || activeIdx === -1 || currentBaseIdx === activeIdx) return;
     
-    if (smallerIdx !== -1) {
-       distance = smallerIdx + 1;
-       isSmaller = true;
-    } else if (largerIdx !== -1) {
-       distance = largerIdx + 1;
-    } else {
-       return;
-    }
+    const distance = Math.abs(activeIdx - currentBaseIdx);
+    const isSmaller = activeIdx < currentBaseIdx;
     
     Object.keys(measurements).forEach(k => {
        const key = k as keyof typeof measurements;
@@ -270,18 +300,47 @@ export function GarmentEditor() {
        
        const stepDelta = totalDelta / (isSmaller ? -distance : distance);
        
-       smallerSizes.forEach((size, idx) => {
-          if (size !== activeSizeTab) {
-             newChart[size][key] = Math.round(measurements[key] - (stepDelta * (idx + 1)));
-          }
-       });
-       largerSizes.forEach((size, idx) => {
-          if (size !== activeSizeTab) {
-             newChart[size][key] = Math.round(measurements[key] + (stepDelta * (idx + 1)));
+       orderedSizes.forEach((size, idx) => {
+          if (size !== activeSizeTab && size !== baseSizeName) {
+             const sizeDist = Math.abs(idx - currentBaseIdx);
+             const sizeIsSmaller = idx < currentBaseIdx;
+             
+             if (sizeIsSmaller) {
+                newChart[size][key] = Math.round(measurements[key] - (stepDelta * sizeDist));
+             } else {
+                newChart[size][key] = Math.round(measurements[key] + (stepDelta * sizeDist));
+             }
           }
        });
     });
     setSizeChart(newChart);
+  };
+
+  const handleDragStart = (e: React.DragEvent, size: string) => {
+    setDraggedSizeTab(size);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (e: React.DragEvent, targetSize: string) => {
+    e.preventDefault();
+    if (!draggedSizeTab || draggedSizeTab === targetSize) return;
+    
+    const newSizes = [...orderedSizes];
+    const draggedIdx = newSizes.indexOf(draggedSizeTab);
+    const targetIdx = newSizes.indexOf(targetSize);
+    
+    if (draggedIdx === -1 || targetIdx === -1) return;
+    
+    newSizes.splice(draggedIdx, 1);
+    newSizes.splice(targetIdx, 0, draggedSizeTab);
+    
+    setOrderedSizes(newSizes);
+    setDraggedSizeTab(null);
   };
 
   const [components, setComponents] = useState({
@@ -609,17 +668,20 @@ export function GarmentEditor() {
 
               <div className="space-y-4">
                 <label className="text-sm font-medium block mb-1.5">{t("baseSizeName")}</label>
-                <input
-                  type="text"
-                  value={baseSizeName}
-                  onChange={(e) => setBaseSizeName(e.target.value.toUpperCase())}
-                  placeholder={t("sizeNamePlaceholder")}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 font-medium"
-                />
+                <Select value={baseSizeName} onValueChange={handleBaseSizeChange}>
+                  <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
+                    <SelectValue placeholder={t("sizeNamePlaceholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(sizingSystem === "alphanumeric" ? ALPHANUMERIC_SIZES : NUMERIC_SIZES).map(sz => (
+                      <SelectItem key={sz} value={sz}>{sz}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="pt-6 border-t border-white/10">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex justify-between items-center mb-1">
                   <h3 className="text-lg font-medium">{t("sizeChart")}</h3>
                   <button
                     onClick={handleRecalibrate}
@@ -629,45 +691,80 @@ export function GarmentEditor() {
                     {t("recalibrate")}
                   </button>
                 </div>
+                <p className="text-xs text-muted-foreground mb-4">{t("recalibrateHint")}</p>
                 
                 {/* TABS CONTAINER */}
                 <div className="flex flex-col gap-4">
                   {/* Presets Area */}
-                  <div className="flex gap-2 mb-2">
-                    <button
-                      onClick={() => handleApplyPreset("alphanumeric")}
-                      className="px-3 py-1.5 text-xs font-medium bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors"
-                    >
-                      Auto: XS - 2XL
-                    </button>
-                    <button
-                      onClick={() => handleApplyPreset("numeric")}
-                      className="px-3 py-1.5 text-xs font-medium bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors"
-                    >
-                      Auto: 38 - 48
-                    </button>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium">{t("sizingSystem")}</label>
+                    <div className="flex items-center gap-4 mb-2">
+                      <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+                        <input
+                          type="radio"
+                          name="sizingSystem"
+                          value="alphanumeric"
+                          checked={sizingSystem === "alphanumeric"}
+                          onChange={() => handleSizingSystemChange("alphanumeric")}
+                          className="accent-primary"
+                        />
+                        {t("systemAlphanumeric")}
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+                        <input
+                          type="radio"
+                          name="sizingSystem"
+                          value="numeric"
+                          checked={sizingSystem === "numeric"}
+                          onChange={() => handleSizingSystemChange("numeric")}
+                          className="accent-primary"
+                        />
+                        {t("systemNumeric")}
+                      </label>
+                    </div>
+                    <div className="flex gap-2 mb-2">
+                      {sizingSystem === "alphanumeric" && (
+                        <button
+                          onClick={() => handleApplyPreset("alphanumeric")}
+                          className="px-3 py-1.5 text-xs font-medium bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors"
+                        >
+                          Auto: XS - 2XL
+                        </button>
+                      )}
+                      {sizingSystem === "numeric" && (
+                        <button
+                          onClick={() => handleApplyPreset("numeric")}
+                          className="px-3 py-1.5 text-xs font-medium bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors"
+                        >
+                          Auto: 38 - 48
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Size Input Area */}
                   <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={newSizeInput}
-                      onChange={(e) => setNewSizeInput(e.target.value.toUpperCase())}
-                      placeholder={t("sizeNamePlaceholder")}
-                      className="flex-1 max-w-[150px] bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 uppercase"
-                    />
+                    <Select value={newSizeInput} onValueChange={(val) => val && setNewSizeInput(val)}>
+                      <SelectTrigger className="flex-1 max-w-[150px] bg-white/5 border-white/10 rounded-xl px-3 h-[38px] text-sm focus:ring-primary/50">
+                        <SelectValue placeholder={t("sizeNamePlaceholder")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(sizingSystem === "alphanumeric" ? ALPHANUMERIC_SIZES : NUMERIC_SIZES).map(sz => (
+                          <SelectItem key={sz} value={sz}>{sz}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <button
                       onClick={handleAddSmallerSize}
-                      disabled={!newSizeInput.trim() || smallerSizes.includes(newSizeInput.trim().toUpperCase()) || largerSizes.includes(newSizeInput.trim().toUpperCase()) || newSizeInput.trim().toUpperCase() === baseSizeName.toUpperCase()}
-                      className="px-3 py-2 text-sm bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+                      disabled={!newSizeInput.trim() || orderedSizes.includes(newSizeInput.trim().toUpperCase())}
+                      className="px-3 py-2 text-sm bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors disabled:opacity-50 h-[38px]"
                     >
                       {t("addSmallerSize")}
                     </button>
                     <button
                       onClick={handleAddLargerSize}
-                      disabled={!newSizeInput.trim() || smallerSizes.includes(newSizeInput.trim().toUpperCase()) || largerSizes.includes(newSizeInput.trim().toUpperCase()) || newSizeInput.trim().toUpperCase() === baseSizeName.toUpperCase()}
-                      className="px-3 py-2 text-sm bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+                      disabled={!newSizeInput.trim() || orderedSizes.includes(newSizeInput.trim().toUpperCase())}
+                      className="px-3 py-2 text-sm bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors disabled:opacity-50 h-[38px]"
                     >
                       {t("addLargerSize")}
                     </button>
@@ -675,43 +772,43 @@ export function GarmentEditor() {
 
                   {/* Tabs List */}
                   <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar" role="tablist" aria-label={t("sizeChart")}>
-                    {/* Smaller Sizes Tabs (Reverse order so smallest is left) */}
-                    {[...smallerSizes].reverse().map(size => (
-                      <button
-                        key={size}
-                        role="tab"
-                        aria-selected={activeSizeTab === size}
-                        onClick={() => setActiveSizeTab(size)}
-                        className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-all border group ${activeSizeTab === size ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(var(--primary),0.2)]' : 'bg-white/5 border-white/10 text-muted-foreground hover:bg-white/10 hover:text-foreground'}`}
-                      >
-                        {size}
-                        <span onClick={(e) => { e.stopPropagation(); removeSize(size); }} className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity text-[10px] cursor-pointer" aria-label="Remove size">×</span>
-                      </button>
-                    ))}
-
-                    {/* Base Size Tab (Locked) */}
-                    <div
-                      role="tab"
-                      aria-selected={false}
-                      className="px-4 py-2 rounded-xl text-sm font-bold bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary),0.4)] cursor-default select-none border border-primary/50 flex flex-col items-center justify-center min-w-[80px]"
-                    >
-                      <span>{baseSizeName}</span>
-                      <span className="text-[10px] uppercase tracking-wider opacity-80">(Base)</span>
-                    </div>
-
-                    {/* Larger Sizes Tabs */}
-                    {largerSizes.map(size => (
-                      <button
-                        key={size}
-                        role="tab"
-                        aria-selected={activeSizeTab === size}
-                        onClick={() => setActiveSizeTab(size)}
-                        className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-all border group ${activeSizeTab === size ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(var(--primary),0.2)]' : 'bg-white/5 border-white/10 text-muted-foreground hover:bg-white/10 hover:text-foreground'}`}
-                      >
-                        {size}
-                        <span onClick={(e) => { e.stopPropagation(); removeSize(size); }} className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity text-[10px] cursor-pointer" aria-label="Remove size">×</span>
-                      </button>
-                    ))}
+                    {orderedSizes.map(size => {
+                      const isBase = size === baseSizeName;
+                      const isActive = activeSizeTab === size;
+                      return (
+                        <div
+                          key={size}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, size)}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => handleDrop(e, size)}
+                          role="tab"
+                          aria-selected={isActive}
+                          onClick={() => !isBase && setActiveSizeTab(size)}
+                          className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-all border cursor-pointer group flex flex-col items-center justify-center min-w-[80px]
+                            ${draggedSizeTab === size ? 'opacity-50 scale-95 border-dashed border-primary bg-transparent' : ''}
+                            ${isBase 
+                              ? 'bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary),0.4)] border-primary/50 cursor-grab active:cursor-grabbing font-bold' 
+                              : isActive 
+                                ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(var(--primary),0.2)] cursor-grab active:cursor-grabbing' 
+                                : 'bg-white/5 border-white/10 text-muted-foreground hover:bg-white/10 hover:text-foreground cursor-grab active:cursor-grabbing'
+                            }
+                          `}
+                        >
+                          <span>{size}</span>
+                          {isBase && <span className="text-[10px] uppercase tracking-wider opacity-80">(Base)</span>}
+                          {!isBase && (
+                            <span 
+                              onClick={(e) => { e.stopPropagation(); removeSize(size); }} 
+                              className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity text-[10px] cursor-pointer" 
+                              aria-label="Remove size"
+                            >
+                              ×
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
