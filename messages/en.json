@@ -854,6 +854,7 @@
     "backImage": "Back Graphic (Optional)",
     "measurementsTitle": "Measurements Editor",
     "measurementsDesc": "Adjust the base parameters to achieve the perfect fit.",
+    "measurementsNote": "Note: These measurements define the Base Size (e.g., M or 42). You will scale to other sizes in the next step.",
     "measureChest": "Chest",
     "measureLength": "Body Length",
     "measureSleeve": "Sleeve Length",

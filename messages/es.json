@@ -854,6 +854,7 @@
     "backImage": "Gráfico Espalda (Opcional)",
     "measurementsTitle": "Editor de Medidas",
     "measurementsDesc": "Ajustá los parámetros base para lograr el calce perfecto.",
+    "measurementsNote": "Nota: Estas mediciones definen el Talle Base (ej: M o 42). Podrás escalar hacia los demás talles en el siguiente paso.",
     "measureChest": "Ancho de Pecho",
     "measureLength": "Largo de Cuerpo",
     "measureSleeve": "Largo de Manga",
@@ -916,5 +917,14 @@
     "cuffSimple": "Dobladillo Simple",
     "cuffRibbed": "Puño Elástico (Ribbed)",
     "cuffThumbhole": "Con Agujero para Pulgar"
+  },
+  "GarmentViewer": {
+    "loading3D": "Cargando 3D...",
+    "modelNotAvailable": "Modelo 3D no disponible",
+    "dragToRotate": "Arrastra para rotar",
+    "scrollToZoom": "Rueda para zoom",
+    "errorLoading": "Error al cargar el modelo 3D",
+    "errorUnknown": "Error desconocido. Revisa la consola para más detalles.",
+    "retry": "Reintentar"
   }
 }

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Shirt, Check, ChevronRight, ChevronLeft, Upload, Loader2, AlertCircle, Ghost, Columns2, AlignEndVertical, Shield, Hourglass, SportShoe, Plus } from "lucide-react";
+import { Shirt, Check, ChevronRight, ChevronLeft, Upload, Loader2, AlertCircle, Ghost, Columns2, AlignEndVertical, Shield, Hourglass, SportShoe, Plus, Info } from "lucide-react";
 import { createGarmentTemplate, checkSkuAvailability, processImageWithRemoveBg } from "./actions";
 import { useDebouncedCallback } from "use-debounce";
 import dynamic from "next/dynamic";
@@ -221,29 +221,27 @@ export function GarmentEditor() {
   };
 
   const handleApplyPreset = (type: "alphanumeric" | "numeric") => {
-    let base = "";
-    let s: string[] = [];
-    let l: string[] = [];
+    let allSizes: string[] = [];
     
     if (type === "alphanumeric") {
-      base = "M";
-      s = ["XS", "S"];
-      l = ["L", "XL", "2XL"];
+      allSizes = ["XS", "S", "M", "L", "XL", "2XL"];
     } else {
-      base = "42";
-      s = ["38", "40"];
-      l = ["44", "46", "48"];
+      allSizes = ["38", "40", "42", "44", "46", "48"];
     }
     
-    setBaseSizeName(base);
-    const allSizes = [...s, base, ...l];
+    let actualBase = baseSizeName;
+    if (!allSizes.includes(actualBase)) {
+      actualBase = type === "alphanumeric" ? "M" : "42";
+      setBaseSizeName(actualBase);
+    }
+    
     setOrderedSizes(allSizes);
     
     const newChart: Record<string, Record<string, number>> = {};
-    const bIdx = allSizes.indexOf(base);
+    const bIdx = allSizes.indexOf(actualBase);
     
     allSizes.forEach((sz, i) => {
-      if (sz === base) return;
+      if (sz === actualBase) return;
       const newMeasurements = { ...measurements };
       const distance = Math.abs(i - bIdx);
       const isSmaller = i < bIdx;
@@ -594,6 +592,10 @@ export function GarmentEditor() {
               <div>
                 <h3 id="step2-title" className="text-xl font-medium">{t("measurementsTitle")}</h3>
                 <p className="text-muted-foreground text-sm mt-1">{t("measurementsDesc")}</p>
+                <div className="mt-3 p-3 bg-primary/10 border border-primary/20 rounded-xl flex gap-3 items-start">
+                  <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                  <p className="text-sm text-primary/90">{t("measurementsNote")}</p>
+                </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 overflow-y-auto pr-2 max-h-[50vh] custom-scrollbar">
                 {(Object.keys(measurements) as Array<keyof typeof measurements>).map((key) => (

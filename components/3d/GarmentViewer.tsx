@@ -421,14 +421,15 @@ function Model({ url, colorHex, textureUrl, backTextureUrl, scale = [1,1,1] }: M
 import { ErrorBoundary } from "./ErrorBoundary";
 import { Html, useProgress } from "@react-three/drei";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
-function ModelLoader() {
+function ModelLoader({ loadingText }: { loadingText: string }) {
   const { progress } = useProgress();
   return (
     <Html center>
       <div className="flex flex-col items-center justify-center p-6 bg-background/80 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl">
         <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-        <p className="text-foreground font-bold text-lg whitespace-nowrap">Cargando 3D...</p>
+        <p className="text-foreground font-bold text-lg whitespace-nowrap">{loadingText}</p>
         <p className="text-muted-foreground text-sm font-medium mt-1">{progress.toFixed(0)}%</p>
       </div>
     </Html>
@@ -452,10 +453,16 @@ export function GarmentViewer({
   avatarUrl?: string;
   scale?: [number, number, number];
 }) {
-  if (!url) return <div className={`h-full w-full flex items-center justify-center bg-white/5 rounded-3xl border border-dashed border-white/10 text-muted-foreground ${className || 'min-h-[500px]'}`}>Modelo 3D no disponible</div>;
+  const t = useTranslations("GarmentViewer");
+
+  if (!url) return <div className={`h-full w-full flex items-center justify-center bg-white/5 rounded-3xl border border-dashed border-white/10 text-muted-foreground ${className || 'min-h-[500px]'}`}>{t("modelNotAvailable")}</div>;
 
   return (
-    <ErrorBoundary>
+    <ErrorBoundary translations={{
+      errorLoading: t("errorLoading"),
+      errorUnknown: t("errorUnknown"),
+      retry: t("retry")
+    }}>
       <div className={`w-full h-full bg-gradient-to-b from-background/80 to-background/20 rounded-3xl overflow-hidden border border-white/10 relative shadow-2xl ${className || 'min-h-[500px]'}`}>
         <Canvas 
           shadows={{ type: THREE.PCFShadowMap }} 
@@ -470,7 +477,7 @@ export function GarmentViewer({
             });
           }}
         >
-          <Suspense fallback={<ModelLoader />}>
+          <Suspense fallback={<ModelLoader loadingText={t("loading3D")} />}>
             <Stage environment="city" intensity={0.8} adjustCamera shadows="contact">
               {avatarUrl && (
                 <Model url={avatarUrl} />
@@ -481,8 +488,8 @@ export function GarmentViewer({
           <OrbitControls makeDefault enableDamping={false} />
         </Canvas>
         <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center px-6 py-3 bg-background/80 backdrop-blur-xl rounded-full border border-white/10 text-xs font-medium text-muted-foreground shadow-lg">
-          <span className="flex items-center gap-2"><MousePointer2 className="w-4 h-4" /> Arrastra para rotar</span>
-          <span className="flex items-center gap-2"><ZoomIn className="w-4 h-4" /> Rueda para zoom</span>
+          <span className="flex items-center gap-2"><MousePointer2 className="w-4 h-4" /> {t("dragToRotate")}</span>
+          <span className="flex items-center gap-2"><ZoomIn className="w-4 h-4" /> {t("scrollToZoom")}</span>
         </div>
       </div>
     </ErrorBoundary>
