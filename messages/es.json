@@ -540,6 +540,13 @@
     "emptyStateTitle": "Aún no tienes prendas",
     "emptyStateDesc": "Comienza a construir tu catálogo virtual subiendo tu primer modelo 3D.",
     "uploadFirstBtn": "Sube tu primera prenda",
+    "searchPlaceholder": "Buscar por nombre o SKU...",
+    "communityTitle": "Comunidad de Eidyn",
+    "communitySubtitle": "Explora y utiliza modelos creados por otros.",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "showingResults": "Mostrando {start} - {end} de {total}",
+    "noResultsFound": "No se encontraron prendas con esos filtros.",
     "comingSoon": "Próximamente"
   },
   "GarmentsNew": {

@@ -763,22 +763,6 @@
     "topStores": "Top Stores",
     "noStoresYet": "No connected stores yet"
   },
-  "Account": {
-    "title": "Account Info",
-    "description": "Manage your personal account settings, security, and active sessions.",
-    "preferencesTitle": "Application Preferences",
-    "themeLabel": "Appearance",
-    "themeLight": "Light",
-    "themeDark": "Dark",
-    "themeSystem": "System",
-    "languageLabel": "Language",
-    "savePreferences": "Save Preferences",
-    "dangerZoneTitle": "Danger Zone",
-    "dangerZoneDesc": "Once you delete your account, there is no going back. This will permanently delete all your personal data, settings, and the link to your store or brand.",
-    "typeToDelete": "Type \"{word}\" to confirm",
-    "deleteConfirmWord": "DELETE",
-    "deleteAccountBtn": "Delete my account"
-  },
   "BrandGarments": {
     "title": "Garments Catalog",
     "subtitle": "Upload and manage your 3D models.",
@@ -788,6 +772,13 @@
     "emptyStateTitle": "No garments yet",
     "emptyStateDesc": "Start building your virtual catalog by uploading your first 3D model.",
     "uploadFirstBtn": "Upload your first garment",
+    "searchPlaceholder": "Search by name or SKU...",
+    "communityTitle": "Eidyn Community",
+    "communitySubtitle": "Explore and use models created by others.",
+    "previous": "Previous",
+    "next": "Next",
+    "showingResults": "Showing {start} - {end} of {total}",
+    "noResultsFound": "No garments found with those filters.",
     "comingSoon": "Coming Soon"
   }
 }
