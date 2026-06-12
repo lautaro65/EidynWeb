@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TextureEditor = dynamic(() => import("@/components/2d/TextureEditor"), { ssr: false });
 
@@ -130,8 +130,10 @@ export function GarmentEditor() {
         gender,
         description,
         baseColor: color,
-        frontImage,
-        backImage,
+        // Guardamos el lienzo 2D procesado (que tiene la posición, rotación, borrados) 
+        // en lugar de la imagen cruda subida por el usuario
+        frontImage: generatedTexture || frontImage,
+        backImage: generatedBackTexture || backImage,
       });
       router.push("/dashboard/brand/garments");
     } catch (err: unknown) {
@@ -158,28 +160,29 @@ export function GarmentEditor() {
       </div>
 
       {/* Right Panel: Editor Controls */}
-      <div className="w-full lg:w-[450px] flex flex-col bg-background/50 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
+      <div className="w-full lg:w-[450px] flex flex-col bg-background/60 backdrop-blur-3xl border border-white/10 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden relative">
 
         {/* Steps Header */}
-        <div className="flex p-2 bg-black/20 border-b border-white/5">
+        <div className="flex p-3 bg-black/40 border-b border-white/10 relative z-10">
           {[1, 2, 3, 4].map((s) => (
             <div
               key={s}
-              className={`flex-1 text-center py-3 text-xs font-medium uppercase tracking-wider rounded-xl transition-all duration-300 ${step === s
-                  ? "bg-white/10 text-primary"
+              className={`flex-1 flex flex-col items-center justify-center py-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest rounded-xl transition-all duration-500 relative overflow-hidden ${step === s
+                  ? "text-primary bg-primary/10 shadow-[inset_0_0_20px_rgba(var(--primary),0.2)]"
                   : step > s
-                    ? "text-foreground"
-                    : "text-muted-foreground"
+                    ? "text-foreground hover:bg-white/5"
+                    : "text-muted-foreground opacity-50"
                 }`}
             >
-              {s === 1 ? <Shirt className="w-4 h-4 mx-auto mb-1" /> : s === 2 ? <ImageIcon className="w-4 h-4 mx-auto mb-1" /> : s === 3 ? <Palette className="w-4 h-4 mx-auto mb-1" /> : <Info className="w-4 h-4 mx-auto mb-1" />}
+              {step === s && <div className="absolute top-0 left-0 w-full h-0.5 bg-primary shadow-[0_0_10px_var(--primary)]" />}
+              {s === 1 ? <Shirt className={`w-5 h-5 mb-1.5 ${step === s ? "animate-pulse" : ""}`} /> : s === 2 ? <ImageIcon className={`w-5 h-5 mb-1.5 ${step === s ? "animate-pulse" : ""}`} /> : s === 3 ? <Palette className={`w-5 h-5 mb-1.5 ${step === s ? "animate-pulse" : ""}`} /> : <Info className={`w-5 h-5 mb-1.5 ${step === s ? "animate-pulse" : ""}`} />}
               {s === 1 ? t("step1") : s === 2 ? t("step2") : s === 3 ? t("step3") : t("step4")}
             </div>
           ))}
         </div>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-8 relative">
+        {/* Dynamic Content Area */}
+        <div className={`flex-1 p-6 relative ${step === 3 ? 'overflow-hidden flex flex-col' : 'overflow-y-auto space-y-8'}`}>
           {error && (
             <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-sm">
               {error}
@@ -294,40 +297,38 @@ export function GarmentEditor() {
             </div>
           )}
 
-          {/* Step 3: Editor 2D */}
-          {step === 3 && (
-            <div className="animate-in slide-in-from-right-4 duration-300 space-y-6 h-full flex flex-col">
-              <div>
-                <h3 className="text-xl font-medium">{t("editor2DTitle")}</h3>
-                <p className="text-muted-foreground text-sm mt-1">{t("editor2DDesc")}</p>
-              </div>
-              
-              <div className="flex-1 min-h-[400px]">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
-                  <TabsList className="w-full max-w-md grid grid-cols-2 bg-white/5 border border-white/10 mb-4">
-                    <TabsTrigger value="front" className="data-[state=active]:bg-primary">Frente</TabsTrigger>
-                    <TabsTrigger value="back" className="data-[state=active]:bg-primary">Espalda</TabsTrigger>
-                  </TabsList>
-                  
-                  {/* We use hidden instead of TabsContent to prevent unmounting the Canvas and losing state */}
-                  <div className={`flex-1 mt-0 h-full ${activeTab === "front" ? "block" : "hidden"}`}>
-                    <TextureEditor 
-                      baseColor={color} 
-                      imageUrl={frontImage}
-                      onTextureUpdate={setGeneratedTexture} 
-                    />
-                  </div>
-                  <div className={`flex-1 mt-0 h-full ${activeTab === "back" ? "block" : "hidden"}`}>
-                    <TextureEditor 
-                      baseColor={color} 
-                      imageUrl={backImage}
-                      onTextureUpdate={setGeneratedBackTexture} 
-                    />
-                  </div>
-                </Tabs>
-              </div>
+          {/* Step 3: Editor 2D (Hidden strictly via CSS to preserve Konva Canvas state) */}
+          <div className={`h-full flex-col ${step === 3 ? "flex animate-in slide-in-from-right-4 duration-300" : "hidden"}`}>
+            <div className="mb-4">
+              <h3 className="text-xl font-medium">{t("editor2DTitle")}</h3>
+              <p className="text-muted-foreground text-sm mt-1">{t("editor2DDesc")}</p>
             </div>
-          )}
+            
+            <div className="flex-1 min-h-0 relative">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
+                <TabsList className="w-full max-w-md grid grid-cols-2 bg-white/5 border border-white/10 mb-4">
+                  <TabsTrigger value="front" className="data-[state=active]:bg-primary">Frente</TabsTrigger>
+                  <TabsTrigger value="back" className="data-[state=active]:bg-primary">Espalda</TabsTrigger>
+                </TabsList>
+                
+                {/* We use hidden instead of TabsContent to prevent unmounting the Canvas and losing state */}
+                <div className={`flex-1 mt-0 h-full ${activeTab === "front" ? "block" : "hidden"}`}>
+                  <TextureEditor 
+                    baseColor={color} 
+                    imageUrl={frontImage}
+                    onTextureUpdate={setGeneratedTexture} 
+                  />
+                </div>
+                <div className={`flex-1 mt-0 h-full ${activeTab === "back" ? "block" : "hidden"}`}>
+                  <TextureEditor 
+                    baseColor={color} 
+                    imageUrl={backImage}
+                    onTextureUpdate={setGeneratedBackTexture} 
+                  />
+                </div>
+              </Tabs>
+            </div>
+          </div>
 
           {/* Step 4: Details */}
           {step === 4 && (
@@ -392,6 +393,29 @@ export function GarmentEditor() {
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                   />
                 </div>
+
+                {/* Resumen de Texturas 2D (UV) */}
+                {(generatedTexture || generatedBackTexture) && (
+                  <div className="pt-2">
+                    <label className="text-sm font-medium block mb-2 text-muted-foreground">Vista Previa 2D (UV)</label>
+                    <div className="flex gap-4">
+                      {generatedTexture && (
+                        <div className="flex-1 bg-black/20 rounded-xl p-3 border border-white/5 flex flex-col items-center">
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-widest mb-2 font-bold">Frente</span>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={generatedTexture} className="w-full max-w-[120px] aspect-square object-contain rounded-lg bg-black/40 border border-white/5" alt="Front UV" />
+                        </div>
+                      )}
+                      {generatedBackTexture && (
+                        <div className="flex-1 bg-black/20 rounded-xl p-3 border border-white/5 flex flex-col items-center">
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-widest mb-2 font-bold">Espalda</span>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={generatedBackTexture} className="w-full max-w-[120px] aspect-square object-contain rounded-lg bg-black/40 border border-white/5" alt="Back UV" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -4,7 +4,6 @@ import React, { useRef, useState, useEffect } from "react";
 import { Stage, Layer, Rect, Line, Image as KonvaImage, Transformer } from "react-konva";
 import Konva from "konva";
 import useImage from "use-image";
-import { useTranslations } from "next-intl";
 import { MousePointer2, Eraser, AlignCenter, Maximize, Trash2, RotateCcw } from "lucide-react";
 
 interface TextureEditorProps {
@@ -18,7 +17,6 @@ export default function TextureEditor({
   baseColor,
   imageUrl,
 }: TextureEditorProps) {
-  const t = useTranslations("GarmentsNew");
   const stageRef = useRef<Konva.Stage>(null);
   
   interface LineData {
