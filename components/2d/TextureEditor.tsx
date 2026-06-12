@@ -160,12 +160,32 @@ export default function TextureEditor({
         </div>
 
         {img && showImage && (
-          <button 
-            onClick={() => { setShowImage(false); setSelectedId(null); setLines([...lines]); }}
-            className="ml-4 px-3 py-1.5 text-xs font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors"
-          >
-            Eliminar Imagen
-          </button>
+          <div className="flex flex-wrap items-center gap-2 border-l border-white/10 pl-4">
+            <button 
+              onClick={() => {
+                setImageNode({ x: 176, y: 176, width: 160, height: 160, rotation: 0, scaleX: 1, scaleY: 1 });
+                setLines([...lines]);
+              }}
+              className="px-3 py-1.5 text-xs font-medium bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+            >
+              Centrar Logo
+            </button>
+            <button 
+              onClick={() => {
+                setImageNode({ x: 0, y: 0, width: 512, height: 512, rotation: 0, scaleX: 1, scaleY: 1 });
+                setLines([...lines]);
+              }}
+              className="px-3 py-1.5 text-xs font-medium bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+            >
+              Cubrir Todo
+            </button>
+            <button 
+              onClick={() => { setShowImage(false); setSelectedId(null); setLines([...lines]); }}
+              className="px-3 py-1.5 text-xs font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors"
+            >
+              Eliminar Imagen
+            </button>
+          </div>
         )}
 
         <button 
