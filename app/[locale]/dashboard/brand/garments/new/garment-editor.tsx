@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Shirt, Image as ImageIcon, Info, Check, ChevronRight, ChevronLeft, Upload, Loader2, Layers, Wind, Sparkles, Footprints, Scissors, Accessibility, AlertCircle } from "lucide-react";
+import { Shirt, Image as ImageIcon, Info, Check, ChevronRight, ChevronLeft, Upload, Loader2, Layers, Wind, Sparkles, Footprints, Scissors, Accessibility, AlertCircle, Palette } from "lucide-react";
 import { GarmentViewer } from "@/components/3d/GarmentViewer";
 import { createGarmentTemplate, checkSkuAvailability } from "./actions";
 import { useDebouncedCallback } from "use-debounce";
+import dynamic from "next/dynamic";
 import {
   Select,
   SelectContent,
@@ -14,6 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+const TextureEditor = dynamic(() => import("@/components/2d/TextureEditor"), { ssr: false });
 
 // Mock Base Models
 const BASE_MODELS = [
@@ -30,7 +33,7 @@ export function GarmentEditor() {
   const t = useTranslations("GarmentsNew");
   const router = useRouter();
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,6 +46,7 @@ export function GarmentEditor() {
   const [sku, setSku] = useState<string>("");
   const [gender, setGender] = useState<string>("unisex");
   const [description, setDescription] = useState<string>("");
+  const [generatedTexture, setGeneratedTexture] = useState<string>("");
 
   const [skuError, setSkuError] = useState<string | null>(null);
   const [isCheckingSku, setIsCheckingSku] = useState(false);
@@ -128,7 +132,7 @@ export function GarmentEditor() {
         <GarmentViewer
           url={currentModelUrl}
           colorHex={color}
-          textureUrl={frontImage}
+          textureUrl={generatedTexture || frontImage}
           backTextureUrl={backImage}
         />
       </div>
@@ -138,7 +142,7 @@ export function GarmentEditor() {
 
         {/* Steps Header */}
         <div className="flex p-2 bg-black/20 border-b border-white/5">
-          {[1, 2, 3].map((s) => (
+          {[1, 2, 3, 4].map((s) => (
             <div
               key={s}
               className={`flex-1 text-center py-3 text-xs font-medium uppercase tracking-wider rounded-xl transition-all duration-300 ${step === s
@@ -148,8 +152,8 @@ export function GarmentEditor() {
                     : "text-muted-foreground"
                 }`}
             >
-              {s === 1 ? <Shirt className="w-4 h-4 mx-auto mb-1" /> : s === 2 ? <ImageIcon className="w-4 h-4 mx-auto mb-1" /> : <Info className="w-4 h-4 mx-auto mb-1" />}
-              {s === 1 ? t("step1") : s === 2 ? t("step2") : t("step3")}
+              {s === 1 ? <Shirt className="w-4 h-4 mx-auto mb-1" /> : s === 2 ? <ImageIcon className="w-4 h-4 mx-auto mb-1" /> : s === 3 ? <Palette className="w-4 h-4 mx-auto mb-1" /> : <Info className="w-4 h-4 mx-auto mb-1" />}
+              {s === 1 ? t("step1") : s === 2 ? t("step2") : s === 3 ? t("step3") : t("step4")}
             </div>
           ))}
         </div>
@@ -258,8 +262,27 @@ export function GarmentEditor() {
             </div>
           )}
 
-          {/* Step 3: Details */}
+          {/* Step 3: Editor 2D */}
           {step === 3 && (
+            <div className="animate-in slide-in-from-right-4 duration-300 space-y-6 h-full flex flex-col">
+              <div>
+                <h3 className="text-xl font-medium">{t("editor2DTitle")}</h3>
+                <p className="text-muted-foreground text-sm mt-1">{t("editor2DDesc")}</p>
+              </div>
+              
+              <div className="flex-1 min-h-[400px]">
+                <TextureEditor 
+                  baseColor={color} 
+                  frontImageUrl={frontImage} 
+                  backImageUrl={backImage}
+                  onTextureUpdate={setGeneratedTexture} 
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Details */}
+          {step === 4 && (
             <div className="animate-in slide-in-from-right-4 duration-300 space-y-6">
               <div>
                 <h3 className="text-xl font-medium">{t("detailsTitle")}</h3>
@@ -345,9 +368,9 @@ export function GarmentEditor() {
             </button>
           )}
 
-          {step < 3 ? (
+          {step < 4 ? (
             <button
-              onClick={() => setStep((s) => s + 1 as 1 | 2 | 3)}
+              onClick={() => setStep((s) => s + 1 as 1 | 2 | 3 | 4)}
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium bg-white/10 text-foreground hover:bg-white/20 transition-all"
             >
               {t("next")}
