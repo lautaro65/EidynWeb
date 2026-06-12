@@ -461,6 +461,8 @@ export function GarmentViewer({
           shadows={{ type: THREE.PCFShadowMap }} 
           camera={{ position: [0, 0, 15], fov: 45 }}
           gl={{ preserveDrawingBuffer: true, powerPreference: "high-performance", antialias: true }}
+          frameloop="demand"
+          dpr={[1, 2]}
           onCreated={({ gl }) => {
             gl.getContext().canvas.addEventListener('webglcontextlost', (e) => {
               e.preventDefault();
@@ -469,14 +471,14 @@ export function GarmentViewer({
           }}
         >
           <Suspense fallback={<ModelLoader />}>
-            <Stage environment="city" intensity={0.8} adjustCamera>
+            <Stage environment="city" intensity={0.8} adjustCamera shadows="contact">
               {avatarUrl && (
                 <Model url={avatarUrl} />
               )}
               <Model url={url} colorHex={colorHex} textureUrl={textureUrl} backTextureUrl={backTextureUrl} scale={scale} />
             </Stage>
           </Suspense>
-          <OrbitControls makeDefault />
+          <OrbitControls makeDefault enableDamping={false} />
         </Canvas>
         <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center px-6 py-3 bg-background/80 backdrop-blur-xl rounded-full border border-white/10 text-xs font-medium text-muted-foreground shadow-lg">
           <span className="flex items-center gap-2"><MousePointer2 className="w-4 h-4" /> Arrastra para rotar</span>
