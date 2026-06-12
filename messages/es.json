@@ -531,6 +531,17 @@
     "deleteConfirmWord": "ELIMINAR",
     "deleteAccountBtn": "Eliminar mi cuenta"
   },
+  "BrandGarments": {
+    "title": "Catálogo de Prendas",
+    "subtitle": "Sube y gestiona tus modelos 3D.",
+    "newGarment": "Nueva Prenda",
+    "tabMyGarments": "Mis Prendas",
+    "tabCommunity": "Comunidad",
+    "emptyStateTitle": "Aún no tienes prendas",
+    "emptyStateDesc": "Comienza a construir tu catálogo virtual subiendo tu primer modelo 3D.",
+    "uploadFirstBtn": "Sube tu primera prenda",
+    "comingSoon": "Próximamente"
+  },
   "GarmentsNew": {
     "title": "Crear Prenda 3D",
     "description": "Sigue los pasos para procesar tu prenda"

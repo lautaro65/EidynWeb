@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { 
@@ -9,6 +10,7 @@ import {
   BarChart3, 
   LogOut,
   User,
+  ChevronDown,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -34,6 +36,13 @@ export function BrandSidebar() {
   const pathname = usePathname();
   const { signOut } = useClerk();
   const t = useTranslations("DashboardSidebar");
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
+
+  const toggleMenu = (label: string) => {
+    setExpandedMenus((prev) => 
+      prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+    );
+  };
 
   const navSections: NavSection[] = [
     {
@@ -141,13 +150,31 @@ export function BrandSidebar() {
                           {t("soon")}
                         </span>
                       )}
+                      {item.subItems && (
+                        <ChevronDown 
+                          className={cn(
+                            "ml-auto w-4 h-4 transition-transform duration-300",
+                            (isParentActive || expandedMenus.includes(item.label)) && "rotate-180"
+                          )} 
+                        />
+                      )}
                     </>
                   );
+
+                  const isExpanded = isParentActive || expandedMenus.includes(item.label);
 
                   return (
                     <div key={item.label} className="space-y-1">
                       {item.disabled ? (
                         <div className={itemClasses} aria-disabled="true">{itemContent}</div>
+                      ) : item.subItems ? (
+                        <button 
+                          onClick={() => toggleMenu(item.label)} 
+                          className={cn(itemClasses, "w-full cursor-pointer")}
+                          aria-expanded={isExpanded}
+                        >
+                          {itemContent}
+                        </button>
                       ) : (
                         <Link href={item.href} aria-current={isParentActive ? "page" : undefined} className={itemClasses}>
                           {itemContent}
@@ -155,8 +182,8 @@ export function BrandSidebar() {
                       )}
 
                       {/* Sub Items */}
-                      {item.subItems && isParentActive && (
-                        <div className="pl-11 pr-4 py-1 space-y-1 relative">
+                      {item.subItems && isExpanded && (
+                        <div className="pl-11 pr-4 py-1 space-y-1 relative animate-in slide-in-from-top-2 duration-200">
                           <div className="absolute left-6 top-0 bottom-4 w-px bg-white/10" />
                           {item.subItems.map((subItem) => {
                             const isSubActive = pathname.endsWith(subItem.href);
