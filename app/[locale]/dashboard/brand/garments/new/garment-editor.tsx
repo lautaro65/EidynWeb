@@ -149,10 +149,10 @@ export function GarmentEditor() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-8rem)] animate-in fade-in duration-500">
+    <div className="flex flex-col lg:flex-row gap-6 items-start min-h-[calc(100vh-8rem)] animate-in fade-in duration-500">
 
       {/* Left Panel: 3D Viewer */}
-      <div className="flex-1 bg-background/50 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative min-h-[400px]">
+      <div className="w-full lg:flex-1 lg:sticky lg:top-24 h-[500px] lg:h-[calc(100vh-8rem)] bg-background/50 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative">
         <GarmentViewer
           url={currentModelUrl}
           colorHex={color}
@@ -162,7 +162,7 @@ export function GarmentEditor() {
       </div>
 
       {/* Right Panel: Editor Controls */}
-      <div className="w-full lg:w-[450px] flex flex-col bg-background/60 backdrop-blur-3xl border border-white/10 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden relative">
+      <div className="w-full lg:w-[450px] flex flex-col bg-background/60 backdrop-blur-3xl border border-white/10 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] relative">
 
         {/* Steps Header (Progress Bar) */}
         <div className="p-6 pb-4 border-b border-white/5 bg-black/20">
@@ -188,7 +188,7 @@ export function GarmentEditor() {
         </div>
 
         {/* Dynamic Content Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-8 relative">
+        <div className="p-6 space-y-8 relative">
           {error && (
             <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-sm">
               {error}
@@ -304,28 +304,28 @@ export function GarmentEditor() {
           )}
 
           {/* Step 3: Editor 2D (Hidden strictly via CSS to preserve Konva Canvas state) */}
-          <div className={`h-full flex-col ${step === 3 ? "flex animate-in slide-in-from-right-4 duration-300" : "hidden"}`}>
+          <div className={`flex-col ${step === 3 ? "flex animate-in slide-in-from-right-4 duration-300" : "hidden"}`}>
             <div className="mb-4">
               <h3 className="text-xl font-medium">{t("editor2DTitle")}</h3>
               <p className="text-muted-foreground text-sm mt-1">{t("editor2DDesc")}</p>
             </div>
 
-            <div className="flex-1 min-h-0 relative">
+            <div className="w-full relative aspect-[4/5]">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
-                <TabsList className="w-full max-w-md grid grid-cols-2 bg-white/5 border border-white/10 mb-4">
+                <TabsList className="w-full max-w-md grid grid-cols-2 bg-white/5 border border-white/10 mb-4 shrink-0">
                   <TabsTrigger value="front" className="data-[state=active]:bg-primary">{t("tabFront")}</TabsTrigger>
                   <TabsTrigger value="back" className="data-[state=active]:bg-primary">{t("tabBack")}</TabsTrigger>
                 </TabsList>
 
                 {/* We use hidden instead of TabsContent to prevent unmounting the Canvas and losing state */}
-                <div className={`flex-1 mt-0 h-full ${activeTab === "front" ? "block" : "hidden"}`}>
+                <div className={`flex-1 min-h-0 w-full ${activeTab === "front" ? "block" : "hidden"}`}>
                   <TextureEditor
                     baseColor={color}
                     imageUrl={frontImage}
                     onTextureUpdate={setGeneratedTexture}
                   />
                 </div>
-                <div className={`flex-1 mt-0 h-full ${activeTab === "back" ? "block" : "hidden"}`}>
+                <div className={`flex-1 min-h-0 w-full ${activeTab === "back" ? "block" : "hidden"}`}>
                   <TextureEditor
                     baseColor={color}
                     imageUrl={backImage}

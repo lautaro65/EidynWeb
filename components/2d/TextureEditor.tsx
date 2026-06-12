@@ -313,14 +313,28 @@ export default function TextureEditor({
           </Layer>
         </Stage>
 
-        {/* T-Shirt Silhouette Overlay Mask */}
-        <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
-          <svg viewBox="0 0 512 512" className="w-full h-full opacity-80">
+        {/* Printable Area Guide */}
+        <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center overflow-hidden rounded-2xl">
+          {/* Subtle Grid overlay */}
+          <div 
+            className="absolute inset-0 opacity-20" 
+            style={{ 
+              backgroundImage: 'linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px)', 
+              backgroundSize: '32px 32px' 
+            }} 
+          />
+          
+          <svg viewBox="0 0 512 512" className="w-full h-full absolute inset-0 opacity-40">
             <path 
-              d="M0,0 L512,0 L512,512 L0,512 Z M170,50 Q256,120 342,50 L480,100 L440,260 L380,220 L360,500 L152,500 L132,220 L72,260 L32,100 Z" 
-              fill="#000" 
-              fillRule="evenodd" 
+              d="M170,50 Q256,120 342,50 L480,100 L440,260 L380,220 L360,500 L152,500 L132,220 L72,260 L32,100 Z" 
+              fill="none" 
+              stroke="#ffffff"
+              strokeWidth="3"
+              strokeDasharray="8, 8"
             />
+            {/* Center crosshair */}
+            <line x1="256" y1="236" x2="256" y2="276" stroke="#ffffff" strokeWidth="1" />
+            <line x1="236" y1="256" x2="276" y2="256" stroke="#ffffff" strokeWidth="1" />
           </svg>
         </div>
 

@@ -840,6 +840,10 @@
     "changeImage": "Change image",
     "processingAi": "Processing with AI...",
     "step": "Step",
-    "of": "of"
+    "of": "of",
+    "designTitle": "Color & Textures",
+    "designDesc": "Define the base color and upload your graphics for front and back.",
+    "frontImage": "Front Graphic (Optional)",
+    "backImage": "Back Graphic (Optional)"
   }
 }

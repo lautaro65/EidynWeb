@@ -4,6 +4,7 @@ import React, { Suspense, useMemo, useEffect } from "react";
 import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import { OrbitControls, Stage, useGLTF } from "@react-three/drei";
 import { OBJLoader } from "three-stdlib";
+import { MousePointer2, ZoomIn } from "lucide-react";
 
 import * as THREE from 'three';
 
@@ -468,8 +469,8 @@ export function GarmentViewer({
           <OrbitControls makeDefault autoRotate autoRotateSpeed={1} />
         </Canvas>
         <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center px-6 py-3 bg-background/80 backdrop-blur-xl rounded-full border border-white/10 text-xs font-medium text-muted-foreground shadow-lg">
-          <span className="flex items-center gap-2"><span>🖱️</span> Arrastra para rotar</span>
-          <span className="flex items-center gap-2"><span>🔍</span> Rueda para zoom</span>
+          <span className="flex items-center gap-2"><MousePointer2 className="w-4 h-4" /> Arrastra para rotar</span>
+          <span className="flex items-center gap-2"><ZoomIn className="w-4 h-4" /> Rueda para zoom</span>
         </div>
       </div>
     </ErrorBoundary>

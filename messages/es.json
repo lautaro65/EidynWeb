@@ -840,6 +840,10 @@
     "changeImage": "Cambiar imagen",
     "processingAi": "Procesando con IA...",
     "step": "Paso",
-    "of": "de"
+    "of": "de",
+    "designTitle": "Color y Texturas",
+    "designDesc": "Definí el color base y subí tus gráficos para el frente y la espalda.",
+    "frontImage": "Gráfico Frontal (Opcional)",
+    "backImage": "Gráfico Espalda (Opcional)"
   }
 }
