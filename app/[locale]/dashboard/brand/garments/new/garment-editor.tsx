@@ -67,7 +67,7 @@ export function GarmentEditor() {
     try {
       const res = await checkSkuAvailability(value);
       if (!res.available) {
-        setSkuError("Este SKU ya está en uso por otra de tus prendas.");
+        setSkuError(t("errorSkuInUse"));
       } else {
         setSkuError(null);
       }
@@ -112,11 +112,11 @@ export function GarmentEditor() {
 
   const handleSave = async () => {
     if (!name || !sku) {
-      setError("El Nombre y el SKU son obligatorios.");
+      setError(t("errorRequired"));
       return;
     }
     if (skuError) {
-      setError("Por favor, corrige el SKU antes de guardar.");
+      setError(t("errorFixSku"));
       return;
     }
 
@@ -135,13 +135,15 @@ export function GarmentEditor() {
         frontImage: generatedTexture || frontImage,
         backImage: generatedBackTexture || backImage,
       });
-      router.push("/dashboard/brand/garments");
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
+      if (true) {
+        router.push("/dashboard/brand/garments");
       } else {
-        setError("Error al guardar la prenda.");
+        setError(t("errorSave"));
       }
+    } catch (err: unknown) {
+      console.error(err);
+      setError(t("errorSave"));
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -182,7 +184,7 @@ export function GarmentEditor() {
         </div>
 
         {/* Dynamic Content Area */}
-        <div className={`flex-1 p-6 relative ${step === 3 ? 'overflow-hidden flex flex-col' : 'overflow-y-auto space-y-8'}`}>
+        <div className="flex-1 overflow-y-auto p-6 space-y-8 relative">
           {error && (
             <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-sm">
               {error}
@@ -249,12 +251,12 @@ export function GarmentEditor() {
                     <div className="flex flex-col items-center">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={frontImage} alt="Front" className="h-20 object-contain mb-2 rounded" />
-                      <span className="text-xs text-primary font-medium">Cambiar imagen</span>
+                      <span className="text-xs text-primary font-medium">{t("changeImage")}</span>
                     </div>
                   ) : isUploadingFront ? (
                     <div className="flex flex-col items-center text-muted-foreground">
                       <Loader2 className="w-8 h-8 mb-2 opacity-50 animate-spin" />
-                      <span className="text-sm">Procesando con IA...</span>
+                      <span className="text-sm">{t("processingAi")}</span>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center text-muted-foreground">
@@ -279,12 +281,12 @@ export function GarmentEditor() {
                     <div className="flex flex-col items-center">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={backImage} alt="Back" className="h-20 object-contain mb-2 rounded" />
-                      <span className="text-xs text-primary font-medium">Cambiar imagen</span>
+                      <span className="text-xs text-primary font-medium">{t("changeImage")}</span>
                     </div>
                   ) : isUploadingBack ? (
                     <div className="flex flex-col items-center text-muted-foreground">
                       <Loader2 className="w-8 h-8 mb-2 opacity-50 animate-spin" />
-                      <span className="text-sm">Procesando con IA...</span>
+                      <span className="text-sm">{t("processingAi")}</span>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center text-muted-foreground">
@@ -307,8 +309,8 @@ export function GarmentEditor() {
             <div className="flex-1 min-h-0 relative">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
                 <TabsList className="w-full max-w-md grid grid-cols-2 bg-white/5 border border-white/10 mb-4">
-                  <TabsTrigger value="front" className="data-[state=active]:bg-primary">Frente</TabsTrigger>
-                  <TabsTrigger value="back" className="data-[state=active]:bg-primary">Espalda</TabsTrigger>
+                  <TabsTrigger value="front" className="data-[state=active]:bg-primary">{t("tabFront")}</TabsTrigger>
+                  <TabsTrigger value="back" className="data-[state=active]:bg-primary">{t("tabBack")}</TabsTrigger>
                 </TabsList>
                 
                 {/* We use hidden instead of TabsContent to prevent unmounting the Canvas and losing state */}
@@ -393,29 +395,6 @@ export function GarmentEditor() {
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                   />
                 </div>
-
-                {/* Resumen de Texturas 2D (UV) */}
-                {(generatedTexture || generatedBackTexture) && (
-                  <div className="pt-2">
-                    <label className="text-sm font-medium block mb-2 text-muted-foreground">Vista Previa 2D (UV)</label>
-                    <div className="flex gap-4">
-                      {generatedTexture && (
-                        <div className="flex-1 bg-black/20 rounded-xl p-3 border border-white/5 flex flex-col items-center">
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-widest mb-2 font-bold">Frente</span>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={generatedTexture} className="w-full max-w-[120px] aspect-square object-contain rounded-lg bg-black/40 border border-white/5" alt="Front UV" />
-                        </div>
-                      )}
-                      {generatedBackTexture && (
-                        <div className="flex-1 bg-black/20 rounded-xl p-3 border border-white/5 flex flex-col items-center">
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-widest mb-2 font-bold">Espalda</span>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={generatedBackTexture} className="w-full max-w-[120px] aspect-square object-contain rounded-lg bg-black/40 border border-white/5" alt="Back UV" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           )}
