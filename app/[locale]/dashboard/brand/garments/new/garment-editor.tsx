@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Shirt, Image as ImageIcon, Info, Check, ChevronRight, ChevronLeft, Upload, Loader2, Layers, Wind, Sparkles, Footprints, Scissors, Accessibility, AlertCircle, Palette } from "lucide-react";
 import { GarmentViewer } from "@/components/3d/GarmentViewer";
-import { createGarmentTemplate, checkSkuAvailability } from "./actions";
+import { createGarmentTemplate, checkSkuAvailability, processImageWithRemoveBg } from "./actions";
 import { useDebouncedCallback } from "use-debounce";
 import dynamic from "next/dynamic";
 import {
@@ -36,6 +36,8 @@ export function GarmentEditor() {
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingFront, setIsUploadingFront] = useState(false);
+  const [isUploadingBack, setIsUploadingBack] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Editor State
@@ -81,14 +83,29 @@ export function GarmentEditor() {
     validateSku(val);
   };
 
-  // Mock File Upload (For visual purposes, a real implementation would upload to R2 here)
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, setUrl: (url: string) => void) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, setUrl: (url: string) => void, setIsUploading: (val: boolean) => void) => {
     const file = e.target.files?.[0];
     if (file) {
-      // In a real app, you would upload to R2 and get a URL. 
-      // For now, we create a local object URL to preview it.
-      const url = URL.createObjectURL(file);
-      setUrl(url);
+      setIsUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append("image", file);
+        
+        // This server action uses remove.bg to clear the background and returns a base64 DataURL
+        const res = await processImageWithRemoveBg(formData);
+        if (res.success && res.dataUrl) {
+          setUrl(res.dataUrl);
+        } else {
+          // Fallback to local URL if API fails or is not configured
+          console.error("Failed to remove background:", res.error);
+          setUrl(URL.createObjectURL(file));
+        }
+      } catch (err) {
+        console.error("Upload error:", err);
+        setUrl(URL.createObjectURL(file));
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -220,14 +237,20 @@ export function GarmentEditor() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleFileUpload(e, setFrontImage)}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    onChange={(e) => handleFileUpload(e, setFrontImage, setIsUploadingFront)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                    disabled={isUploadingFront}
                   />
                   {frontImage ? (
                     <div className="flex flex-col items-center">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={frontImage} alt="Front" className="h-20 object-contain mb-2 rounded" />
                       <span className="text-xs text-primary font-medium">Cambiar imagen</span>
+                    </div>
+                  ) : isUploadingFront ? (
+                    <div className="flex flex-col items-center text-muted-foreground">
+                      <Loader2 className="w-8 h-8 mb-2 opacity-50 animate-spin" />
+                      <span className="text-sm">Procesando con IA...</span>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center text-muted-foreground">
@@ -244,14 +267,20 @@ export function GarmentEditor() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleFileUpload(e, setBackImage)}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    onChange={(e) => handleFileUpload(e, setBackImage, setIsUploadingBack)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                    disabled={isUploadingBack}
                   />
                   {backImage ? (
                     <div className="flex flex-col items-center">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={backImage} alt="Back" className="h-20 object-contain mb-2 rounded" />
                       <span className="text-xs text-primary font-medium">Cambiar imagen</span>
+                    </div>
+                  ) : isUploadingBack ? (
+                    <div className="flex flex-col items-center text-muted-foreground">
+                      <Loader2 className="w-8 h-8 mb-2 opacity-50 animate-spin" />
+                      <span className="text-sm">Procesando con IA...</span>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center text-muted-foreground">

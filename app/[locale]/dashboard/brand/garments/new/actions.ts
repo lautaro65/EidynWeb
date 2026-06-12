@@ -3,6 +3,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { removeBackground } from "@/lib/image-processing";
 
 export async function checkSkuAvailability(sku: string) {
   if (!sku) return { available: true };
@@ -27,6 +28,25 @@ export async function checkSkuAvailability(sku: string) {
   });
 
   return { available: !existing };
+}
+
+export async function processImageWithRemoveBg(formData: FormData): Promise<{ success: boolean; dataUrl?: string; error?: string }> {
+  try {
+    const file = formData.get("image") as File;
+    if (!file) return { success: false, error: "No image provided" };
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const { buffer: processedBuffer, mimeType } = await removeBackground(buffer, file.type);
+    
+    // Convert back to base64 DataURL for frontend
+    const base64 = processedBuffer.toString("base64");
+    const dataUrl = `data:${mimeType};base64,${base64}`;
+    
+    return { success: true, dataUrl };
+  } catch (err: unknown) {
+    console.error("processImageWithRemoveBg Error:", err);
+    return { success: false, error: "Error processing image" };
+  }
 }
 
 export async function createGarmentTemplate(data: {
