@@ -466,7 +466,7 @@ export function GarmentViewer({
               <Model url={url} colorHex={colorHex} textureUrl={textureUrl} backTextureUrl={backTextureUrl} scale={scale} />
             </Stage>
           </Suspense>
-          <OrbitControls makeDefault autoRotate autoRotateSpeed={1} />
+          <OrbitControls makeDefault />
         </Canvas>
         <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center px-6 py-3 bg-background/80 backdrop-blur-xl rounded-full border border-white/10 text-xs font-medium text-muted-foreground shadow-lg">
           <span className="flex items-center gap-2"><MousePointer2 className="w-4 h-4" /> Arrastra para rotar</span>

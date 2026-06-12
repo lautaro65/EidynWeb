@@ -121,7 +121,9 @@ export function GarmentEditor() {
 
   // Size Grading State
   const [baseSizeName, setBaseSizeName] = useState("M");
-  const [activeSizes, setActiveSizes] = useState<string[]>([]);
+  const [smallerSizes, setSmallerSizes] = useState<string[]>([]);
+  const [largerSizes, setLargerSizes] = useState<string[]>([]);
+  const [activeSizeTab, setActiveSizeTab] = useState<string | null>(null);
   const [sizeChart, setSizeChart] = useState<Record<string, Record<string, number>>>({});
   const [newSizeInput, setNewSizeInput] = useState("");
 
@@ -145,29 +147,93 @@ export function GarmentEditor() {
     setMeasurements(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleAddSize = () => {
+  const handleAddSmallerSize = () => {
     const size = newSizeInput.trim().toUpperCase();
-    if (!size || size === baseSizeName.toUpperCase() || activeSizes.includes(size)) return;
+    if (!size || size === baseSizeName.toUpperCase() || smallerSizes.includes(size) || largerSizes.includes(size)) return;
     
     const newMeasurements = { ...measurements };
-    // Start with a generic delta of +2 per size for auto-fill
+    const distance = smallerSizes.length + 1;
     Object.keys(newMeasurements).forEach(k => {
        const key = k as keyof typeof measurements;
-       newMeasurements[key] = measurements[key] + (activeSizes.length + 1) * 2;
+       newMeasurements[key] = measurements[key] - (distance * 2);
     });
 
-    setActiveSizes(prev => [...prev, size]);
+    setSmallerSizes(prev => [...prev, size]);
     setSizeChart(prev => ({ ...prev, [size]: newMeasurements }));
+    setActiveSizeTab(size);
     setNewSizeInput("");
   };
 
+  const handleAddLargerSize = () => {
+    const size = newSizeInput.trim().toUpperCase();
+    if (!size || size === baseSizeName.toUpperCase() || smallerSizes.includes(size) || largerSizes.includes(size)) return;
+    
+    const newMeasurements = { ...measurements };
+    const distance = largerSizes.length + 1;
+    Object.keys(newMeasurements).forEach(k => {
+       const key = k as keyof typeof measurements;
+       newMeasurements[key] = measurements[key] + (distance * 2);
+    });
+
+    setLargerSizes(prev => [...prev, size]);
+    setSizeChart(prev => ({ ...prev, [size]: newMeasurements }));
+    setActiveSizeTab(size);
+    setNewSizeInput("");
+  };
+
+  const handleApplyPreset = (type: "alphanumeric" | "numeric") => {
+    let base = "";
+    let s: string[] = [];
+    let l: string[] = [];
+    
+    if (type === "alphanumeric") {
+      base = "M";
+      s = ["S", "XS"];
+      l = ["L", "XL", "2XL"];
+    } else {
+      base = "42";
+      s = ["40", "38"];
+      l = ["44", "46", "48"];
+    }
+    
+    setBaseSizeName(base);
+    const newChart: Record<string, Record<string, number>> = {};
+    
+    s.forEach((sz, i) => {
+      const newMeasurements = { ...measurements };
+      const distance = i + 1;
+      Object.keys(newMeasurements).forEach(k => {
+         const key = k as keyof typeof measurements;
+         newMeasurements[key] = measurements[key] - (distance * 2);
+      });
+      newChart[sz] = newMeasurements;
+    });
+    
+    l.forEach((sz, i) => {
+      const newMeasurements = { ...measurements };
+      const distance = i + 1;
+      Object.keys(newMeasurements).forEach(k => {
+         const key = k as keyof typeof measurements;
+         newMeasurements[key] = measurements[key] + (distance * 2);
+      });
+      newChart[sz] = newMeasurements;
+    });
+    
+    setSmallerSizes(s);
+    setLargerSizes(l);
+    setSizeChart(newChart);
+    setActiveSizeTab(null);
+  };
+
   const removeSize = (sizeToRemove: string) => {
-    setActiveSizes(prev => prev.filter(s => s !== sizeToRemove));
+    setSmallerSizes(prev => prev.filter(s => s !== sizeToRemove));
+    setLargerSizes(prev => prev.filter(s => s !== sizeToRemove));
     setSizeChart(prev => {
       const newChart = { ...prev };
       delete newChart[sizeToRemove];
       return newChart;
     });
+    if (activeSizeTab === sizeToRemove) setActiveSizeTab(null);
   };
 
   const handleSizeMeasurementChange = (sizeName: string, key: string, value: number) => {
@@ -178,21 +244,42 @@ export function GarmentEditor() {
   };
 
   const handleRecalibrate = () => {
-    if (activeSizes.length === 0) return;
-    const refSize = activeSizes[0];
-    const refChart = sizeChart[refSize];
+    if (!activeSizeTab || !sizeChart[activeSizeTab]) return;
+    const refChart = sizeChart[activeSizeTab];
     const newChart = { ...sizeChart };
+    
+    let distance = 1;
+    let isSmaller = false;
+    
+    const smallerIdx = smallerSizes.indexOf(activeSizeTab);
+    const largerIdx = largerSizes.indexOf(activeSizeTab);
+    
+    if (smallerIdx !== -1) {
+       distance = smallerIdx + 1;
+       isSmaller = true;
+    } else if (largerIdx !== -1) {
+       distance = largerIdx + 1;
+    } else {
+       return;
+    }
     
     Object.keys(measurements).forEach(k => {
        const key = k as keyof typeof measurements;
-       const delta = refChart[key] - measurements[key];
-       if (delta !== 0) {
-         activeSizes.forEach((size, idx) => {
-            if (size !== refSize) {
-               newChart[size][key] = measurements[key] + (delta * (idx + 1));
-            }
-         });
-       }
+       const totalDelta = refChart[key] - measurements[key];
+       if (totalDelta === 0) return;
+       
+       const stepDelta = totalDelta / (isSmaller ? -distance : distance);
+       
+       smallerSizes.forEach((size, idx) => {
+          if (size !== activeSizeTab) {
+             newChart[size][key] = Math.round(measurements[key] - (stepDelta * (idx + 1)));
+          }
+       });
+       largerSizes.forEach((size, idx) => {
+          if (size !== activeSizeTab) {
+             newChart[size][key] = Math.round(measurements[key] + (stepDelta * (idx + 1)));
+          }
+       });
     });
     setSizeChart(newChart);
   };
@@ -531,51 +618,114 @@ export function GarmentEditor() {
                 />
               </div>
 
-              <div className="space-y-4">
-                <label className="text-sm font-medium block mb-1.5">{t("addSize")}</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newSizeInput}
-                    onChange={(e) => setNewSizeInput(e.target.value.toUpperCase())}
-                    onKeyDown={(e) => e.key === 'Enter' && handleAddSize()}
-                    placeholder={t("sizeNamePlaceholder")}
-                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 uppercase"
-                  />
-                  <button
-                    onClick={handleAddSize}
-                    disabled={!newSizeInput.trim() || activeSizes.includes(newSizeInput.trim().toUpperCase()) || newSizeInput.trim().toUpperCase() === baseSizeName.toUpperCase()}
-                    className="px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
               <div className="pt-6 border-t border-white/10">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-medium">{t("sizeChart")}</h3>
                   <button
                     onClick={handleRecalibrate}
-                    disabled={activeSizes.length === 0}
+                    disabled={!activeSizeTab || (smallerSizes.length === 0 && largerSizes.length === 0)}
                     className="px-3 py-1.5 text-xs font-medium bg-primary/20 text-primary rounded-lg hover:bg-primary/30 transition-colors disabled:opacity-50"
                   >
                     {t("recalibrate")}
                   </button>
                 </div>
                 
-                <div className="overflow-x-auto custom-scrollbar pb-4" aria-live="polite" aria-atomic="true">
+                {/* TABS CONTAINER */}
+                <div className="flex flex-col gap-4">
+                  {/* Presets Area */}
+                  <div className="flex gap-2 mb-2">
+                    <button
+                      onClick={() => handleApplyPreset("alphanumeric")}
+                      className="px-3 py-1.5 text-xs font-medium bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors"
+                    >
+                      Auto: XS - 2XL
+                    </button>
+                    <button
+                      onClick={() => handleApplyPreset("numeric")}
+                      className="px-3 py-1.5 text-xs font-medium bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors"
+                    >
+                      Auto: 38 - 48
+                    </button>
+                  </div>
+
+                  {/* Size Input Area */}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={newSizeInput}
+                      onChange={(e) => setNewSizeInput(e.target.value.toUpperCase())}
+                      placeholder={t("sizeNamePlaceholder")}
+                      className="flex-1 max-w-[150px] bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 uppercase"
+                    />
+                    <button
+                      onClick={handleAddSmallerSize}
+                      disabled={!newSizeInput.trim() || smallerSizes.includes(newSizeInput.trim().toUpperCase()) || largerSizes.includes(newSizeInput.trim().toUpperCase()) || newSizeInput.trim().toUpperCase() === baseSizeName.toUpperCase()}
+                      className="px-3 py-2 text-sm bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+                    >
+                      {t("addSmallerSize")}
+                    </button>
+                    <button
+                      onClick={handleAddLargerSize}
+                      disabled={!newSizeInput.trim() || smallerSizes.includes(newSizeInput.trim().toUpperCase()) || largerSizes.includes(newSizeInput.trim().toUpperCase()) || newSizeInput.trim().toUpperCase() === baseSizeName.toUpperCase()}
+                      className="px-3 py-2 text-sm bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+                    >
+                      {t("addLargerSize")}
+                    </button>
+                  </div>
+
+                  {/* Tabs List */}
+                  <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar" role="tablist" aria-label={t("sizeChart")}>
+                    {/* Smaller Sizes Tabs (Reverse order so smallest is left) */}
+                    {[...smallerSizes].reverse().map(size => (
+                      <button
+                        key={size}
+                        role="tab"
+                        aria-selected={activeSizeTab === size}
+                        onClick={() => setActiveSizeTab(size)}
+                        className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-all border group ${activeSizeTab === size ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(var(--primary),0.2)]' : 'bg-white/5 border-white/10 text-muted-foreground hover:bg-white/10 hover:text-foreground'}`}
+                      >
+                        {size}
+                        <span onClick={(e) => { e.stopPropagation(); removeSize(size); }} className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity text-[10px] cursor-pointer" aria-label="Remove size">×</span>
+                      </button>
+                    ))}
+
+                    {/* Base Size Tab (Locked) */}
+                    <div
+                      role="tab"
+                      aria-selected={false}
+                      className="px-4 py-2 rounded-xl text-sm font-bold bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary),0.4)] cursor-default select-none border border-primary/50 flex flex-col items-center justify-center min-w-[80px]"
+                    >
+                      <span>{baseSizeName}</span>
+                      <span className="text-[10px] uppercase tracking-wider opacity-80">(Base)</span>
+                    </div>
+
+                    {/* Larger Sizes Tabs */}
+                    {largerSizes.map(size => (
+                      <button
+                        key={size}
+                        role="tab"
+                        aria-selected={activeSizeTab === size}
+                        onClick={() => setActiveSizeTab(size)}
+                        className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-all border group ${activeSizeTab === size ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(var(--primary),0.2)]' : 'bg-white/5 border-white/10 text-muted-foreground hover:bg-white/10 hover:text-foreground'}`}
+                      >
+                        {size}
+                        <span onClick={(e) => { e.stopPropagation(); removeSize(size); }} className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity text-[10px] cursor-pointer" aria-label="Remove size">×</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto mt-4 custom-scrollbar pb-4" aria-live="polite" aria-atomic="true">
                   <table className="w-full text-sm text-left border-collapse">
                     <thead>
                       <tr>
-                        <th className="px-4 py-2 font-medium text-muted-foreground border-b border-white/10">{t("measureHeader")}</th>
-                        <th className="px-4 py-2 font-medium text-primary border-b border-white/10 text-center bg-primary/5 rounded-t-lg">{baseSizeName} (Base)</th>
-                        {activeSizes.map(size => (
-                          <th key={size} className="px-4 py-2 font-medium text-muted-foreground border-b border-white/10 text-center relative group">
-                            {size}
-                            <button onClick={() => removeSize(size)} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-xl px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity text-[10px]">×</button>
+                        <th className="px-4 py-2 font-medium text-muted-foreground border-b border-white/10 w-1/3">{t("measureHeader")}</th>
+                        <th className="px-4 py-2 font-medium text-primary border-b border-white/10 text-center bg-primary/5 rounded-tl-lg">{baseSizeName} (Base)</th>
+                        {activeSizeTab && (
+                          <th className="px-4 py-2 font-medium text-primary border-b border-white/10 text-center bg-primary/10 rounded-tr-lg">
+                            {activeSizeTab}
                           </th>
-                        ))}
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -583,20 +733,25 @@ export function GarmentEditor() {
                         <tr key={key} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                           <td className="px-4 py-3 text-muted-foreground">{t(key as Parameters<typeof t>[0])}</td>
                           <td className="px-4 py-3 text-center font-mono text-primary bg-primary/5">{measurements[key]}</td>
-                          {activeSizes.map(size => (
-                            <td key={`${size}-${key}`} className="px-4 py-3">
+                          {activeSizeTab && (
+                            <td className="px-4 py-3 bg-primary/5">
                               <input 
                                 type="number" 
-                                value={sizeChart[size]?.[key] || 0}
-                                onChange={(e) => handleSizeMeasurementChange(size, key, parseInt(e.target.value) || 0)}
-                                className="w-16 bg-transparent border-b border-white/20 text-center font-mono focus:outline-none focus:border-primary appearance-none m-0"
+                                value={sizeChart[activeSizeTab]?.[key] || 0}
+                                onChange={(e) => handleSizeMeasurementChange(activeSizeTab, key, parseInt(e.target.value) || 0)}
+                                className="w-full bg-transparent border-b border-white/20 text-center font-mono focus:outline-none focus:border-primary appearance-none m-0 text-foreground"
                               />
                             </td>
-                          ))}
+                          )}
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                  {!activeSizeTab && (smallerSizes.length > 0 || largerSizes.length > 0) && (
+                    <div className="text-center py-6 text-sm text-muted-foreground bg-white/5 rounded-b-lg border border-t-0 border-white/5">
+                      Select a size tab above to edit measurements.
+                    </div>
+                  )}
                 </div>
               </div>
             </section>
