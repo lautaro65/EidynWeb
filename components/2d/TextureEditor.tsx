@@ -1,18 +1,23 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import { Stage, Layer, Rect, Line } from "react-konva";
+import { Stage, Layer, Rect, Line, Image as KonvaImage, Transformer } from "react-konva";
 import Konva from "konva";
+import useImage from "use-image";
 import { useTranslations } from "next-intl";
 
 interface TextureEditorProps {
   onTextureUpdate: (dataUrl: string) => void;
   baseColor: string;
+  frontImageUrl?: string;
+  backImageUrl?: string;
 }
 
 export default function TextureEditor({
   onTextureUpdate,
   baseColor,
+  frontImageUrl,
+  backImageUrl,
 }: TextureEditorProps) {
   const t = useTranslations("GarmentsNew");
   const stageRef = useRef<Konva.Stage>(null);
@@ -28,21 +33,53 @@ export default function TextureEditor({
   const [tool, setTool] = useState<"brush" | "eraser">("brush");
   const [brushColor, setBrushColor] = useState("#000000");
   const [brushSize, setBrushSize] = useState(5);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   
+  const [frontImg] = useImage(frontImageUrl || "", "anonymous");
+  const [backImg] = useImage(backImageUrl || "", "anonymous");
+  const trRef = useRef<Konva.Transformer>(null);
+  const frontImageRef = useRef<Konva.Image>(null);
+  const backImageRef = useRef<Konva.Image>(null);
+
   // Update parent when lines change
   useEffect(() => {
     if (stageRef.current) {
+      // Temporarily hide transformer before exporting
+      const tr = trRef.current;
+      if (tr) tr.nodes([]);
+      
       const dataUrl = stageRef.current.toDataURL({ pixelRatio: 2 });
       onTextureUpdate(dataUrl);
+
+      // Restore transformer
+      if (tr && selectedId === 'front' && frontImageRef.current) {
+        tr.nodes([frontImageRef.current]);
+      } else if (tr && selectedId === 'back' && backImageRef.current) {
+        tr.nodes([backImageRef.current]);
+      }
     }
-  }, [lines, baseColor, onTextureUpdate]);
+  }, [lines, baseColor, frontImg, backImg, selectedId, onTextureUpdate]);
 
   const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
-    setIsDrawing(true);
-    const stage = e.target.getStage();
-    const pos = stage?.getPointerPosition();
-    if (!pos) return;
-    setLines([...lines, { tool, color: brushColor, size: brushSize, points: [pos.x, pos.y] }]);
+    const clickedOnEmpty = e.target === e.target.getStage() || e.target.name() === 'background';
+    if (clickedOnEmpty) {
+      setSelectedId(null);
+      if (tool === 'brush' || tool === 'eraser') {
+        setIsDrawing(true);
+        const stage = e.target.getStage();
+        const pos = stage?.getPointerPosition();
+        if (!pos) return;
+        setLines([...lines, { tool, color: brushColor, size: brushSize, points: [pos.x, pos.y] }]);
+      }
+    } else {
+      // Clicked on an image or line, check if it's an image
+      const name = e.target.name();
+      if (name === 'front' || name === 'back') {
+        setSelectedId(name);
+      } else {
+        setSelectedId(null);
+      }
+    }
   };
 
   const handleMouseMove = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
@@ -133,7 +170,65 @@ export default function TextureEditor({
         >
           <Layer>
             {/* Base Color Background */}
-            <Rect x={0} y={0} width={512} height={512} fill={baseColor} />
+            <Rect x={0} y={0} width={512} height={512} fill={baseColor} name="background" />
+            
+            {/* Front Image Proxy */}
+            {frontImg && (
+              <KonvaImage 
+                ref={frontImageRef}
+                image={frontImg} 
+                x={128} 
+                y={128} 
+                width={256} 
+                height={256} 
+                draggable 
+                name="front"
+                onClick={() => setSelectedId('front')}
+                onTap={() => setSelectedId('front')}
+                onDragEnd={() => {
+                  // Trigger re-render to update texture
+                  setLines([...lines]);
+                }}
+                onTransformEnd={() => {
+                  setLines([...lines]);
+                }}
+              />
+            )}
+
+            {/* Back Image Proxy */}
+            {backImg && (
+              <KonvaImage 
+                ref={backImageRef}
+                image={backImg} 
+                x={10} 
+                y={10} 
+                width={128} 
+                height={128} 
+                draggable 
+                name="back"
+                onClick={() => setSelectedId('back')}
+                onTap={() => setSelectedId('back')}
+                onDragEnd={() => {
+                  setLines([...lines]);
+                }}
+                onTransformEnd={() => {
+                  setLines([...lines]);
+                }}
+              />
+            )}
+
+            {/* Transformer for Resizing/Rotating */}
+            {selectedId && (
+              <Transformer
+                ref={trRef}
+                boundBoxFunc={(oldBox, newBox) => {
+                  if (Math.abs(newBox.width) < 5 || Math.abs(newBox.height) < 5) {
+                    return oldBox;
+                  }
+                  return newBox;
+                }}
+              />
+            )}
 
             {/* Drawn Lines */}
             {lines.map((line, i) => (
@@ -154,7 +249,20 @@ export default function TextureEditor({
         </Stage>
 
         {/* Overlay Grid/UV Helper */}
-        <div className="absolute inset-0 pointer-events-none border border-dashed border-white/20 m-4 rounded" />
+        <div className="absolute inset-0 pointer-events-none flex opacity-20 mix-blend-overlay">
+          {/* Front Guide */}
+          <div className="flex-1 border-r border-dashed border-white flex flex-col items-center justify-center p-8">
+            <div className="w-full h-full border-2 border-white rounded-[40px] flex items-center justify-center">
+              <span className="text-white text-3xl font-black uppercase tracking-widest rotate-[-45deg]">Frente</span>
+            </div>
+          </div>
+          {/* Back Guide */}
+          <div className="flex-1 flex flex-col items-center justify-center p-8">
+             <div className="w-full h-full border-2 border-white rounded-[40px] flex items-center justify-center">
+              <span className="text-white text-3xl font-black uppercase tracking-widest rotate-[-45deg]">Espalda</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

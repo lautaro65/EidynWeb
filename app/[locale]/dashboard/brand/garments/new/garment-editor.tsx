@@ -272,6 +272,8 @@ export function GarmentEditor() {
               <div className="flex-1 min-h-[400px]">
                 <TextureEditor 
                   baseColor={color} 
+                  frontImageUrl={frontImage}
+                  backImageUrl={backImage}
                   onTextureUpdate={setGeneratedTexture} 
                 />
               </div>
