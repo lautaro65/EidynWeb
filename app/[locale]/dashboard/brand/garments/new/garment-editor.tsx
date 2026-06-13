@@ -279,11 +279,34 @@ export function GarmentEditor() {
   };
 
   const handleRecalibrate = () => {
-    if (!activeSizeTab || !sizeChart[activeSizeTab]) return;
+    const currentBaseIdx = orderedSizes.indexOf(baseSizeName);
+    if (currentBaseIdx === -1) return;
+
+    if (!activeSizeTab || !sizeChart[activeSizeTab]) {
+      // Standard recalibrate (±2 step) based on array positions
+      const newChart = { ...sizeChart };
+      orderedSizes.forEach((size, idx) => {
+        if (size === baseSizeName) return;
+        const sizeDist = Math.abs(idx - currentBaseIdx);
+        const sizeIsSmaller = idx < currentBaseIdx;
+        const newMeasurements = { ...measurements };
+        
+        Object.keys(newMeasurements).forEach(k => {
+           const key = k as keyof typeof measurements;
+           if (sizeIsSmaller) {
+              newMeasurements[key] = measurements[key] - (sizeDist * 2);
+           } else {
+              newMeasurements[key] = measurements[key] + (sizeDist * 2);
+           }
+        });
+        newChart[size] = newMeasurements;
+      });
+      setSizeChart(newChart);
+      return;
+    }
+
     const refChart = sizeChart[activeSizeTab];
     const newChart = { ...sizeChart };
-    
-    const currentBaseIdx = orderedSizes.indexOf(baseSizeName);
     const activeIdx = orderedSizes.indexOf(activeSizeTab);
     
     if (currentBaseIdx === -1 || activeIdx === -1 || currentBaseIdx === activeIdx) return;
@@ -687,7 +710,7 @@ export function GarmentEditor() {
                   <h3 className="text-lg font-medium">{t("sizeChart")}</h3>
                   <button
                     onClick={handleRecalibrate}
-                    disabled={!activeSizeTab || (smallerSizes.length === 0 && largerSizes.length === 0)}
+                    disabled={orderedSizes.length <= 1}
                     className="px-3 py-1.5 text-xs font-medium bg-primary/20 text-primary rounded-lg hover:bg-primary/30 transition-colors disabled:opacity-50"
                   >
                     {t("recalibrate")}

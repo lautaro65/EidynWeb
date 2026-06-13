@@ -873,7 +873,6 @@
     "sizeGuideTitle": "Progresión de Talles",
     "sizeGuideDesc": "Definí tu Talle Base y agregá nuevos talles para generar la tabla automáticamente.",
     "baseSizeName": "Nombre del Talle Base",
-    "addSize": "Añadir Talle",
     "recalibrate": "Reajustar Escala",
     "recalibrateHint": "Modifica el talle activo y reajusta todos los demás proporcionalmente.",
     "sizingSystem": "Sistema de Talles",
@@ -883,6 +882,7 @@
     "sizeNamePlaceholder": "Ej: L, 44",
     "addSmallerSize": "+ Menor",
     "addLargerSize": "+ Mayor",
+    "addSize": "Añadir Otra Talla",
     "collarType": "Tipo de Cuello",
     "collarCrew": "Cuello Redondo (U)",
     "collarVneck": "Cuello en V",
@@ -916,10 +916,7 @@
     "cuffType": "Tipo de Puños",
     "cuffSimple": "Dobladillo Simple",
     "cuffRibbed": "Puño Elástico (Ribbed)",
-    "cuffThumbhole": "Con Agujero para Pulgar"
-  },
-  "GarmentViewer": {
-    "loading3D": "Cargando 3D...",
+    "cuffThumbhole": "Con Agujero para Pulgar",
     "modelNotAvailable": "Modelo 3D no disponible",
     "dragToRotate": "Arrastra para rotar",
     "scrollToZoom": "Rueda para zoom",

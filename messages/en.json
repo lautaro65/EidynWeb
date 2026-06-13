@@ -883,6 +883,7 @@
     "addSmallerSize": "+ Smaller",
     "addLargerSize": "+ Larger",
     "addSize": "Add Another Size",
+    "collarType": "Collar Type",
     "collarCrew": "Crew Neck (Round)",
     "collarVneck": "V-Neck",
     "collarTurtleneck": "Turtleneck",
@@ -915,6 +916,12 @@
     "cuffType": "Cuffs",
     "cuffSimple": "Simple Hem",
     "cuffRibbed": "Ribbed Cuff",
-    "cuffThumbhole": "Thumbhole"
+    "cuffThumbhole": "Thumbhole",
+    "modelNotAvailable": "3D Model not available",
+    "dragToRotate": "Drag to rotate",
+    "scrollToZoom": "Scroll to zoom",
+    "errorLoading": "Error loading 3D model",
+    "errorUnknown": "Unknown error. Check console for details.",
+    "retry": "Retry"
   }
 }

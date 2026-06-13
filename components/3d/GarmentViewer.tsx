@@ -453,7 +453,7 @@ export function GarmentViewer({
   avatarUrl?: string;
   scale?: [number, number, number];
 }) {
-  const t = useTranslations("GarmentViewer");
+  const t = useTranslations("GarmentsNew");
 
   if (!url) return <div className={`h-full w-full flex items-center justify-center bg-white/5 rounded-3xl border border-dashed border-white/10 text-muted-foreground ${className || 'min-h-[500px]'}`}>{t("modelNotAvailable")}</div>;
 
