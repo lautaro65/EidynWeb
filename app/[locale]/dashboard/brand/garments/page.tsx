@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { Link } from "@/i18n/routing";
 import { Plus, Shirt, Search } from "lucide-react";
 import { GarmentsToolbar } from "./garments-toolbar";
+import { TestGarmentButton } from "./test-garment-button";
 import { Pagination } from "@/components/ui/pagination";
 import { Prisma } from "@prisma/client";
 
@@ -89,13 +90,16 @@ export default async function BrandGarmentsPage({
           </h1>
           <p className="text-muted-foreground mt-2">{t("subtitle")}</p>
         </div>
-        <Link
-          href="/dashboard/brand/garments/new"
-          className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300"
-        >
-          <Plus className="w-5 h-5" />
-          {t("newGarment")}
-        </Link>
+        <div className="flex items-center gap-3">
+          <TestGarmentButton />
+          <Link
+            href="/dashboard/brand/garments/new"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300"
+          >
+            <Plus className="w-5 h-5" />
+            {t("newGarment")}
+          </Link>
+        </div>
       </div>
 
       {/* Main Content Area */}

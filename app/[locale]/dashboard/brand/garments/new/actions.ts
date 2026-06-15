@@ -151,24 +151,30 @@ export async function saveGarmentAction(payload: SaveGarmentPayload) {
       });
     }
 
+    const parseMeasure = (val: unknown) => {
+      if (val === "" || val === null || val === undefined) return null;
+      const num = Number(val);
+      return isNaN(num) ? null : num;
+    };
+
     // 2. Create the Sizes
     const sizesToCreate = Object.entries(payload.sizing.chart).map(([sizeLabel, measurements]) => ({
       garmentId: garment.id,
       label: sizeLabel,
       system: payload.sizing.system,
       isBase: sizeLabel === payload.sizing.baseSizeName,
-      chest: measurements.measureChest,
-      length: measurements.measureLength,
-      sleeve: measurements.measureSleeve,
-      shoulders: measurements.measureShoulder,
-      collar: measurements.measureCollar,
-      hem: measurements.measureHem,
-      waist: measurements.measureWaist,
-      frontLength: measurements.measureFrontLength,
-      backLength: measurements.measureBackLength,
-      bicep: measurements.measureBicep,
-      wrist: measurements.measureWrist,
-      armhole: measurements.measureArmhole,
+      chest: parseMeasure(measurements.measureChest),
+      length: parseMeasure(measurements.measureLength),
+      sleeve: parseMeasure(measurements.measureSleeve),
+      shoulders: parseMeasure(measurements.measureShoulder),
+      collar: parseMeasure(measurements.measureCollar),
+      hem: parseMeasure(measurements.measureHem),
+      waist: parseMeasure(measurements.measureWaist),
+      frontLength: parseMeasure(measurements.measureFrontLength),
+      backLength: parseMeasure(measurements.measureBackLength),
+      bicep: parseMeasure(measurements.measureBicep),
+      wrist: parseMeasure(measurements.measureWrist),
+      armhole: parseMeasure(measurements.measureArmhole),
     }));
 
     await tx.garmentSize.createMany({
@@ -181,10 +187,10 @@ export async function saveGarmentAction(payload: SaveGarmentPayload) {
       name: v.name,
       type: "color",
       colorHex: v.color,
-      frontImageUrl: v.frontImageUrl,
-      backImageUrl: v.backImageUrl,
-      textureUrl: v.generatedTextureUrl,
-      backTextureUrl: v.generatedBackTextureUrl,
+      frontImageUrl: v.frontImageUrl || null,
+      backImageUrl: v.backImageUrl || null,
+      textureUrl: v.generatedTextureUrl || null,
+      backTextureUrl: v.generatedBackTextureUrl || null,
       status: "completed" // Can be changed to pending if background jobs will process textures
     }));
 
