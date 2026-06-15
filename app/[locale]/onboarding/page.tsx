@@ -16,15 +16,18 @@ export default function OnboardingPage() {
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [socialUrl, setSocialUrl] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  
+  // Shopper fields
+  const [shopperName, setShopperName] = useState("");
+  const [shopperGender, setShopperGender] = useState("unisex");
+  const [shopperHeight, setShopperHeight] = useState("");
+  const [shopperAge, setShopperAge] = useState("");
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const handleNextStep = async () => {
-    if (role === "shopper") {
-      await handleComplete();
-    } else {
-      setStep(2);
-    }
+  const handleNextStep = () => {
+    setStep(2);
   };
 
   const handleComplete = async () => {
@@ -45,13 +48,20 @@ export default function OnboardingPage() {
         if (logoFile) formData.append("logoFile", logoFile);
       }
 
+      if (role === "shopper") {
+        formData.append("shopperName", shopperName);
+        formData.append("shopperGender", shopperGender);
+        formData.append("shopperHeight", shopperHeight);
+        formData.append("shopperAge", shopperAge);
+      }
+
       await submitOnboarding(formData);
       if (role === "store_owner") {
         router.push("/dashboard/shop/analytics");
       } else if (role === "brand_owner") {
         router.push("/dashboard/brand");
       } else {
-        router.push("/");
+        router.push("/portal");
       }
     } catch (error) {
       console.error(error);
@@ -238,16 +248,8 @@ export default function OnboardingPage() {
                   disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none
                 "
               >
-                {isSubmitting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : role === "shopper" ? (
-                  t("completeSetupBtn")
-                ) : (
-                  <>
-                    {t("continueBtn")}
-                    <ArrowRight className="w-4 h-4" strokeWidth={2} />
-                  </>
-                )}
+                {t("continueBtn")}
+                <ArrowRight className="w-4 h-4" strokeWidth={2} />
               </button>
             </div>
           </div>
@@ -259,15 +261,80 @@ export default function OnboardingPage() {
             <div className="inline-flex items-center gap-1.5 text-xs font-medium tracking-widest uppercase px-3 py-1 rounded-full bg-primary/10 text-primary mb-6">{t("yourStore")}</div>
 
             <h1 className="font-serif text-5xl font-light tracking-tight leading-tight text-foreground mb-2">
-              {t("step2Title")}
+              {role === "shopper" ? "Tu Identidad 3D" : t("step2Title")}
             </h1>
             <p className="text-muted-foreground text-base font-light mb-10">
-              {t("step2Subtitle")}
+              {role === "shopper" 
+                ? "Completa tus datos físicos básicos para que podamos generar tu avatar con precisión." 
+                : t("step2Subtitle")}
             </p>
 
             <div className="bg-card border border-border/60 rounded-[2rem] p-8 shadow-sm space-y-8">
-              {/* Store name */}
-              <div className="space-y-2">
+              
+              {/* Shopper Fields */}
+              {role === "shopper" && (
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="block text-[0.7rem] font-medium tracking-widest uppercase text-muted-foreground">
+                      Tu Nombre
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ej: María"
+                      value={shopperName}
+                      onChange={(e) => setShopperName(e.target.value)}
+                      className="w-full h-12 px-4 rounded-[0.875rem] border-[1.5px] border-border bg-background text-[0.95rem] text-foreground placeholder:text-muted-foreground/50 font-light outline-none transition-colors duration-200 focus:border-primary"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="block text-[0.7rem] font-medium tracking-widest uppercase text-muted-foreground">
+                        Género Biológico
+                      </label>
+                      <select
+                        value={shopperGender}
+                        onChange={(e) => setShopperGender(e.target.value)}
+                        className="w-full h-12 px-4 rounded-[0.875rem] border-[1.5px] border-border bg-background text-[0.95rem] text-foreground font-light outline-none transition-colors duration-200 focus:border-primary"
+                      >
+                        <option value="unisex">Prefiero no decirlo</option>
+                        <option value="female">Femenino</option>
+                        <option value="male">Masculino</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-[0.7rem] font-medium tracking-widest uppercase text-muted-foreground">
+                        Edad
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Ej: 25"
+                        value={shopperAge}
+                        onChange={(e) => setShopperAge(e.target.value)}
+                        className="w-full h-12 px-4 rounded-[0.875rem] border-[1.5px] border-border bg-background text-[0.95rem] text-foreground placeholder:text-muted-foreground/50 font-light outline-none transition-colors duration-200 focus:border-primary"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-[0.7rem] font-medium tracking-widest uppercase text-muted-foreground">
+                      Altura (cm)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="Ej: 175"
+                      value={shopperHeight}
+                      onChange={(e) => setShopperHeight(e.target.value)}
+                      className="w-full h-12 px-4 rounded-[0.875rem] border-[1.5px] border-border bg-background text-[0.95rem] text-foreground placeholder:text-muted-foreground/50 font-light outline-none transition-colors duration-200 focus:border-primary"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Store/Brand name */}
+              {role !== "shopper" && (
+                <div className="space-y-2">
                 <label htmlFor="storeNameInput" className="block text-[0.7rem] font-medium tracking-widest uppercase text-muted-foreground">
                   {t("storeNameLabel")}
                 </label>
@@ -287,6 +354,7 @@ export default function OnboardingPage() {
                   "
                 />
               </div>
+              )}
 
               {/* Brand Extra Fields */}
               {role === "brand_owner" && (
@@ -331,7 +399,7 @@ export default function OnboardingPage() {
                 </div>
               )}
 
-              {role !== "brand_owner" && (
+              {role === "store_owner" && (
                 <>
                   {/* Divider */}
                   <div className="h-px bg-border opacity-60" />
@@ -458,8 +526,9 @@ export default function OnboardingPage() {
                 onClick={handleComplete}
                 disabled={
                   isSubmitting || 
-                  !storeName.trim() || 
-                  (role === "brand_owner" && (!websiteUrl.trim() || !socialUrl.trim() || !logoFile))
+                  (role !== "shopper" && !storeName.trim()) || 
+                  (role === "brand_owner" && (!websiteUrl.trim() || !socialUrl.trim() || !logoFile)) ||
+                  (role === "shopper" && (!shopperName.trim() || !shopperHeight.trim() || !shopperAge.trim()))
                 }
                 className="
                   inline-flex items-center gap-2 px-7 py-3 rounded-[0.875rem]
@@ -473,7 +542,7 @@ export default function OnboardingPage() {
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <>
-                    {t("launchStoreBtn")}
+                    {role === "shopper" ? "Entrar al Probador" : t("launchStoreBtn")}
                     <ArrowRight className="w-4 h-4" strokeWidth={2} />
                   </>
                 )}

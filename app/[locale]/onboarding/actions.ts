@@ -12,6 +12,13 @@ export async function submitOnboarding(formData: FormData) {
   const websiteUrl = formData.get("websiteUrl") as string | undefined;
   const socialUrl = formData.get("socialUrl") as string | undefined;
   const logoFile = formData.get("logoFile") as File | null;
+  
+  // Shopper fields
+  const shopperName = formData.get("shopperName") as string | undefined;
+  const shopperGender = formData.get("shopperGender") as string | undefined;
+  const shopperHeight = formData.get("shopperHeight") as string | undefined;
+  const shopperAge = formData.get("shopperAge") as string | undefined;
+
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -30,11 +37,51 @@ export async function submitOnboarding(formData: FormData) {
       data: {
         clerkId: userId,
         email: email,
-        username: clerkUser.username || clerkUser.firstName || "User",
+        username: (role === "shopper" && shopperName) ? shopperName : (clerkUser.username || clerkUser.firstName || "User"),
         imageUrl: clerkUser.imageUrl,
         emailVerified: clerkUser.emailAddresses[0]?.verification?.status === "verified",
       },
     });
+  } else if (role === "shopper" && shopperName) {
+    // Update name if they already existed but are just completing onboarding
+    dbUser = await db.user.update({
+      where: { id: dbUser.id },
+      data: { username: shopperName }
+    });
+  }
+
+  // 1.5. If Shopper, create/update their Avatar with measurements
+  if (role === "shopper") {
+    const parsedHeight = shopperHeight ? Number(shopperHeight) : null;
+    const measurementsJson = shopperAge ? { age: Number(shopperAge) } : {};
+
+    let activeAvatarId = dbUser.activeAvatarId;
+
+    if (!activeAvatarId) {
+      const newAvatar = await db.avatar.create({
+        data: {
+          userId: dbUser.id,
+          gender: shopperGender,
+          height: parsedHeight,
+          measurements: measurementsJson,
+        }
+      });
+      activeAvatarId = newAvatar.id;
+      
+      await db.user.update({
+        where: { id: dbUser.id },
+        data: { activeAvatarId }
+      });
+    } else {
+      await db.avatar.update({
+        where: { id: activeAvatarId },
+        data: {
+          gender: shopperGender,
+          height: parsedHeight,
+          measurements: measurementsJson,
+        }
+      });
+    }
   }
 
   let tenantIdToReturn: string | null = null;

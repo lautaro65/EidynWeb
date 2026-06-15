@@ -127,11 +127,19 @@ export function PortalSidebar() {
         {/* Footer */}
         <div className="p-4 border-t border-border/40 bg-muted/40 dark:border-white/5 dark:bg-black/10">
           <Link
+            href="/portal/account"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium text-sm text-muted-foreground hover:bg-white/5 hover:text-foreground group mb-1"
+          >
+            <User className="h-5 w-5 transition-transform duration-300" />
+            Información de cuenta
+          </Link>
+
+          <Link
             href="/portal/settings"
             className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium text-sm text-muted-foreground hover:bg-white/5 hover:text-foreground group mb-1"
           >
             <Settings className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
-            Configuración
+            Ajustes
           </Link>
 
           <button
