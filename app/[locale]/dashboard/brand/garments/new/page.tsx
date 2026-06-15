@@ -27,10 +27,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default async function NewGarmentPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ id?: string }>;
 }) {
   const { locale } = await params;
+  const { id } = await searchParams;
   const t = await getTranslations("GarmentsNew");
   const clerkUser = await currentUser();
 
@@ -47,6 +50,26 @@ export default async function NewGarmentPage({
     redirect(`/${locale}/dashboard`);
   }
 
+  let initialData = null;
+  let isEditMode = false;
+  if (id) {
+    const draft = await db.garmentTemplate.findFirst({
+      where: {
+        id: id,
+        ownerId: membership.tenantId,
+      },
+      include: {
+        sizes: true,
+        variants: true,
+      }
+    });
+
+    if (draft) {
+      initialData = draft;
+      isEditMode = draft.status !== "draft";
+    }
+  }
+
   return (
     <main className="max-w-[1600px] mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
       <header className="flex items-center gap-4">
@@ -59,13 +82,13 @@ export default async function NewGarmentPage({
         </Link>
         <div>
           <h1 className="text-2xl font-serif tracking-tight text-foreground">
-            {t("title")}
+            {isEditMode ? "Editar Prenda" : t("title")}
           </h1>
-          <p className="text-sm text-muted-foreground">{t("description")}</p>
+          <p className="text-sm text-muted-foreground">{isEditMode ? "Modifica las especificaciones de esta prenda." : t("description")}</p>
         </div>
       </header>
 
-      <GarmentEditor />
+      <GarmentEditor initialData={initialData} isEditMode={isEditMode} />
     </main>
   );
 }

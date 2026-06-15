@@ -146,11 +146,25 @@ export default async function BrandGarmentsPage({
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
                 {garments.map((garment) => (
-                  <div key={garment.id} className="p-4 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center justify-center gap-4 text-muted-foreground aspect-square group hover:bg-white/10 transition-all duration-300 cursor-pointer hover:border-primary/50 relative overflow-hidden">
+                  <div key={garment.id} className="p-4 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center justify-center gap-4 text-muted-foreground aspect-square group hover:bg-white/10 transition-all duration-300 relative overflow-hidden">
+                    {garment.status === "draft" && (
+                      <div className="absolute top-3 left-3 bg-yellow-500/10 text-yellow-500 text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded-md border border-yellow-500/20">
+                        Borrador
+                      </div>
+                    )}
                     <Shirt className="w-12 h-12 opacity-50 group-hover:scale-110 group-hover:opacity-100 group-hover:text-primary transition-all duration-300" />
                     <div className="text-center">
                       <span className="block text-sm font-medium text-foreground">{garment.name || "Sin nombre"}</span>
                       <span className="block text-xs mt-1 font-mono bg-black/20 px-2 py-0.5 rounded-md">{garment.sku}</span>
+                    </div>
+
+                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                      <Link 
+                        href={`/dashboard/brand/garments/new?id=${garment.id}`}
+                        className="px-6 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded-xl shadow-lg hover:bg-primary/90 transition-transform hover:scale-105 active:scale-95"
+                      >
+                        {garment.status === "draft" ? "Continuar" : "Editar"}
+                      </Link>
                     </div>
                   </div>
                 ))}

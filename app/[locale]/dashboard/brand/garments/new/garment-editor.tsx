@@ -1,10 +1,12 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Shirt, Check, ChevronRight, ChevronLeft, Upload, Loader2, AlertCircle, Ghost, Columns2, AlignEndVertical, Shield, Hourglass, SportShoe, Plus, Info } from "lucide-react";
-import { createGarmentTemplate, checkSkuAvailability, processImageWithRemoveBg } from "./actions";
+import { saveGarmentAction, checkSkuAvailability, processImageWithRemoveBg } from "./actions";
 import { useDebouncedCallback } from "use-debounce";
 import dynamic from "next/dynamic";
 import {
@@ -107,11 +109,13 @@ export type GarmentVariant = {
   generatedBackTexture: string;
 };
 
-export function GarmentEditor() {
+export function GarmentEditor({ initialData, isEditMode = false }: { initialData?: Record<string, unknown> | null, isEditMode?: boolean }) {
   const t = useTranslations("GarmentsNew");
   const router = useRouter();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
+  const [garmentId, setGarmentId] = useState<string | undefined>(initialData?.id as string | undefined);
+  const [currentStatus, setCurrentStatus] = useState<"draft" | "pending" | "completed">((initialData?.status as any) || "draft");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingFront, setIsUploadingFront] = useState(false);
   const [isUploadingBack, setIsUploadingBack] = useState(false);
@@ -120,12 +124,40 @@ export function GarmentEditor() {
   const [activeComponentTab, setActiveComponentTab] = useState<keyof typeof COMPONENT_OPTIONS>("collarType");
 
   // Size Grading State
-  const [baseSizeName, setBaseSizeName] = useState("M");
-  const [orderedSizes, setOrderedSizes] = useState<string[]>(["M"]);
+  const baseSizeItem = (initialData?.sizes as any[])?.find(s => s.isBase) || (initialData?.sizes as any[])?.[0];
+  const [baseSizeName, setBaseSizeName] = useState(baseSizeItem?.label || "M");
+  
+  const initOrderedSizes = (initialData?.sizes as any[])?.map(s => s.label) || ["M"];
+  const [orderedSizes, setOrderedSizes] = useState<string[]>(initOrderedSizes);
   const [activeSizeTab, setActiveSizeTab] = useState<string | null>(null);
-  const [sizeChart, setSizeChart] = useState<Record<string, Record<string, number>>>({});
+
+  const initSizeChart: Record<string, any> = {};
+  if (initialData?.sizes) {
+    (initialData.sizes as any[]).forEach(s => {
+      initSizeChart[s.label] = {
+        measureChest: s.chest || 50, measureLength: s.length || 50, measureSleeve: s.sleeve || 50, measureShoulder: s.shoulders || 50,
+        measureCollar: s.collar || 50, measureHem: s.hem || 50, measureWaist: s.waist || 50, measureFrontLength: s.frontLength || 50,
+        measureBackLength: s.backLength || 50, measureBicep: s.bicep || 50, measureWrist: s.wrist || 50, measureArmhole: s.armhole || 50
+      };
+    });
+  }
+
+  const [sizeChart, setSizeChart] = useState<Record<string, {
+    measureChest: number;
+    measureLength: number;
+    measureSleeve: number;
+    measureShoulder: number;
+    measureCollar: number;
+    measureHem: number;
+    measureWaist: number;
+    measureFrontLength: number;
+    measureBackLength: number;
+    measureBicep: number;
+    measureWrist: number;
+    measureArmhole: number;
+  }>>(initSizeChart);
   const [newSizeInput, setNewSizeInput] = useState("");
-  const [sizingSystem, setSizingSystem] = useState<"alphanumeric" | "numeric">("alphanumeric");
+  const [sizingSystem, setSizingSystem] = useState<"alphanumeric" | "numeric">(baseSizeItem?.system || "alphanumeric");
   const [draggedSizeTab, setDraggedSizeTab] = useState<string | null>(null);
 
   // Derived arrays for UI and logic separation if needed, but we mostly rely on index logic now.
@@ -138,18 +170,18 @@ export function GarmentEditor() {
 
   // Editor State
   const [measurements, setMeasurements] = useState({
-    measureChest: 50,
-    measureLength: 50,
-    measureSleeve: 50,
-    measureShoulder: 50,
-    measureCollar: 50,
-    measureHem: 50,
-    measureWaist: 50,
-    measureFrontLength: 50,
-    measureBackLength: 50,
-    measureBicep: 50,
-    measureWrist: 50,
-    measureArmhole: 50
+    measureChest: baseSizeItem?.chest || 50,
+    measureLength: baseSizeItem?.length || 50,
+    measureSleeve: baseSizeItem?.sleeve || 50,
+    measureShoulder: baseSizeItem?.shoulders || 50,
+    measureCollar: baseSizeItem?.collar || 50,
+    measureHem: baseSizeItem?.hem || 50,
+    measureWaist: baseSizeItem?.waist || 50,
+    measureFrontLength: baseSizeItem?.frontLength || 50,
+    measureBackLength: baseSizeItem?.backLength || 50,
+    measureBicep: baseSizeItem?.bicep || 50,
+    measureWrist: baseSizeItem?.wrist || 50,
+    measureArmhole: baseSizeItem?.armhole || 50
   });
 
   const handleSizingSystemChange = (system: "alphanumeric" | "numeric") => {
@@ -237,7 +269,7 @@ export function GarmentEditor() {
     
     setOrderedSizes(allSizes);
     
-    const newChart: Record<string, Record<string, number>> = {};
+    const newChart: typeof sizeChart = {};
     const bIdx = allSizes.indexOf(actualBase);
     
     allSizes.forEach((sz, i) => {
@@ -365,17 +397,26 @@ export function GarmentEditor() {
   };
 
   const [components, setComponents] = useState({
-    collarType: "crew",
-    pocketType: "none",
-    sleevesType: "sleeveShort",
-    closureType: "closureNone",
-    hemType: "hemStraight",
-    hoodType: "hoodNone",
-    cuffType: "cuffSimple",
+    collarType: (initialData?.componentsData as any)?.collarType || "crew",
+    pocketType: (initialData?.componentsData as any)?.pocketType || "none",
+    sleevesType: (initialData?.componentsData as any)?.sleevesType || "sleeveShort",
+    closureType: (initialData?.componentsData as any)?.closureType || "closureNone",
+    hemType: (initialData?.componentsData as any)?.hemType || "hemStraight",
+    hoodType: (initialData?.componentsData as any)?.hoodType || "hoodNone",
+    cuffType: (initialData?.componentsData as any)?.cuffType || "cuffSimple",
   });
 
-  const [category, setCategory] = useState<string>("tshirt");
-  const [variants, setVariants] = useState<GarmentVariant[]>([
+  const [category, setCategory] = useState<string>((initialData?.category as string) || "tshirt");
+  
+  const initVariants = (initialData?.variants as any[])?.length ? (initialData?.variants as any[]).map(v => ({
+    id: v.id,
+    name: v.name || "Default",
+    color: v.colorHex || "#ffffff",
+    frontImage: v.frontImageUrl || "",
+    backImage: v.backImageUrl || "",
+    generatedTexture: v.textureUrl || "",
+    generatedBackTexture: v.backTextureUrl || ""
+  })) : [
     {
       id: "var-1",
       name: "Default",
@@ -385,18 +426,20 @@ export function GarmentEditor() {
       generatedTexture: "",
       generatedBackTexture: ""
     }
-  ]);
-  const [activeVariantId, setActiveVariantId] = useState<string>("var-1");
+  ];
+  
+  const [variants, setVariants] = useState<GarmentVariant[]>(initVariants);
+  const [activeVariantId, setActiveVariantId] = useState<string>(initVariants[0].id);
   const activeVariant = variants.find(v => v.id === activeVariantId) || variants[0];
 
   const updateActiveVariant = (updates: Partial<GarmentVariant>) => {
     setVariants(prev => prev.map(v => v.id === activeVariantId ? { ...v, ...updates } : v));
   };
 
-  const [name, setName] = useState<string>("");
-  const [sku, setSku] = useState<string>("");
-  const [gender, setGender] = useState<string>("unisex");
-  const [description, setDescription] = useState<string>("");
+  const [name, setName] = useState<string>((initialData?.name as string) || "");
+  const [sku, setSku] = useState<string>((initialData?.sku as string) || "");
+  const [gender, setGender] = useState<string>((initialData?.gender as string) || "unisex");
+  const [description, setDescription] = useState<string>((initialData?.description as string) || "");
 
   const [skuError, setSkuError] = useState<string | null>(null);
   const [isCheckingSku, setIsCheckingSku] = useState(false);
@@ -455,6 +498,42 @@ export function GarmentEditor() {
     }
   };
 
+  const autoSaveDraft = async () => {
+    if (!name || !sku || skuError) return; // Silent return if required fields are missing
+
+    try {
+      const result = await saveGarmentAction({
+        garmentId,
+        status: currentStatus, // Do not downgrade to draft if it's already pending/completed
+        sku,
+        name,
+        category,
+        gender,
+        description,
+        components,
+        sizing: {
+          baseSizeName,
+          system: sizingSystem,
+          chart: sizeChart,
+        },
+        variants: variants.map(v => ({
+          name: v.name,
+          color: v.color,
+          frontImageUrl: v.frontImage,
+          backImageUrl: v.backImage,
+          generatedTextureUrl: v.generatedTexture,
+          generatedBackTextureUrl: v.generatedBackTexture,
+        }))
+      });
+
+      if (result.success && result.garmentId) {
+        setGarmentId(result.garmentId);
+      }
+    } catch (err) {
+      console.error("Auto-save failed:", err);
+    }
+  };
+
   const handleSave = async () => {
     if (!name || !sku) {
       setError(t("errorRequired"));
@@ -468,19 +547,32 @@ export function GarmentEditor() {
     setIsSubmitting(true);
     setError(null);
     try {
-      await createGarmentTemplate({
+      const finalStatus = currentStatus === "draft" ? "pending" : currentStatus;
+      const result = await saveGarmentAction({
+        garmentId,
+        status: finalStatus,
         sku,
         name,
         category,
         gender,
         description,
-        baseColor: activeVariant.color,
-        // We will need to update server action to accept an array of variants
-        // For now we just pass the active variant so it compiles
-        frontImage: activeVariant.generatedTexture || activeVariant.frontImage,
-        backImage: activeVariant.generatedBackTexture || activeVariant.backImage,
+        components,
+        sizing: {
+          baseSizeName,
+          system: sizingSystem,
+          chart: sizeChart,
+        },
+        variants: variants.map(v => ({
+          name: v.name,
+          color: v.color,
+          frontImageUrl: v.frontImage,
+          backImageUrl: v.backImage,
+          generatedTextureUrl: v.generatedTexture,
+          generatedBackTextureUrl: v.generatedBackTexture,
+        }))
       });
-      if (true) {
+
+      if (result.success) {
         router.push("/dashboard/brand/garments");
       } else {
         setError(t("errorSave"));
@@ -1113,7 +1205,12 @@ export function GarmentEditor() {
 
           {step < 6 ? (
             <button
-              onClick={() => setStep((s) => s + 1 as 1 | 2 | 3 | 4 | 5 | 6)}
+              onClick={() => {
+                if (step >= 2) {
+                  autoSaveDraft();
+                }
+                setStep((s) => s + 1 as 1 | 2 | 3 | 4 | 5 | 6);
+              }}
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium bg-white/10 text-foreground hover:bg-white/20 transition-all"
             >
               {t("next")}
@@ -1126,7 +1223,7 @@ export function GarmentEditor() {
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
             >
               {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-              {isSubmitting ? t("saving") : t("saveGarment")}
+              {isSubmitting ? t("saving") : (isEditMode ? "Actualizar Prenda" : t("saveGarment"))}
             </button>
           )}
         </div>

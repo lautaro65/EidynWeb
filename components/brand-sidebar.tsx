@@ -66,6 +66,7 @@ export function BrandSidebar() {
         { icon: BarChart3, label: t("analytics"), href: "/dashboard/brand/analytics" },
       ],
     },
+
     {
       key: "account",
       label: t("sectionAccount"),
@@ -87,8 +88,42 @@ export function BrandSidebar() {
           <div className="flex items-center gap-3">
             <div>
               <BrandLogo className="w-[120px]" />
-              <p className="text-xs text-muted-foreground font-medium">{t("proWorkspace")}</p>
+              <p className="text-xs text-muted-foreground font-medium">{t("proWorkspace") || "Estudio de Marca"}</p>
             </div>
+          </div>
+          
+          <div className="mt-6">
+            {pathname.includes("/dashboard/shop") ? (
+              <Link 
+                href="/dashboard/brand" 
+                className="flex items-center justify-between w-full p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 hover:border-amber-500/40 hover:from-amber-500/20 hover:to-orange-500/20 transition-all duration-300 group shadow-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                    <Shirt className="w-4 h-4 text-amber-500 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs font-semibold text-foreground leading-none mb-1">Mi Estudio 3D</p>
+                    <p className="text-[10px] text-muted-foreground leading-none">Creador de Prendas</p>
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <Link 
+                href="/dashboard/shop" 
+                className="flex items-center justify-between w-full p-3 rounded-xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 hover:border-blue-500/40 hover:from-blue-500/20 hover:to-purple-500/20 transition-all duration-300 group shadow-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                    <LayoutDashboard className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs font-semibold text-foreground leading-none mb-1">Mi Tienda</p>
+                    <p className="text-[10px] text-muted-foreground leading-none">Gestión E-Commerce</p>
+                  </div>
+                </div>
+              </Link>
+            )}
           </div>
         </div>
 

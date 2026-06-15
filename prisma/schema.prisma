@@ -238,6 +238,11 @@ model GarmentTemplate {
   sourceImageUrl     String? @map("source_image_url")
   sourceImageBackUrl String? @map("source_image_back_url")
 
+  // Componentes 3D y Mapas Técnicos
+  componentsData Json? @map("components_data")
+  uvMapUrl       String? @map("uv_map_url")
+  normalMapUrl   String? @map("normal_map_url")
+
   likesCount Int @default(0) @map("likes_count")
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -264,7 +269,11 @@ model GarmentVariant {
   type      String? @default("color") // "color" | "design"
   colorHex  String? @map("color_hex") // "#1A1A1A"
 
-  // Textura en R2
+  // Imágenes subidas por el usuario
+  frontImageUrl   String? @map("front_image_url")
+  backImageUrl    String? @map("back_image_url")
+
+  // Textura en R2 (Procesadas)
   textureUrl      String? @map("texture_url") // El PNG del diseño/color (Frente)
   backTextureUrl  String? @map("back_texture_url") // El PNG del diseño/color (Espalda)
   previewImageUrl String? @map("preview_image_url")
@@ -288,14 +297,23 @@ model GarmentSize {
   label     String // "S", "M", "L", "XL"
   system    String? // "numeric", "EU", "alpha"
 
-  // Medidas reales
-  chest     Float?
-  shoulders Float?
-  length    Float?
-  waist     Float?
-  hips      Float?
-  inseam    Float?
-  sleeve    Float?
+  isBase    Boolean @default(false) @map("is_base")
+
+  // Medidas reales (cm)
+  chest       Float?
+  shoulders   Float?
+  length      Float?
+  waist       Float?
+  hips        Float?
+  inseam      Float?
+  sleeve      Float?
+  collar      Float?
+  hem         Float?
+  frontLength Float? @map("front_length")
+  backLength  Float? @map("back_length")
+  bicep       Float?
+  wrist       Float?
+  armhole     Float?
 
   // Factores calculados para Three.js (referencia = 1.0)
   scaleX Float? @map("scale_x")
