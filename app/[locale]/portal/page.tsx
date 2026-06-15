@@ -1,7 +1,10 @@
-import { User, Ruler, Store, ArrowRight } from "lucide-react";
+import { User, Ruler, Store, ArrowRight, Wand2 } from "lucide-react";
 import { Link } from "@/i18n/routing";
+import { getOrCreateActiveAvatar } from "./actions";
+import { AvatarViewer } from "@/components/3d/AvatarViewer";
 
-export default function PortalPage() {
+export default async function PortalPage() {
+  const activeAvatar = await getOrCreateActiveAvatar();
 
   return (
     <div className="max-w-5xl space-y-12">
@@ -76,19 +79,41 @@ export default function PortalPage() {
 
       </div>
 
-      {/* Hero Visual Placeholder */}
-      <div className="mt-12 w-full h-[400px] rounded-[2rem] border border-white/10 overflow-hidden relative group">
-        <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/20 via-transparent to-purple-500/20 opacity-50 transition-opacity duration-700 group-hover:opacity-100" />
-        <div className="absolute inset-0 backdrop-blur-3xl" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 z-10">
-          <div className="w-20 h-20 mb-6 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-            <User className="w-10 h-10 text-white/50" />
-          </div>
-          <h2 className="text-2xl font-bold mb-2">Tu Avatar 3D aparecerá aquí</h2>
-          <p className="text-muted-foreground max-w-md">
-            Pronto podrás visualizar tu clon digital en 360 grados y ajustar sus características directamente desde este panel.
-          </p>
-        </div>
+      {/* Hero Visual: 3D Viewer or CTA */}
+      <div className="mt-12 w-full h-[500px] rounded-[2rem] border border-white/10 overflow-hidden relative group bg-background/50 backdrop-blur-sm">
+        {activeAvatar?.modelUrl ? (
+          <AvatarViewer modelUrl={activeAvatar.modelUrl} />
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/20 via-transparent to-purple-500/20 opacity-50" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 z-10">
+              <div className="w-24 h-24 mb-6 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl backdrop-blur-md">
+                <User className="w-12 h-12 text-blue-400" />
+              </div>
+              <h2 className="text-3xl font-bold mb-3 tracking-tight">Crea tu Identidad 3D</h2>
+              <p className="text-muted-foreground max-w-md mb-8 text-lg">
+                Genera tu clon digital ingresando tus medidas o subiendo fotos para un escaneo corporal.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link 
+                  href="/portal/measurements"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-500 text-white font-medium rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all duration-300"
+                >
+                  <Ruler className="w-5 h-5" />
+                  Ingresar Medidas
+                </Link>
+                <button 
+                  disabled
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/5 text-muted-foreground font-medium rounded-xl border border-white/10 cursor-not-allowed"
+                >
+                  <Wand2 className="w-5 h-5" />
+                  Generar con IA (Próximamente)
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
     </div>

@@ -1,7 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
-import { BrandSidebar } from "@/components/brand-sidebar";
+import { SidebarSwitcher } from "@/components/sidebar-switcher";
 import { ThemeSyncer } from "@/components/account/theme-syncer";
 import { db } from "@/lib/db";
 import { getLocale } from "next-intl/server";
@@ -46,7 +45,7 @@ export default async function DashboardLayout({
     <>
       <ThemeSyncer dbTheme={membership.user.preferredTheme || "system"} />
       <div className="flex min-h-screen pt-24 bg-background px-4 md:px-8 max-w-[1600px] mx-auto gap-8">
-        {membership.tenant.type === "brand" ? <BrandSidebar /> : <DashboardSidebar />}
+        <SidebarSwitcher tenantType={membership.tenant.type} />
       <div className="flex-1 pb-12">
         <main id="main-content" className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
           {children}
