@@ -1,10 +1,24 @@
-import { User, Ruler, Store, ArrowRight, Wand2 } from "lucide-react";
+import { User, Store, ArrowRight, Wand2 } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { getOrCreateActiveAvatar } from "./actions";
 import { AvatarViewer } from "@/components/3d/AvatarViewer";
 
+import { currentUser } from "@clerk/nextjs/server";
+import { db } from "@/lib/db";
+import { AvatarProfileCard } from "./avatar-profile-card";
+
 export default async function PortalPage() {
+  const clerkUser = await currentUser();
   const activeAvatar = await getOrCreateActiveAvatar();
+
+  const user = clerkUser ? await db.user.findUnique({ where: { clerkId: clerkUser.id } }) : null;
+
+  const initialProfileData = {
+    name: user?.username || "",
+    gender: activeAvatar?.gender || "unisex",
+    height: activeAvatar?.height ? Number(activeAvatar.height) : 0,
+    age: ((activeAvatar?.measurements as Record<string, unknown>)?.age as number) || 0,
+  };
 
   return (
     <div className="max-w-5xl space-y-12">
@@ -43,22 +57,7 @@ export default async function PortalPage() {
           </div>
         </Link>
 
-        {/* Card: Medidas */}
-        <Link href="/portal/measurements" className="group">
-          <div className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 h-full transition-all duration-300 hover:border-purple-500/50 hover:bg-white/5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-[40px] -mr-10 -mt-10 transition-all group-hover:bg-purple-500/20" />
-            <div className="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center mb-6 border border-purple-500/20">
-              <Ruler className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-bold mb-2 flex items-center justify-between">
-              Mis Medidas
-              <ArrowRight className="w-5 h-5 opacity-0 -translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 text-purple-500" />
-            </h3>
-            <p className="text-muted-foreground text-sm">
-              Revisa tu perfil de tallas, altura, peso y dimensiones exactas para recomendaciones precisas.
-            </p>
-          </div>
-        </Link>
+
 
         {/* Card: Tiendas */}
         <Link href="/portal/shops" className="group">
@@ -77,6 +76,10 @@ export default async function PortalPage() {
           </div>
         </Link>
 
+        {/* Card: Perfil Físico */}
+        <div className="md:col-span-2 lg:col-span-1">
+          <AvatarProfileCard initialData={initialProfileData} />
+        </div>
       </div>
 
       {/* Hero Visual: 3D Viewer or CTA */}
@@ -92,17 +95,11 @@ export default async function PortalPage() {
               </div>
               <h2 className="text-3xl font-bold mb-3 tracking-tight">Crea tu Identidad 3D</h2>
               <p className="text-muted-foreground max-w-md mb-8 text-lg">
-                Genera tu clon digital ingresando tus medidas o subiendo fotos para un escaneo corporal.
+                Genera tu clon digital subiendo fotos para un escaneo corporal inteligente.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link 
-                  href="/portal/measurements"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-500 text-white font-medium rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all duration-300"
-                >
-                  <Ruler className="w-5 h-5" />
-                  Ingresar Medidas
-                </Link>
+
                 <button 
                   disabled
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/5 text-muted-foreground font-medium rounded-xl border border-white/10 cursor-not-allowed"

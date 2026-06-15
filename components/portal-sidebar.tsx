@@ -4,7 +4,6 @@ import { usePathname } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { 
   User, 
-  Ruler, 
   Store, 
   Settings, 
   LogOut,
@@ -37,7 +36,6 @@ export function PortalSidebar() {
       label: "Mi Identidad 3D",
       items: [
         { icon: User, label: "Mi Avatar", href: "/portal" },
-        { icon: Ruler, label: "Mis Medidas", href: "/portal/measurements" },
       ],
     },
     {

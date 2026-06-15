@@ -111,3 +111,38 @@ export async function toggleShopConsent(consentId: string, granted: boolean) {
   revalidatePath("/[locale]/portal/shops", "page");
   return { success: true };
 }
+
+export async function updatePhysicalProfile(data: {
+  name: string;
+  gender: string;
+  height: number;
+  age: number;
+}) {
+  const clerkUser = await currentUser();
+  if (!clerkUser) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: { clerkId: clerkUser.id }
+  });
+
+  if (!user || !user.activeAvatarId) throw new Error("User or avatar not found");
+
+  // Actualizar usuario
+  await db.user.update({
+    where: { id: user.id },
+    data: { username: data.name }
+  });
+
+  // Actualizar avatar
+  await db.avatar.update({
+    where: { id: user.activeAvatarId },
+    data: {
+      gender: data.gender,
+      height: data.height,
+      measurements: { age: data.age }
+    }
+  });
+
+  revalidatePath("/[locale]/portal", "layout");
+  return { success: true };
+}
