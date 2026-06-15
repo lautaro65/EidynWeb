@@ -2,10 +2,11 @@
 
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, UploadCloud, CheckCircle2, User, Ruler, Weight, Camera, Info, Loader2, Wand2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, UploadCloud, CheckCircle2, User, Ruler, Weight, Camera, Info, Loader2, Minus, Plus, Box } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import { startAvatarGeneration } from "../../actions"; // We need to create this action
+import { startAvatarGeneration } from "../../actions";
+import { useTranslations } from "next-intl";
 
 interface AvatarWizardProps {
   initialData: {
@@ -17,14 +18,16 @@ interface AvatarWizardProps {
 
 export function AvatarWizard({ initialData }: AvatarWizardProps) {
   const router = useRouter();
+  const t = useTranslations("AvatarWizard");
   const [step, setStep] = useState<1 | 2>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
 
   // Step 1 State
   const [physicalData, setPhysicalData] = useState({
-    gender: initialData.gender,
-    height: initialData.height.toString(),
-    weight: initialData.weight.toString(),
+    gender: initialData.gender || "unisex",
+    height: initialData.height || 170,
+    weight: initialData.weight || 70,
   });
 
   // Step 2 State
@@ -41,7 +44,7 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
     
     // Check size limit (10MB)
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("La imagen debe pesar menos de 10MB");
+      toast.error(t("toastSizeLimit"));
       return;
     }
 
@@ -58,15 +61,16 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
 
   const handleNext = () => {
     if (!physicalData.height || !physicalData.weight) {
-      toast.error("Por favor ingresa tu altura y peso");
+      toast.error(t("toastMissingData"));
       return;
     }
     setStep(2);
+    setShowInstructions(true);
   };
 
   const handleSubmit = async () => {
     if (!frontImage || !sideImage) {
-      toast.error("Por favor sube ambas fotografías");
+      toast.error(t("toastMissingPhotos"));
       return;
     }
 
@@ -74,46 +78,54 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
     try {
       const formData = new FormData();
       formData.append("gender", physicalData.gender);
-      formData.append("height", physicalData.height);
-      formData.append("weight", physicalData.weight);
+      formData.append("height", physicalData.height.toString());
+      formData.append("weight", physicalData.weight.toString());
       formData.append("frontImage", frontImage);
       formData.append("sideImage", sideImage);
 
       const res = await startAvatarGeneration(formData);
       
       if (res.success) {
-        toast.success("¡Fotografías enviadas!");
+        toast.success(t("toastSuccess"));
         router.push("/portal");
         router.refresh();
       }
     } catch (error) {
       console.error(error);
-      toast.error("Hubo un error al iniciar la generación.");
+      toast.error(t("toastError"));
       setIsSubmitting(false);
     }
+  };
+
+  // UI Helpers
+  const adjustValue = (field: 'height' | 'weight', amount: number) => {
+    setPhysicalData(prev => ({
+      ...prev,
+      [field]: Math.max(0, prev[field] + amount)
+    }));
   };
 
   return (
     <div className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-[2rem] p-8 md:p-12 shadow-2xl relative overflow-hidden">
       {/* Background Glow */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px] pointer-events-none -mt-40 -mr-40" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] pointer-events-none -mt-40 -mr-40" />
 
       {/* Header */}
       <div className="mb-10 relative z-10 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-serif tracking-tight text-foreground mb-2 flex items-center gap-3">
-            <Camera className="w-8 h-8 text-blue-500" />
-            Asistente de Creación 3D
+            <Camera className="w-8 h-8 text-primary" />
+            {t("title")}
           </h1>
           <p className="text-muted-foreground">
-            {step === 1 ? "Paso 1: Confirma tus medidas base." : "Paso 2: Sube tus fotografías."}
+            {step === 1 ? t("step1Subtitle") : t("step2Subtitle")}
           </p>
         </div>
         
         {/* Progress indicator */}
         <div className="flex gap-2">
-          <div className={`h-2 rounded-full transition-all duration-500 ${step >= 1 ? "w-12 bg-blue-500" : "w-4 bg-white/10"}`} />
-          <div className={`h-2 rounded-full transition-all duration-500 ${step >= 2 ? "w-12 bg-blue-500" : "w-4 bg-white/10"}`} />
+          <div className={`h-2 rounded-full transition-all duration-500 ${step >= 1 ? "w-12 bg-primary" : "w-4 bg-primary/20"}`} />
+          <div className={`h-2 rounded-full transition-all duration-500 ${step >= 2 ? "w-12 bg-primary" : "w-4 bg-primary/20"}`} />
         </div>
       </div>
 
@@ -125,64 +137,108 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.3 }}
-            className="space-y-8 relative z-10"
+            className="space-y-10 relative z-10"
           >
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-6 flex gap-4">
-              <Info className="w-6 h-6 text-blue-500 shrink-0" />
-              <p className="text-sm text-blue-200">
-                La Inteligencia Artificial necesita conocer tu complexión básica antes de analizar las fotografías para evitar distorsiones en el modelo 3D resultante.
+            <div className="bg-primary/10 border border-primary/20 rounded-2xl p-6 flex gap-4">
+              <Info className="w-6 h-6 text-primary shrink-0" />
+              <p className="text-sm text-foreground/80 font-medium">
+                {t("infoBox")}
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                  <User className="w-4 h-4" /> Género Biológico
-                </label>
-                <select
-                  value={physicalData.gender}
-                  onChange={(e) => setPhysicalData({ ...physicalData, gender: e.target.value })}
-                  className="w-full h-14 px-4 rounded-xl border border-white/10 bg-white/5 text-foreground outline-none focus:border-blue-500 transition-colors"
-                >
-                  <option value="unisex">Prefiero no decirlo</option>
-                  <option value="female">Femenino</option>
-                  <option value="male">Masculino</option>
-                </select>
-              </div>
-
-              <div className="space-y-3">
-                <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                  <Ruler className="w-4 h-4" /> Altura (cm)
-                </label>
-                <input
-                  type="number"
-                  value={physicalData.height}
-                  onChange={(e) => setPhysicalData({ ...physicalData, height: e.target.value })}
-                  placeholder="Ej: 175"
-                  className="w-full h-14 px-4 rounded-xl border border-white/10 bg-white/5 text-foreground outline-none focus:border-blue-500 transition-colors"
-                />
-              </div>
-
-              <div className="space-y-3">
-                <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                  <Weight className="w-4 h-4" /> Peso Estimado (kg)
-                </label>
-                <input
-                  type="number"
-                  value={physicalData.weight}
-                  onChange={(e) => setPhysicalData({ ...physicalData, weight: e.target.value })}
-                  placeholder="Ej: 70"
-                  className="w-full h-14 px-4 rounded-xl border border-white/10 bg-white/5 text-foreground outline-none focus:border-blue-500 transition-colors"
-                />
+            {/* Género (Cards) */}
+            <div className="space-y-4">
+              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <User className="w-4 h-4" /> {t("genderLabel")}
+              </label>
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { id: "female", label: t("genderFemale") },
+                  { id: "male", label: t("genderMale") },
+                  { id: "unisex", label: t("genderUnisex") }
+                ].map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => setPhysicalData({ ...physicalData, gender: option.id })}
+                    className={`
+                      relative flex flex-col items-center justify-center gap-2 p-6 rounded-[1.5rem] border-[1.5px] transition-all duration-300
+                      ${physicalData.gender === option.id 
+                        ? 'border-primary bg-primary/5 shadow-md shadow-primary/10' 
+                        : 'border-border/60 bg-card hover:border-primary/40'
+                      }
+                    `}
+                  >
+                    {physicalData.gender === option.id && (
+                      <span className="absolute top-3 right-3 text-primary">
+                        <CheckCircle2 className="w-5 h-5" />
+                      </span>
+                    )}
+                    <span className={`font-medium text-center ${physicalData.gender === option.id ? 'text-primary' : 'text-foreground'}`}>
+                      {option.label}
+                    </span>
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="flex justify-end pt-6">
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Altura Stepper */}
+              <div className="space-y-4">
+                <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                  <Ruler className="w-4 h-4" /> {t("heightLabel")}
+                </label>
+                <div className="flex items-center justify-between p-4 bg-card border-[1.5px] border-border/60 rounded-[1.5rem]">
+                  <button 
+                    onClick={() => adjustValue('height', -1)}
+                    className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors"
+                  >
+                    <Minus className="w-5 h-5" />
+                  </button>
+                  <div className="flex flex-col items-center justify-center">
+                    <span className="text-4xl font-serif font-light text-foreground">{physicalData.height}</span>
+                    <span className="text-xs text-muted-foreground font-medium uppercase tracking-widest">{t("heightUnit")}</span>
+                  </div>
+                  <button 
+                    onClick={() => adjustValue('height', 1)}
+                    className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Peso Stepper */}
+              <div className="space-y-4">
+                <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                  <Weight className="w-4 h-4" /> {t("weightLabel")}
+                </label>
+                <div className="flex items-center justify-between p-4 bg-card border-[1.5px] border-border/60 rounded-[1.5rem]">
+                  <button 
+                    onClick={() => adjustValue('weight', -1)}
+                    className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors"
+                  >
+                    <Minus className="w-5 h-5" />
+                  </button>
+                  <div className="flex flex-col items-center justify-center">
+                    <span className="text-4xl font-serif font-light text-foreground">{physicalData.weight}</span>
+                    <span className="text-xs text-muted-foreground font-medium uppercase tracking-widest">{t("weightUnit")}</span>
+                  </div>
+                  <button 
+                    onClick={() => adjustValue('weight', 1)}
+                    className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-6 border-t border-white/10">
               <button
                 onClick={handleNext}
-                className="inline-flex items-center gap-2 px-8 py-4 bg-blue-500 text-white font-medium rounded-xl hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-primary/20"
               >
-                Siguiente
+                {t("btnNext")}
                 <ArrowRight className="w-5 h-5" />
               </button>
             </div>
@@ -198,21 +254,88 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
             transition={{ duration: 0.3 }}
             className="space-y-8 relative z-10"
           >
+            {/* Instructions Modal Overlay */}
+            <AnimatePresence>
+              {showInstructions && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="absolute inset-0 z-50 bg-background/95 backdrop-blur-3xl rounded-[2rem] border border-white/10 p-6 md:p-8 flex flex-col shadow-2xl overflow-hidden"
+                >
+                  <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                    <h2 className="text-2xl font-serif font-bold text-foreground mb-4">{t("instructionsTitle")}</h2>
+                    <p className="text-muted-foreground mb-6">
+                      {t("instructionsDesc")}
+                    </p>
+
+                    <div className="space-y-8">
+                      {/* Front Photo */}
+                      <div>
+                        <h3 className="text-lg font-semibold text-primary mb-3">{t("frontPhotoInstTitle")}</h3>
+                        <ul className="list-disc pl-5 space-y-2 text-sm text-foreground/80 mb-4">
+                          <li>{t("frontPhotoInst1")}</li>
+                          <li>{t("frontPhotoInst2")}</li>
+                          <li>{t("frontPhotoInst3")}</li>
+                        </ul>
+                      </div>
+
+                      {/* Side Photo */}
+                      <div>
+                        <h3 className="text-lg font-semibold text-primary mb-3">{t("sidePhotoInstTitle")}</h3>
+                        <ul className="list-disc pl-5 space-y-2 text-sm text-foreground/80 mb-4">
+                          <li>{t("sidePhotoInst1")}</li>
+                          <li>{t("sidePhotoInst2")}</li>
+                          <li>{t("sidePhotoInst3")}</li>
+                        </ul>
+                      </div>
+
+                      {/* Examples */}
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">{t("examplesTitle")}</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="/model3dpose/front.jpg" alt="Ejemplo Frontal" className="w-full rounded-xl border border-white/10 object-cover aspect-[1/2]" />
+                            <p className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("exampleFront")}</p>
+                          </div>
+                          <div className="space-y-2">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="/model3dpose/right.jpg" alt="Ejemplo Perfil" className="w-full rounded-xl border border-white/10 object-cover aspect-[1/2]" />
+                            <p className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("exampleSide")}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-6 mt-4 border-t border-white/10 flex justify-end">
+                    <button 
+                      onClick={() => setShowInstructions(false)}
+                      className="px-8 py-3 bg-primary text-primary-foreground font-medium rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-primary/20"
+                    >
+                      {t("btnUnderstood")}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="grid md:grid-cols-2 gap-8">
               
               {/* Front Image */}
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center text-xs">1</span>
-                  Fotografía Frontal
+                  <span className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs">1</span>
+                  {t("frontPhotoTitle")}
                 </h3>
-                <p className="text-sm text-muted-foreground h-10">Párate derecho mirando a la cámara, con los brazos ligeramente separados.</p>
+                <p className="text-sm text-muted-foreground h-10">{t("frontPhotoDesc")}</p>
                 
                 <div 
                   onClick={() => frontInputRef.current?.click()}
                   className={`
-                    w-full aspect-[3/4] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center p-6 cursor-pointer transition-all overflow-hidden relative
-                    ${frontPreview ? 'border-blue-500/50 bg-blue-500/5' : 'border-white/20 bg-white/5 hover:border-blue-500/50 hover:bg-white/10'}
+                    w-full aspect-[3/4] rounded-3xl border-2 border-dashed flex flex-col items-center justify-center p-6 cursor-pointer transition-all overflow-hidden relative
+                    ${frontPreview ? 'border-primary/50 bg-primary/5' : 'border-border/60 bg-card hover:border-primary/40 hover:bg-white/5'}
                   `}
                 >
                   <input 
@@ -228,15 +351,17 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={frontPreview} alt="Frontal" className="absolute inset-0 w-full h-full object-cover opacity-90" />
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                        <p className="text-white font-medium flex items-center gap-2"><UploadCloud className="w-5 h-5" /> Cambiar foto</p>
+                        <p className="text-white font-medium flex items-center gap-2"><UploadCloud className="w-5 h-5" /> {t("changePhoto")}</p>
                       </div>
-                      <CheckCircle2 className="absolute top-4 right-4 text-emerald-400 w-8 h-8 drop-shadow-md" />
+                      <CheckCircle2 className="absolute top-4 right-4 text-emerald-500 bg-white rounded-full w-8 h-8 drop-shadow-md" />
                     </>
                   ) : (
                     <>
-                      <UploadCloud className="w-12 h-12 text-muted-foreground mb-4" />
-                      <p className="text-center font-medium">Subir foto frontal</p>
-                      <p className="text-center text-xs text-muted-foreground mt-2">JPG o PNG (Max 10MB)</p>
+                      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                        <UploadCloud className="w-8 h-8 text-primary" />
+                      </div>
+                      <p className="text-center font-medium">{t("uploadFrontPhoto")}</p>
+                      <p className="text-center text-xs text-muted-foreground mt-2">{t("fileReqs")}</p>
                     </>
                   )}
                 </div>
@@ -245,16 +370,16 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
               {/* Side Image */}
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center text-xs">2</span>
-                  Fotografía de Perfil
+                  <span className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs">2</span>
+                  {t("sidePhotoTitle")}
                 </h3>
-                <p className="text-sm text-muted-foreground h-10">Párate de costado hacia la cámara, manteniendo la misma postura recta.</p>
+                <p className="text-sm text-muted-foreground h-10">{t("sidePhotoDesc")}</p>
                 
                 <div 
                   onClick={() => sideInputRef.current?.click()}
                   className={`
-                    w-full aspect-[3/4] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center p-6 cursor-pointer transition-all overflow-hidden relative
-                    ${sidePreview ? 'border-blue-500/50 bg-blue-500/5' : 'border-white/20 bg-white/5 hover:border-blue-500/50 hover:bg-white/10'}
+                    w-full aspect-[3/4] rounded-3xl border-2 border-dashed flex flex-col items-center justify-center p-6 cursor-pointer transition-all overflow-hidden relative
+                    ${sidePreview ? 'border-primary/50 bg-primary/5' : 'border-border/60 bg-card hover:border-primary/40 hover:bg-white/5'}
                   `}
                 >
                   <input 
@@ -270,15 +395,17 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={sidePreview} alt="Perfil" className="absolute inset-0 w-full h-full object-cover opacity-90" />
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                        <p className="text-white font-medium flex items-center gap-2"><UploadCloud className="w-5 h-5" /> Cambiar foto</p>
+                        <p className="text-white font-medium flex items-center gap-2"><UploadCloud className="w-5 h-5" /> {t("changePhoto")}</p>
                       </div>
-                      <CheckCircle2 className="absolute top-4 right-4 text-emerald-400 w-8 h-8 drop-shadow-md" />
+                      <CheckCircle2 className="absolute top-4 right-4 text-emerald-500 bg-white rounded-full w-8 h-8 drop-shadow-md" />
                     </>
                   ) : (
                     <>
-                      <UploadCloud className="w-12 h-12 text-muted-foreground mb-4" />
-                      <p className="text-center font-medium">Subir foto de perfil</p>
-                      <p className="text-center text-xs text-muted-foreground mt-2">JPG o PNG (Max 10MB)</p>
+                       <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                        <UploadCloud className="w-8 h-8 text-primary" />
+                      </div>
+                      <p className="text-center font-medium">{t("uploadSidePhoto")}</p>
+                      <p className="text-center text-xs text-muted-foreground mt-2">{t("fileReqs")}</p>
                     </>
                   )}
                 </div>
@@ -290,18 +417,18 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
               <button
                 onClick={() => setStep(1)}
                 disabled={isSubmitting}
-                className="inline-flex items-center gap-2 px-6 py-4 bg-white/5 text-foreground font-medium rounded-xl hover:bg-white/10 transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-6 py-4 bg-secondary text-secondary-foreground font-medium rounded-xl hover:bg-secondary/80 transition-colors disabled:opacity-50"
               >
                 <ArrowLeft className="w-5 h-5" />
-                Atrás
+                {t("btnBack")}
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting || !frontImage || !sideImage}
-                className="inline-flex items-center gap-2 px-8 py-4 bg-blue-500 text-white font-medium rounded-xl hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-xl hover:opacity-90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Wand2 className="w-5 h-5" />}
-                Generar Avatar
+                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Box className="w-5 h-5" />}
+                {t("btnSubmit")}
               </button>
             </div>
           </motion.div>

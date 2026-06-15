@@ -25,7 +25,7 @@ export default async function PortalPage() {
       
       {/* Header */}
       <div>
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 text-sm font-semibold mb-4 border border-blue-500/20">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-4 border border-primary/20">
           <User className="w-4 h-4" />
           Panel de Usuario
         </div>
@@ -42,14 +42,14 @@ export default async function PortalPage() {
         
         {/* Card: Avatar */}
         <Link href="/portal" className="group">
-          <div className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 h-full transition-all duration-300 hover:border-blue-500/50 hover:bg-white/5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-[40px] -mr-10 -mt-10 transition-all group-hover:bg-blue-500/20" />
-            <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center mb-6 border border-blue-500/20">
+          <div className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 h-full transition-all duration-300 hover:border-primary/50 hover:bg-white/5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-[40px] -mr-10 -mt-10 transition-all group-hover:bg-primary/20" />
+            <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-6 border border-primary/20">
               <User className="w-6 h-6" />
             </div>
             <h3 className="text-xl font-bold mb-2 flex items-center justify-between">
               Mi Avatar 3D
-              <ArrowRight className="w-5 h-5 opacity-0 -translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 text-blue-500" />
+              <ArrowRight className="w-5 h-5 opacity-0 -translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 text-primary" />
             </h3>
             <p className="text-muted-foreground text-sm">
               Visualiza y actualiza tu modelo 3D corporal generado a partir de tus fotos o medidas.
@@ -85,27 +85,27 @@ export default async function PortalPage() {
       {/* Hero Visual: 3D Viewer or CTA */}
       <div className="mt-12 w-full h-[500px] rounded-[2rem] border border-white/10 overflow-hidden relative group bg-background/50 backdrop-blur-sm">
         {activeAvatar?.status === "processing" ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 z-10 bg-gradient-to-tr from-blue-500/10 via-transparent to-purple-500/10">
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 z-10 bg-gradient-to-tr from-primary/10 via-transparent to-purple-500/10">
             <div className="relative w-32 h-32 mb-8">
-              <div className="absolute inset-0 border-4 border-blue-500/20 rounded-full animate-ping" />
-              <div className="absolute inset-2 border-4 border-t-blue-500 border-r-transparent border-b-purple-500 border-l-transparent rounded-full animate-spin" />
+              <div className="absolute inset-0 border-4 border-primary/20 rounded-full animate-ping" />
+              <div className="absolute inset-2 border-4 border-t-primary border-r-transparent border-b-purple-500 border-l-transparent rounded-full animate-spin" />
               <div className="absolute inset-0 flex items-center justify-center">
-                <Wand2 className="w-10 h-10 text-blue-400 animate-pulse" />
+                <Wand2 className="w-10 h-10 text-primary animate-pulse" />
               </div>
             </div>
             <h2 className="text-3xl font-bold mb-3 tracking-tight animate-pulse">Generando tu Avatar 3D...</h2>
             <p className="text-muted-foreground max-w-md text-lg">
-              Nuestra Inteligencia Artificial está analizando tus fotografías y creando tu clon digital. Este proceso puede demorar unos minutos. Te notificaremos cuando esté listo.
+              Nuestro sistema está analizando tus fotografías y generando tu clon digital. Este proceso puede demorar unos minutos. Te notificaremos cuando esté listo.
             </p>
           </div>
         ) : activeAvatar?.modelUrl ? (
           <AvatarViewer modelUrl={activeAvatar.modelUrl} />
         ) : (
           <>
-            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/20 via-transparent to-purple-500/20 opacity-50" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 via-transparent to-purple-500/20 opacity-50" />
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 z-10">
               <div className="w-24 h-24 mb-6 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl backdrop-blur-md">
-                <User className="w-12 h-12 text-blue-400" />
+                <User className="w-12 h-12 text-primary" />
               </div>
               <h2 className="text-3xl font-bold mb-3 tracking-tight">Crea tu Identidad 3D</h2>
               <p className="text-muted-foreground max-w-md mb-8 text-lg">
@@ -116,10 +116,10 @@ export default async function PortalPage() {
 
                 <Link 
                   href="/portal/avatar/new"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-500 text-white font-medium rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all duration-300"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-300"
                 >
                   <Wand2 className="w-5 h-5" />
-                  Generar con IA
+                  Procesar Fotografías
                 </Link>
               </div>
             </div>
