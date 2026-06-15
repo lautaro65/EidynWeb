@@ -3,6 +3,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { uploadToR2 } from "@/lib/r2";
 
 /**
  * Ensures a User record exists and has an active avatar.
@@ -146,3 +147,47 @@ export async function updatePhysicalProfile(data: {
   revalidatePath("/[locale]/portal", "layout");
   return { success: true };
 }
+
+export async function startAvatarGeneration(formData: FormData) {
+  const clerkUser = await currentUser();
+  if (!clerkUser) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: { clerkId: clerkUser.id }
+  });
+
+  if (!user || !user.activeAvatarId) throw new Error("User or avatar not found");
+
+  const gender = formData.get("gender") as string;
+  const height = formData.get("height") as string;
+  const weight = formData.get("weight") as string;
+  const frontImage = formData.get("frontImage") as File;
+  const sideImage = formData.get("sideImage") as File;
+
+  if (!frontImage || !sideImage) throw new Error("Images required");
+
+  // Upload to R2
+  const frontBuffer = Buffer.from(await frontImage.arrayBuffer());
+  const sideBuffer = Buffer.from(await sideImage.arrayBuffer());
+
+  const frontKey = `avatars/${user.id}/front-${Date.now()}.jpg`;
+  const sideKey = `avatars/${user.id}/side-${Date.now()}.jpg`;
+
+  await uploadToR2(frontBuffer, frontKey, frontImage.type);
+  await uploadToR2(sideBuffer, sideKey, sideImage.type);
+
+  // Update Avatar status to processing
+  await db.avatar.update({
+    where: { id: user.activeAvatarId },
+    data: {
+      gender,
+      height: Number(height),
+      weight: Number(weight),
+      status: "processing",
+    }
+  });
+
+  revalidatePath("/[locale]/portal", "layout");
+  return { success: true };
+}
+

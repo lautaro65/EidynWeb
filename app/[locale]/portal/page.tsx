@@ -84,7 +84,21 @@ export default async function PortalPage() {
 
       {/* Hero Visual: 3D Viewer or CTA */}
       <div className="mt-12 w-full h-[500px] rounded-[2rem] border border-white/10 overflow-hidden relative group bg-background/50 backdrop-blur-sm">
-        {activeAvatar?.modelUrl ? (
+        {activeAvatar?.status === "processing" ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 z-10 bg-gradient-to-tr from-blue-500/10 via-transparent to-purple-500/10">
+            <div className="relative w-32 h-32 mb-8">
+              <div className="absolute inset-0 border-4 border-blue-500/20 rounded-full animate-ping" />
+              <div className="absolute inset-2 border-4 border-t-blue-500 border-r-transparent border-b-purple-500 border-l-transparent rounded-full animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Wand2 className="w-10 h-10 text-blue-400 animate-pulse" />
+              </div>
+            </div>
+            <h2 className="text-3xl font-bold mb-3 tracking-tight animate-pulse">Generando tu Avatar 3D...</h2>
+            <p className="text-muted-foreground max-w-md text-lg">
+              Nuestra Inteligencia Artificial está analizando tus fotografías y creando tu clon digital. Este proceso puede demorar unos minutos. Te notificaremos cuando esté listo.
+            </p>
+          </div>
+        ) : activeAvatar?.modelUrl ? (
           <AvatarViewer modelUrl={activeAvatar.modelUrl} />
         ) : (
           <>
@@ -100,13 +114,13 @@ export default async function PortalPage() {
               
               <div className="flex flex-col sm:flex-row gap-4">
 
-                <button 
-                  disabled
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/5 text-muted-foreground font-medium rounded-xl border border-white/10 cursor-not-allowed"
+                <Link 
+                  href="/portal/avatar/new"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-500 text-white font-medium rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all duration-300"
                 >
                   <Wand2 className="w-5 h-5" />
-                  Generar con IA (Próximamente)
-                </button>
+                  Generar con IA
+                </Link>
               </div>
             </div>
           </>
