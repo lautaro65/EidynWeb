@@ -3,10 +3,11 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, UploadCloud, CheckCircle2, User, Ruler, Weight, Camera, Info, Loader2, Minus, Plus, Box } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
 import { startAvatarGeneration } from "../../actions";
 import { useTranslations } from "next-intl";
+import { validatePose } from "./pose-validator";
 
 interface AvatarWizardProps {
   initialData: {
@@ -22,6 +23,9 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
   const [step, setStep] = useState<1 | 2>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+
+  const [isValidatingFront, setIsValidatingFront] = useState(false);
+  const [isValidatingSide, setIsValidatingSide] = useState(false);
 
   // Step 1 State
   const [physicalData, setPhysicalData] = useState({
@@ -39,7 +43,7 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
   const frontInputRef = useRef<HTMLInputElement>(null);
   const sideInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageChange = (file: File | null, type: "front" | "side") => {
+  const handleImageChange = async (file: File | null, type: "front" | "side") => {
     if (!file) return;
     
     // Check size limit (10MB)
@@ -50,12 +54,48 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
 
     const previewUrl = URL.createObjectURL(file);
     
-    if (type === "front") {
-      setFrontImage(file);
-      setFrontPreview(previewUrl);
-    } else {
-      setSideImage(file);
-      setSidePreview(previewUrl);
+    if (type === "front") setIsValidatingFront(true);
+    else setIsValidatingSide(true);
+
+    try {
+      const img = new Image();
+      img.src = previewUrl;
+      await new Promise((resolve) => { img.onload = resolve; });
+
+      const validation = await validatePose(img, type);
+
+      if (!validation.isValid) {
+        toast.error(validation.errorKey ? t(validation.errorKey) : t("toastError"), { duration: 5000 });
+        if (type === "front") setIsValidatingFront(false);
+        else setIsValidatingSide(false);
+        
+        // Reset input value so they can select the same file again if they want
+        if (type === "front" && frontInputRef.current) frontInputRef.current.value = "";
+        if (type === "side" && sideInputRef.current) sideInputRef.current.value = "";
+        
+        return;
+      }
+      
+      if (type === "front") {
+        setFrontImage(file);
+        setFrontPreview(previewUrl);
+      } else {
+        setSideImage(file);
+        setSidePreview(previewUrl);
+      }
+    } catch (e) {
+      console.error(e);
+      // Fallback
+      if (type === "front") {
+        setFrontImage(file);
+        setFrontPreview(previewUrl);
+      } else {
+        setSideImage(file);
+        setSidePreview(previewUrl);
+      }
+    } finally {
+      if (type === "front") setIsValidatingFront(false);
+      else setIsValidatingSide(false);
     }
   };
 
@@ -346,7 +386,12 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
                     onChange={(e) => handleImageChange(e.target.files?.[0] || null, "front")}
                   />
                   
-                  {frontPreview ? (
+                  {isValidatingFront ? (
+                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center z-10">
+                      <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
+                      <p className="font-medium animate-pulse">{t("analyzingPose")}</p>
+                    </div>
+                  ) : frontPreview ? (
                     <>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={frontPreview} alt="Frontal" className="absolute inset-0 w-full h-full object-cover opacity-90" />
@@ -390,7 +435,12 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
                     onChange={(e) => handleImageChange(e.target.files?.[0] || null, "side")}
                   />
                   
-                  {sidePreview ? (
+                  {isValidatingSide ? (
+                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center z-10">
+                      <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
+                      <p className="font-medium animate-pulse">{t("analyzingPose")}</p>
+                    </div>
+                  ) : sidePreview ? (
                     <>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={sidePreview} alt="Perfil" className="absolute inset-0 w-full h-full object-cover opacity-90" />

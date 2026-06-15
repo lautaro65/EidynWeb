@@ -966,6 +966,14 @@
     "toastMissingData": "Please enter your height and weight",
     "toastMissingPhotos": "Please upload both photos",
     "toastSuccess": "Photos submitted successfully!",
-    "toastError": "There was an error starting the processing."
+    "toastError": "There was an error starting the processing.",
+    "analyzingPose": "Analyzing pose...",
+    "poseNoBody": "Could not detect a body in the image. Please take another photo.",
+    "poseMissingParts": "Make sure the entire body is visible, from shoulders to feet.",
+    "poseArmsTooClose": "Your arms are too close to your body. Separate them a bit (A-Pose).",
+    "poseArmsTooHigh": "Your arms are too high. Lower them slightly (A-Pose).",
+    "poseFeetTooClose": "It seems your feet are too close together. Separate them to shoulder width.",
+    "poseNotProfile": "You are not completely in profile. Turn your body to face sideways to the camera.",
+    "poseSideFeetApart": "Keep your feet completely together for the side photo."
   }
 }
