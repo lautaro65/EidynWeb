@@ -58,7 +58,13 @@ export async function validatePose(imageElement: HTMLImageElement, type: "front"
     if (type === "front") {
       // Check full body visibility (shoulders to ankles)
       const requiredPoints = [11, 12, 23, 24, 27, 28]; // shoulders, hips, ankles
-      const missingPoints = requiredPoints.some(idx => !landmarks[idx] || (landmarks[idx].visibility || 0) < 0.5);
+      const missingPoints = requiredPoints.some(idx => {
+        const p = landmarks[idx];
+        if (!p) return true;
+        const vis = p.visibility || 0;
+        console.log(`Punto ${idx} visibilidad: ${vis}`);
+        return vis < 0.3; // Bajado a 0.3 para ser un poco más tolerante
+      });
       
       if (missingPoints) {
         return { isValid: false, errorKey: "poseMissingParts" };
@@ -76,6 +82,8 @@ export async function validatePose(imageElement: HTMLImageElement, type: "front"
       const leftArmAngle = calculateAngle(leftHip, leftShoulder, leftElbow);
       const rightArmAngle = calculateAngle(rightHip, rightShoulder, rightElbow);
 
+      console.log(`Frontal -> leftAngle: ${leftArmAngle}, rightAngle: ${rightArmAngle}`);
+
       if (leftArmAngle < 15 || rightArmAngle < 15) {
         return { isValid: false, errorKey: "poseArmsTooClose" };
       }
@@ -87,7 +95,13 @@ export async function validatePose(imageElement: HTMLImageElement, type: "front"
       const shoulderWidth = Math.abs(leftShoulder.x - rightShoulder.x);
       const ankleWidth = Math.abs(landmarks[27].x - landmarks[28].x);
       
-      if (ankleWidth < shoulderWidth * 0.3) {
+      console.log(`Frontal -> shoulderWidth: ${shoulderWidth}, ankleWidth: ${ankleWidth}`);
+
+      if (shoulderWidth < 0.1) {
+        return { isValid: false, errorKey: "poseNotFrontal" };
+      }
+      
+      if (ankleWidth < shoulderWidth * 0.25) { // Bajado a 0.25
         return { isValid: false, errorKey: "poseFeetTooClose" };
       }
 
@@ -99,8 +113,9 @@ export async function validatePose(imageElement: HTMLImageElement, type: "front"
       
       // Check if shoulders overlap on X axis (profile view)
       const shoulderDiffX = Math.abs(leftShoulder.x - rightShoulder.x);
+      console.log(`Perfil -> shoulderDiffX: ${shoulderDiffX}`);
       
-      if (shoulderDiffX > 0.18) {
+      if (shoulderDiffX > 0.15) { // Más estricto para que rechace fotos frontales
         return { isValid: false, errorKey: "poseNotProfile" };
       }
 
@@ -108,8 +123,9 @@ export async function validatePose(imageElement: HTMLImageElement, type: "front"
       const leftAnkle = landmarks[27];
       const rightAnkle = landmarks[28];
       
-      if (leftAnkle && rightAnkle && (leftAnkle.visibility || 0) > 0.5 && (rightAnkle.visibility || 0) > 0.5) {
+      if (leftAnkle && rightAnkle && (leftAnkle.visibility || 0) > 0.3 && (rightAnkle.visibility || 0) > 0.3) {
         const ankleDiffX = Math.abs(leftAnkle.x - rightAnkle.x);
+        console.log(`Perfil -> ankleDiffX: ${ankleDiffX}`);
         if (ankleDiffX > 0.15) {
           return { isValid: false, errorKey: "poseSideFeetApart" };
         }
@@ -121,7 +137,6 @@ export async function validatePose(imageElement: HTMLImageElement, type: "front"
     return { isValid: true };
   } catch (error) {
     console.error("Error running pose validation:", error);
-    // If there's an internal error with ML, allow upload to not block user
-    return { isValid: true };
+    return { isValid: false, errorKey: "errorUnknown" };
   }
 }

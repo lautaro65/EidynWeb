@@ -973,6 +973,7 @@
     "poseArmsTooClose": "Los brazos están muy pegados al cuerpo. Sepáralos un poco (Postura A).",
     "poseArmsTooHigh": "Los brazos están demasiado levantados. Bájalos ligeramente (Postura A).",
     "poseFeetTooClose": "Parece que los pies están muy juntos. Sepáralos a la altura de los hombros.",
+    "poseNotFrontal": "La foto no parece ser frontal. Asegúrate de mirar de frente a la cámara.",
     "poseNotProfile": "No estás completamente de perfil. Gira el cuerpo para quedar de lado hacia la cámara.",
     "poseSideFeetApart": "Mantén los pies completamente juntos para la foto de perfil."
   }
