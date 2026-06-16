@@ -6,7 +6,7 @@ export async function initPoseLandmarker() {
   if (poseLandmarker) return poseLandmarker;
 
   const vision = await FilesetResolver.forVisionTasks(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
   );
   
   poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
@@ -135,8 +135,12 @@ export async function validatePose(imageElement: HTMLImageElement, type: "front"
     }
 
     return { isValid: true };
-  } catch (error) {
-    console.error("Error running pose validation:", error);
+  } catch (error: unknown) {
+    console.error("====== MEDIA PIPE ERROR ======");
+    console.error(error);
+    if (error instanceof Error) {
+      console.error(error.message);
+    }
     return { isValid: false, errorKey: "errorUnknown" };
   }
 }

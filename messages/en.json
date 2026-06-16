@@ -975,6 +975,7 @@
     "poseFeetTooClose": "It seems your feet are too close together. Separate them to shoulder width.",
     "poseNotFrontal": "The photo does not appear to be frontal. Make sure you face the camera.",
     "poseNotProfile": "You are not completely in profile. Turn your body to face sideways to the camera.",
-    "poseSideFeetApart": "Keep your feet completely together for the side photo."
+    "poseSideFeetApart": "Keep your feet completely together for the side photo.",
+    "errorUnknown": "AI Error: Could not analyze the photo. Check your internet connection or try another photo."
   }
 }

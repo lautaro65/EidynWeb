@@ -975,6 +975,7 @@
     "poseFeetTooClose": "Parece que los pies están muy juntos. Sepáralos a la altura de los hombros.",
     "poseNotFrontal": "La foto no parece ser frontal. Asegúrate de mirar de frente a la cámara.",
     "poseNotProfile": "No estás completamente de perfil. Gira el cuerpo para quedar de lado hacia la cámara.",
-    "poseSideFeetApart": "Mantén los pies completamente juntos para la foto de perfil."
+    "poseSideFeetApart": "Mantén los pies completamente juntos para la foto de perfil.",
+    "errorUnknown": "Error de IA: No se pudo analizar la foto. Revisa tu conexión a internet o intenta con otra foto."
   }
 }

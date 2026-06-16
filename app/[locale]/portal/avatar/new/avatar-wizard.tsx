@@ -60,7 +60,13 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
     try {
       const img = new Image();
       img.src = previewUrl;
-      await new Promise((resolve) => { img.onload = resolve; });
+      await new Promise((resolve) => { 
+        img.onload = () => {
+          img.width = img.naturalWidth;
+          img.height = img.naturalHeight;
+          resolve(null);
+        }; 
+      });
 
       const validation = await validatePose(img, type);
 
