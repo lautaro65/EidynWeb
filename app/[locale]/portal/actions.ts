@@ -9,8 +9,6 @@ import { uploadToR2, bucketName } from "@/lib/r2";
  * Ensures a User record exists and has an active avatar.
  * If not, it creates them.
  */
-export const maxDuration = 60; // Allow up to 60 seconds for Bodygram API on Vercel
-
 export async function getOrCreateActiveAvatar() {
   const clerkUser = await currentUser();
   if (!clerkUser) throw new Error("Unauthorized");

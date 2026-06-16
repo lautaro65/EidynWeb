@@ -7,6 +7,8 @@ export const metadata = {
   title: "Crear Avatar 3D - Eidyn",
 };
 
+export const maxDuration = 60; // Allow up to 60 seconds for Bodygram API on Vercel
+
 export default async function AvatarNewPage({
   params,
 }: {
