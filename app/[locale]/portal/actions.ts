@@ -113,6 +113,47 @@ export async function toggleShopConsent(consentId: string, granted: boolean) {
   return { success: true };
 }
 
+export async function connectShop(tenantId: string) {
+  const clerkUser = await currentUser();
+  if (!clerkUser) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: { clerkId: clerkUser.id }
+  });
+
+  if (!user) throw new Error("User not found");
+
+  const tenant = await db.tenant.findUnique({
+    where: { id: tenantId }
+  });
+
+  if (!tenant) throw new Error("Tenant not found");
+
+  // Upsert the ShopConsent
+  await db.shopConsent.upsert({
+    where: {
+      userId_tenantId: {
+        userId: user.id,
+        tenantId: tenant.id,
+      }
+    },
+    create: {
+      userId: user.id,
+      tenantId: tenant.id,
+      granted: true,
+      grantedAt: new Date(),
+    },
+    update: {
+      granted: true,
+      grantedAt: new Date(),
+      revokedAt: null,
+    }
+  });
+
+  revalidatePath("/[locale]/portal/shops", "page");
+  return { success: true };
+}
+
 export async function updatePhysicalProfile(data: {
   name: string;
   gender: string;

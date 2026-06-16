@@ -17,21 +17,59 @@ export function MeasurementsForm({ initialData }: MeasurementsFormProps) {
   const gender = initialData?.gender || "unisex";
   const height = initialData?.height?.toString() || "";
   const weight = initialData?.weight?.toString() || "";
-  const initialMeasurements = (initialData?.measurements as Record<string, number | null>) || {};
   
-  // Bodygram API devuelve valores en milímetros (mm) y con claves específicas.
-  // Mapeamos esas claves y convertimos a cm dividiendo por 10.
+  const initialMeasurements = (initialData?.measurements as Record<string, number | null>) || {};
   const formatCm = (mmValue: number | null | undefined) => mmValue ? (mmValue / 10).toFixed(1) : "";
 
-  const measurements = {
-    chest: formatCm(initialMeasurements.bustGirth || initialMeasurements.chest),
-    waist: formatCm(initialMeasurements.waistGirth || initialMeasurements.waist),
-    hips: formatCm(initialMeasurements.hipGirth || initialMeasurements.hips),
-    inseam: formatCm(initialMeasurements.insideLegLengthR || initialMeasurements.inseam),
-    shoulders: formatCm(initialMeasurements.acrossBackShoulderWidth || initialMeasurements.shoulders),
+  // Diccionario de todas las medidas posibles que devuelve Bodygram y su traducción
+  const bodygramLabels: Record<string, string> = {
+    acrossBackShoulderWidth: "Ancho de Hombros",
+    backNeckHeight: "Altura de la Nuca",
+    backNeckPointToGroundContoured: "Nuca a Suelo (Contorno)",
+    backNeckPointToWaist: "Nuca a Cintura",
+    backNeckPointToWristLengthR: "Nuca a Muñeca",
+    bellyWaistDepth: "Profundidad Abdominal",
+    bellyWaistGirth: "Contorno Abdominal",
+    bellyWaistHeight: "Altura Abdominal",
+    bellyWaistWidth: "Ancho Abdominal",
+    bustGirth: "Contorno de Pecho",
+    bustHeight: "Altura de Pecho",
+    calfGirthR: "Contorno de Pantorrilla",
+    forearmGirthR: "Contorno de Antebrazo",
+    hipGirth: "Contorno de Caderas",
+    hipHeight: "Altura de Caderas",
+    insideLegHeight: "Altura de Entrepierna (Suelo)",
+    insideLegLengthR: "Largo de Entrepierna",
+    kneeGirthR: "Contorno de Rodilla",
+    kneeHeightR: "Altura de Rodilla",
+    midThighGirthR: "Contorno Medio Muslo",
+    neckBaseGirth: "Base del Cuello",
+    neckGirth: "Contorno de Cuello",
+    outerAnkleHeightR: "Altura Tobillo Exterior",
+    outerArmLengthR: "Largo Exterior del Brazo",
+    outseamR: "Costura Exterior Pierna",
+    outsideLegLengthR: "Largo Total Exterior Pierna",
+    shoulderToElbowR: "Hombro a Codo",
+    thighGirthR: "Contorno de Muslo",
+    topHipGirth: "Contorno Cadera Alta",
+    topHipHeight: "Altura Cadera Alta",
+    underBustGirth: "Contorno Bajo Pecho",
+    upperArmGirthR: "Contorno de Bíceps",
+    waistGirth: "Contorno de Cintura",
+    waistHeight: "Altura de Cintura",
+    wristGirthR: "Contorno de Muñeca",
   };
 
-  const hasMeasurements = Object.keys(initialMeasurements).length > 0;
+  // Preparamos un array con las medidas que realmente existen en el JSON de este usuario
+  const availableMeasurements = Object.entries(bodygramLabels)
+    .map(([key, label]) => ({
+      key,
+      label,
+      value: initialMeasurements[key],
+    }))
+    .filter(m => m.value !== undefined && m.value !== null);
+
+  const hasMeasurements = availableMeasurements.length > 0 || Object.keys(initialMeasurements).length > 0;
 
   if (!hasMeasurements) {
     return (
@@ -99,55 +137,25 @@ export function MeasurementsForm({ initialData }: MeasurementsFormProps) {
         </div>
       </div>
 
-      {/* Medidas Específicas */}
+      {/* Medidas Específicas - DYNAMIC GRID */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground border-b border-white/10 pb-2">Dimensiones Específicas (cm)</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Contorno de Pecho</label>
-            <input
-              type="text"
-              readOnly
-              value={measurements.chest ? `${measurements.chest} cm` : "N/A"}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm opacity-70 cursor-not-allowed font-medium"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Contorno de Cintura</label>
-            <input
-              type="text"
-              readOnly
-              value={measurements.waist ? `${measurements.waist} cm` : "N/A"}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm opacity-70 cursor-not-allowed font-medium"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Contorno de Caderas</label>
-            <input
-              type="text"
-              readOnly
-              value={measurements.hips ? `${measurements.hips} cm` : "N/A"}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm opacity-70 cursor-not-allowed font-medium"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Ancho de Hombros</label>
-            <input
-              type="text"
-              readOnly
-              value={measurements.shoulders ? `${measurements.shoulders} cm` : "N/A"}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm opacity-70 cursor-not-allowed font-medium"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Largo de Entrepierna</label>
-            <input
-              type="text"
-              readOnly
-              value={measurements.inseam ? `${measurements.inseam} cm` : "N/A"}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm opacity-70 cursor-not-allowed font-medium"
-            />
-          </div>
+        <h3 className="text-lg font-semibold text-foreground border-b border-white/10 pb-2 flex items-center justify-between">
+          Dimensiones Específicas
+          <span className="text-xs font-normal text-muted-foreground bg-white/5 px-2 py-1 rounded-full">
+            {availableMeasurements.length} métricas analizadas
+          </span>
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {availableMeasurements.map((m) => (
+            <div key={m.key} className="space-y-1.5 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
+              <label className="text-xs font-medium text-muted-foreground truncate block" title={m.label}>
+                {m.label}
+              </label>
+              <div className="text-sm font-semibold text-foreground">
+                {formatCm(m.value)} cm
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
