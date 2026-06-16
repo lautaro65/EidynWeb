@@ -1,24 +1,49 @@
 import { PoseLandmarker, FilesetResolver, NormalizedLandmark } from "@mediapipe/tasks-vision";
 
-let poseLandmarker: PoseLandmarker | null = null;
+const POSE_CONFIG = {
+  visibilityThreshold: 0.3,
+  armAngleMin: 15,
+  armAngleMax: 55,
+  shoulderProfileMaxDiff: 0.15,
+  hipProfileMaxDiff: 0.15,
+  frontalMinShoulderWidth: 0.1,
+  ankleShoulderRatio: 0.25,
+} as const;
 
-export async function initPoseLandmarker() {
-  if (poseLandmarker) return poseLandmarker;
+let initPromise: Promise<PoseLandmarker> | null = null;
 
+async function _initPoseLandmarker() {
   const vision = await FilesetResolver.forVisionTasks(
     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
   );
   
-  poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
-    baseOptions: {
-      modelAssetPath: "/models/pose_landmarker_lite.task",
-      delegate: "GPU"
-    },
-    runningMode: "IMAGE",
-    numPoses: 1
-  });
+  try {
+    return await PoseLandmarker.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task",
+        delegate: "GPU"
+      },
+      runningMode: "IMAGE",
+      numPoses: 1
+    });
+  } catch (e) {
+    console.warn("GPU delegate failed, falling back to CPU", e);
+    return await PoseLandmarker.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task",
+        delegate: "CPU"
+      },
+      runningMode: "IMAGE",
+      numPoses: 1
+    });
+  }
+}
 
-  return poseLandmarker;
+export function initPoseLandmarker() {
+  if (!initPromise) {
+    initPromise = _initPoseLandmarker();
+  }
+  return initPromise;
 }
 
 // Function to calculate angle between 3 points
@@ -63,7 +88,7 @@ export async function validatePose(imageElement: HTMLImageElement, type: "front"
         if (!p) return true;
         const vis = p.visibility || 0;
         console.log(`Punto ${idx} visibilidad: ${vis}`);
-        return vis < 0.3; // Bajado a 0.3 para ser un poco más tolerante
+        return vis < POSE_CONFIG.visibilityThreshold;
       });
       
       if (missingPoints) {
@@ -84,10 +109,10 @@ export async function validatePose(imageElement: HTMLImageElement, type: "front"
 
       console.log(`Frontal -> leftAngle: ${leftArmAngle}, rightAngle: ${rightArmAngle}`);
 
-      if (leftArmAngle < 15 || rightArmAngle < 15) {
+      if (leftArmAngle < POSE_CONFIG.armAngleMin || rightArmAngle < POSE_CONFIG.armAngleMin) {
         return { isValid: false, errorKey: "poseArmsTooClose" };
       }
-      if (leftArmAngle > 55 || rightArmAngle > 55) {
+      if (leftArmAngle > POSE_CONFIG.armAngleMax || rightArmAngle > POSE_CONFIG.armAngleMax) {
         return { isValid: false, errorKey: "poseArmsTooHigh" };
       }
 
@@ -97,11 +122,11 @@ export async function validatePose(imageElement: HTMLImageElement, type: "front"
       
       console.log(`Frontal -> shoulderWidth: ${shoulderWidth}, ankleWidth: ${ankleWidth}`);
 
-      if (shoulderWidth < 0.1) {
+      if (shoulderWidth < POSE_CONFIG.frontalMinShoulderWidth) {
         return { isValid: false, errorKey: "poseNotFrontal" };
       }
       
-      if (ankleWidth < shoulderWidth * 0.25) { // Bajado a 0.25
+      if (ankleWidth < shoulderWidth * POSE_CONFIG.ankleShoulderRatio) {
         return { isValid: false, errorKey: "poseFeetTooClose" };
       }
 
@@ -111,11 +136,15 @@ export async function validatePose(imageElement: HTMLImageElement, type: "front"
       const leftShoulder = landmarks[11];
       const rightShoulder = landmarks[12];
       
-      // Check if shoulders overlap on X axis (profile view)
+      // Check if shoulders or hips overlap on X axis (profile view)
       const shoulderDiffX = Math.abs(leftShoulder.x - rightShoulder.x);
-      console.log(`Perfil -> shoulderDiffX: ${shoulderDiffX}`);
+      const leftHip = landmarks[23];
+      const rightHip = landmarks[24];
+      const hipDiffX = Math.abs(leftHip.x - rightHip.x);
       
-      if (shoulderDiffX > 0.15) { // Más estricto para que rechace fotos frontales
+      console.log(`Perfil -> shoulderDiffX: ${shoulderDiffX}, hipDiffX: ${hipDiffX}`);
+      
+      if (shoulderDiffX > POSE_CONFIG.shoulderProfileMaxDiff || hipDiffX > POSE_CONFIG.hipProfileMaxDiff) {
         return { isValid: false, errorKey: "poseNotProfile" };
       }
 
@@ -123,7 +152,7 @@ export async function validatePose(imageElement: HTMLImageElement, type: "front"
       const leftAnkle = landmarks[27];
       const rightAnkle = landmarks[28];
       
-      if (leftAnkle && rightAnkle && (leftAnkle.visibility || 0) > 0.3 && (rightAnkle.visibility || 0) > 0.3) {
+      if (leftAnkle && rightAnkle && (leftAnkle.visibility || 0) > POSE_CONFIG.visibilityThreshold && (rightAnkle.visibility || 0) > POSE_CONFIG.visibilityThreshold) {
         const ankleDiffX = Math.abs(leftAnkle.x - rightAnkle.x);
         console.log(`Perfil -> ankleDiffX: ${ankleDiffX}`);
         if (ankleDiffX > 0.15) {
