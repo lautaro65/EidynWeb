@@ -1,20 +1,61 @@
 "use client";
 
-import React, { Suspense } from "react";
-import { Canvas } from "@react-three/fiber";
+import React, { Suspense, useMemo } from "react";
+import { Canvas, useLoader } from "@react-three/fiber";
 import { OrbitControls, Environment, useGLTF, Center } from "@react-three/drei";
+import { OBJLoader } from "three-stdlib";
+import * as THREE from "three";
 
 interface AvatarModelProps {
   modelUrl: string;
 }
 
-function AvatarModel({ modelUrl }: AvatarModelProps) {
+function ObjModel({ modelUrl }: { modelUrl: string }) {
+  const obj = useLoader(OBJLoader, modelUrl);
+  
+  // Create a default material since OBJ doesn't come with one
+  const material = useMemo(() => new THREE.MeshStandardMaterial({
+    color: "#e2e8f0",
+    roughness: 0.4,
+    metalness: 0.1,
+  }), []);
+
+  // Apply material to all meshes inside the OBJ
+  const scene = useMemo(() => {
+    const clone = obj.clone();
+    clone.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        (child as THREE.Mesh).material = material;
+        // Bodygram models can sometimes need geometry centering, Center handles bounds
+      }
+    });
+    return clone;
+  }, [obj, material]);
+
+  return (
+    <Center>
+      <primitive object={scene} scale={0.05} /> {/* OBJ from Bodygram might need scale adjustment compared to GLB */}
+    </Center>
+  );
+}
+
+function GlbModel({ modelUrl }: { modelUrl: string }) {
   const { scene } = useGLTF(modelUrl);
   return (
     <Center>
       <primitive object={scene} scale={1.5} />
     </Center>
   );
+}
+
+function AvatarModel({ modelUrl }: AvatarModelProps) {
+  const isObj = modelUrl.toLowerCase().includes(".obj");
+  
+  if (isObj) {
+    return <ObjModel modelUrl={modelUrl} />;
+  }
+  
+  return <GlbModel modelUrl={modelUrl} />;
 }
 
 interface AvatarViewerProps {

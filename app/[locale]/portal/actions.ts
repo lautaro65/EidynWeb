@@ -3,12 +3,14 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { uploadToR2 } from "@/lib/r2";
+import { uploadToR2, bucketName } from "@/lib/r2";
 
 /**
  * Ensures a User record exists and has an active avatar.
  * If not, it creates them.
  */
+export const maxDuration = 60; // Allow up to 60 seconds for Bodygram API on Vercel
+
 export async function getOrCreateActiveAvatar() {
   const clerkUser = await currentUser();
   if (!clerkUser) throw new Error("Unauthorized");
@@ -158,6 +160,12 @@ export async function startAvatarGeneration(formData: FormData) {
 
   if (!user || !user.activeAvatarId) throw new Error("User or avatar not found");
 
+  const avatar = await db.avatar.findUnique({
+    where: { id: user.activeAvatarId }
+  });
+  
+  if (!avatar) throw new Error("Avatar not found");
+
   const gender = formData.get("gender") as string;
   const height = formData.get("height") as string;
   const weight = formData.get("weight") as string;
@@ -176,14 +184,117 @@ export async function startAvatarGeneration(formData: FormData) {
   await uploadToR2(frontBuffer, frontKey, frontImage.type);
   await uploadToR2(sideBuffer, sideKey, sideImage.type);
 
-  // Update Avatar status to processing
+  // Extract age from measurements if it exists, otherwise default
+  const avatarMeasurements = (avatar.measurements || {}) as Record<string, unknown>;
+  const age = typeof avatarMeasurements?.age === "number" ? avatarMeasurements.age : 30;
+
+  // Bodygram API expects height in mm (cm * 10) and weight in grams (kg * 1000)
+  const heightMm = Math.round(Number(height) * 10);
+  const weightG = Math.round(Number(weight) * 1000);
+
+  // Convert image buffers to base64 for the API
+  const frontBase64 = frontBuffer.toString("base64");
+  const sideBase64 = sideBuffer.toString("base64");
+
+  // Bodygram expects biological sex (male/female) for accurate ML estimation
+  const mappedGender = gender.toLowerCase() === "male" ? "male" : "female";
+
+  const BODYGRAM_ORG_ID = process.env.BODYGRAM_ORG_ID;
+  const BODYGRAM_API_KEY = process.env.BODYGRAM_API_KEY;
+
+  if (!BODYGRAM_ORG_ID || !BODYGRAM_API_KEY) {
+    console.error("Missing Bodygram API credentials in .env");
+    throw new Error("Missing Bodygram API credentials");
+  }
+
+  // Call Bodygram API
+  const response = await fetch(`https://platform.bodygram.com/api/orgs/${BODYGRAM_ORG_ID}/scans`, {
+    method: 'POST',
+    headers: {
+      'Authorization': BODYGRAM_API_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      photoScan: {
+        age: age,
+        gender: mappedGender,
+        height: heightMm,
+        weight: weightG,
+        frontPhoto: frontBase64,
+        rightPhoto: sideBase64,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    console.error("Bodygram API HTTP error:", response.status, await response.text());
+    await db.avatar.update({
+      where: { id: user.activeAvatarId },
+      data: { status: "failed" }
+    });
+    throw new Error(`Bodygram API failed with status: ${response.status}`);
+  }
+
+  const result = await response.json();
+  const entry = result.entry;
+
+  if (!entry || entry.status === "failure") {
+    console.error("Bodygram scan failure:", entry);
+    await db.avatar.update({
+      where: { id: user.activeAvatarId },
+      data: { status: "failed" }
+    });
+    throw new Error("Bodygram API scan failed");
+  }
+
+  // Success! Extract the .obj base64
+  if (!entry.avatar || !entry.avatar.data) {
+    throw new Error("Bodygram response missing avatar data");
+  }
+
+  const objBuffer = Buffer.from(entry.avatar.data, "base64");
+  const objKey = `avatars/${user.id}/model-${Date.now()}.obj`;
+  
+  // Upload .obj to Cloudflare R2
+  await uploadToR2(objBuffer, objKey, "model/obj");
+
+  // Use our local R2 proxy API to securely load the R2 object
+  const modelUrl = `/api/r2?url=r2://${bucketName}/${objKey}`;
+
+  // Bodygram measurements is an array of {name, unit, value}. We convert it to a key-value dictionary.
+  const parsedMeasurements: Record<string, unknown> = {};
+  if (Array.isArray(entry.measurements)) {
+    entry.measurements.forEach((m: { name: string; value: unknown }) => {
+      parsedMeasurements[m.name] = m.value;
+    });
+  }
+
+  // Compile full measurements JSON
+  const finalMeasurements = {
+    ...avatarMeasurements,
+    ...parsedMeasurements, 
+  };
+
+  const bodygramData = {
+    rawMeasurements: entry.measurements,
+    bodyComposition: entry.bodyComposition,
+    posture: entry.posture,
+  };
+
+  // Update Avatar status to completed and save data
   await db.avatar.update({
     where: { id: user.activeAvatarId },
     data: {
       gender,
       height: Number(height),
       weight: Number(weight),
-      status: "processing",
+      status: "completed",
+      modelUrl,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      measurements: finalMeasurements as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      bodygramData: bodygramData as any,
+      previewUrl: `/api/r2?url=r2://${bucketName}/${frontKey}`, // using front photo as preview
     }
   });
 
