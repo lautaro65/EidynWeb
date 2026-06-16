@@ -19,12 +19,16 @@ export function MeasurementsForm({ initialData }: MeasurementsFormProps) {
   const weight = initialData?.weight?.toString() || "";
   const initialMeasurements = (initialData?.measurements as Record<string, number | null>) || {};
   
+  // Bodygram API devuelve valores en milímetros (mm) y con claves específicas.
+  // Mapeamos esas claves y convertimos a cm dividiendo por 10.
+  const formatCm = (mmValue: number | null | undefined) => mmValue ? (mmValue / 10).toFixed(1) : "";
+
   const measurements = {
-    chest: initialMeasurements.chest?.toString() || "",
-    waist: initialMeasurements.waist?.toString() || "",
-    hips: initialMeasurements.hips?.toString() || "",
-    inseam: initialMeasurements.inseam?.toString() || "",
-    shoulders: initialMeasurements.shoulders?.toString() || "",
+    chest: formatCm(initialMeasurements.bustGirth || initialMeasurements.chest),
+    waist: formatCm(initialMeasurements.waistGirth || initialMeasurements.waist),
+    hips: formatCm(initialMeasurements.hipGirth || initialMeasurements.hips),
+    inseam: formatCm(initialMeasurements.insideLegLengthR || initialMeasurements.inseam),
+    shoulders: formatCm(initialMeasurements.acrossBackShoulderWidth || initialMeasurements.shoulders),
   };
 
   const hasMeasurements = Object.keys(initialMeasurements).length > 0;
@@ -104,7 +108,7 @@ export function MeasurementsForm({ initialData }: MeasurementsFormProps) {
             <input
               type="text"
               readOnly
-              value={measurements.chest ? `${measurements.chest} mm` : "N/A"}
+              value={measurements.chest ? `${measurements.chest} cm` : "N/A"}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm opacity-70 cursor-not-allowed font-medium"
             />
           </div>
@@ -113,7 +117,7 @@ export function MeasurementsForm({ initialData }: MeasurementsFormProps) {
             <input
               type="text"
               readOnly
-              value={measurements.waist ? `${measurements.waist} mm` : "N/A"}
+              value={measurements.waist ? `${measurements.waist} cm` : "N/A"}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm opacity-70 cursor-not-allowed font-medium"
             />
           </div>
@@ -122,7 +126,7 @@ export function MeasurementsForm({ initialData }: MeasurementsFormProps) {
             <input
               type="text"
               readOnly
-              value={measurements.hips ? `${measurements.hips} mm` : "N/A"}
+              value={measurements.hips ? `${measurements.hips} cm` : "N/A"}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm opacity-70 cursor-not-allowed font-medium"
             />
           </div>
@@ -131,7 +135,7 @@ export function MeasurementsForm({ initialData }: MeasurementsFormProps) {
             <input
               type="text"
               readOnly
-              value={measurements.shoulders ? `${measurements.shoulders} mm` : "N/A"}
+              value={measurements.shoulders ? `${measurements.shoulders} cm` : "N/A"}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm opacity-70 cursor-not-allowed font-medium"
             />
           </div>
@@ -140,7 +144,7 @@ export function MeasurementsForm({ initialData }: MeasurementsFormProps) {
             <input
               type="text"
               readOnly
-              value={measurements.inseam ? `${measurements.inseam} mm` : "N/A"}
+              value={measurements.inseam ? `${measurements.inseam} cm` : "N/A"}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm opacity-70 cursor-not-allowed font-medium"
             />
           </div>
