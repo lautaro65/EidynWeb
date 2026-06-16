@@ -7,6 +7,7 @@ import {
   Store, 
   Settings, 
   LogOut,
+  Ruler,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ export function PortalSidebar() {
       label: "Mi Identidad 3D",
       items: [
         { icon: User, label: "Mi Avatar", href: "/portal" },
+        { icon: Ruler, label: "Mis Medidas", href: "/portal/measurements" },
       ],
     },
     {

@@ -152,14 +152,46 @@ export async function startAvatarGeneration(formData: FormData) {
   const clerkUser = await currentUser();
   if (!clerkUser) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
+  let user = await db.user.findUnique({
     where: { clerkId: clerkUser.id }
   });
 
   if (!user || !user.activeAvatarId) throw new Error("User or avatar not found");
+  const activeAvatarId = user.activeAvatarId;
+
+  // --- QUOTA & RATE LIMIT LOGIC ---
+  const now = new Date();
+  let currentCount = user.avatarMonthlyCount;
+  let resetAt = user.avatarCountResetAt;
+
+  // Si la fecha actual superó la fecha de reseteo, le devolvemos sus escaneos (cada 2 meses)
+  if (now > resetAt) {
+    currentCount = 0;
+    const nextReset = new Date();
+    nextReset.setMonth(nextReset.getMonth() + 2);
+    resetAt = nextReset;
+    
+    user = await db.user.update({
+      where: { id: user.id },
+      data: {
+        avatarMonthlyCount: currentCount,
+        avatarCountResetAt: resetAt,
+      }
+    });
+  }
+
+  // Verificar si ya gastó todos sus escaneos
+  if (currentCount >= user.avatarMonthlyLimit) {
+    return { 
+      success: false, 
+      error: "RATE_LIMIT", 
+      nextReset: resetAt.toISOString() 
+    };
+  }
+  // --------------------------------
 
   const avatar = await db.avatar.findUnique({
-    where: { id: user.activeAvatarId }
+    where: { id: activeAvatarId }
   });
   
   if (!avatar) throw new Error("Avatar not found");
@@ -167,6 +199,7 @@ export async function startAvatarGeneration(formData: FormData) {
   const gender = formData.get("gender") as string;
   const height = formData.get("height") as string;
   const weight = formData.get("weight") as string;
+  const ageStr = formData.get("age") as string;
   const frontImage = formData.get("frontImage") as File;
   const sideImage = formData.get("sideImage") as File;
 
@@ -182,9 +215,12 @@ export async function startAvatarGeneration(formData: FormData) {
   await uploadToR2(frontBuffer, frontKey, frontImage.type);
   await uploadToR2(sideBuffer, sideKey, sideImage.type);
 
-  // Extract age from measurements if it exists, otherwise default
+  // Use provided age or fallback
   const avatarMeasurements = (avatar.measurements || {}) as Record<string, unknown>;
-  const age = typeof avatarMeasurements?.age === "number" ? avatarMeasurements.age : 30;
+  const age = ageStr ? Number(ageStr) : (typeof avatarMeasurements?.age === "number" ? avatarMeasurements.age : 30);
+  
+  // Make sure we save the age back to measurements
+  avatarMeasurements.age = age;
 
   // Bodygram API expects height in mm (cm * 10) and weight in grams (kg * 1000)
   const heightMm = Math.round(Number(height) * 10);
@@ -227,10 +263,10 @@ export async function startAvatarGeneration(formData: FormData) {
   if (!response.ok) {
     console.error("Bodygram API HTTP error:", response.status, await response.text());
     await db.avatar.update({
-      where: { id: user.activeAvatarId },
+      where: { id: activeAvatarId },
       data: { status: "failed" }
     });
-    throw new Error(`Bodygram API failed with status: ${response.status}`);
+    return { success: false, error: "BODYGRAM_ERROR" };
   }
 
   const result = await response.json();
@@ -239,7 +275,7 @@ export async function startAvatarGeneration(formData: FormData) {
   if (!entry || entry.status === "failure") {
     console.error("Bodygram scan failure:", entry);
     await db.avatar.update({
-      where: { id: user.activeAvatarId },
+      where: { id: activeAvatarId },
       data: { status: "failed" }
     });
     throw new Error("Bodygram API scan failed");
@@ -279,22 +315,31 @@ export async function startAvatarGeneration(formData: FormData) {
     posture: entry.posture,
   };
 
-  // Update Avatar status to completed and save data
-  await db.avatar.update({
-    where: { id: user.activeAvatarId },
-    data: {
-      gender,
-      height: Number(height),
-      weight: Number(weight),
-      status: "completed",
-      modelUrl,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      measurements: finalMeasurements as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      bodygramData: bodygramData as any,
-      previewUrl: `/api/r2?url=r2://${bucketName}/${frontKey}`, // using front photo as preview
-    }
-  });
+  // Update Avatar status to completed, increment user quota, and create scan log
+  await db.$transaction([
+    db.avatar.update({
+      where: { id: activeAvatarId },
+      data: {
+        gender,
+        height: Number(height),
+        weight: Number(weight),
+        status: "completed",
+        modelUrl,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        measurements: finalMeasurements as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        bodygramData: bodygramData as any,
+        previewUrl: `/api/r2?url=r2://${bucketName}/${frontKey}`, // using front photo as preview
+      }
+    }),
+    db.user.update({
+      where: { id: user.id },
+      data: { avatarMonthlyCount: { increment: 1 } }
+    }),
+    db.avatarScanLog.create({
+      data: { userId: user.id }
+    })
+  ]);
 
   revalidatePath("/[locale]/portal", "layout");
   return { success: true };

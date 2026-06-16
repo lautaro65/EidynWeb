@@ -14,6 +14,7 @@ interface AvatarWizardProps {
     gender: string;
     height: number;
     weight: number;
+    age: number;
   };
 }
 
@@ -32,6 +33,7 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
     gender: initialData.gender || "unisex",
     height: initialData.height || 170,
     weight: initialData.weight || 70,
+    age: initialData.age || 30,
   });
 
   // Step 2 State
@@ -126,6 +128,7 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
       formData.append("gender", physicalData.gender);
       formData.append("height", physicalData.height.toString());
       formData.append("weight", physicalData.weight.toString());
+      formData.append("age", physicalData.age.toString());
       formData.append("frontImage", frontImage);
       formData.append("sideImage", sideImage);
 
@@ -135,6 +138,13 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
         toast.success(t("toastSuccess"));
         router.push("/portal");
         router.refresh();
+      } else if (res.error === "RATE_LIMIT") {
+        const nextDate = new Date(res.nextReset as string).toLocaleDateString();
+        toast.error(`Has agotado tus escaneos. Se renovarán el ${nextDate}.`, { duration: 6000 });
+        setIsSubmitting(false);
+      } else {
+        toast.error(t("toastError"));
+        setIsSubmitting(false);
       }
     } catch (error) {
       console.error(error);
@@ -144,7 +154,7 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
   };
 
   // UI Helpers
-  const adjustValue = (field: 'height' | 'weight', amount: number) => {
+  const adjustValue = (field: 'height' | 'weight' | 'age', amount: number) => {
     setPhysicalData(prev => ({
       ...prev,
       [field]: Math.max(0, prev[field] + amount)
@@ -227,7 +237,31 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-3 gap-8">
+              {/* Edad Stepper */}
+              <div className="space-y-4">
+                <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                  <User className="w-4 h-4" /> Edad
+                </label>
+                <div className="flex items-center justify-between p-4 bg-card border-[1.5px] border-border/60 rounded-[1.5rem]">
+                  <button 
+                    onClick={() => adjustValue('age', -1)}
+                    className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors"
+                  >
+                    <Minus className="w-5 h-5" />
+                  </button>
+                  <div className="flex flex-col items-center justify-center">
+                    <span className="text-4xl font-serif font-light text-foreground">{physicalData.age}</span>
+                    <span className="text-xs text-muted-foreground font-medium uppercase tracking-widest">Años</span>
+                  </div>
+                  <button 
+                    onClick={() => adjustValue('age', 1)}
+                    className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
               {/* Altura Stepper */}
               <div className="space-y-4">
                 <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-2">

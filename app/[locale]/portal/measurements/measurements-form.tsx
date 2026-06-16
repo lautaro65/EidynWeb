@@ -1,9 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { updateAvatarMeasurements } from "../actions";
-import { toast } from "react-hot-toast";
-import { Loader2, Save } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface MeasurementsFormProps {
@@ -17,57 +14,49 @@ interface MeasurementsFormProps {
 
 export function MeasurementsForm({ initialData }: MeasurementsFormProps) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [gender, setGender] = useState(initialData?.gender || "unisex");
-  const [height, setHeight] = useState<string>(initialData?.height?.toString() || "");
-  const [weight, setWeight] = useState<string>(initialData?.weight?.toString() || "");
-  
+  const gender = initialData?.gender || "unisex";
+  const height = initialData?.height?.toString() || "";
+  const weight = initialData?.weight?.toString() || "";
   const initialMeasurements = (initialData?.measurements as Record<string, number | null>) || {};
-  const [measurements, setMeasurements] = useState<Record<string, string>>({
+  
+  const measurements = {
     chest: initialMeasurements.chest?.toString() || "",
     waist: initialMeasurements.waist?.toString() || "",
     hips: initialMeasurements.hips?.toString() || "",
     inseam: initialMeasurements.inseam?.toString() || "",
     shoulders: initialMeasurements.shoulders?.toString() || "",
-  });
-
-  const handleMeasurementChange = (key: string, value: string) => {
-    setMeasurements(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const hasMeasurements = Object.keys(initialMeasurements).length > 0;
 
-    try {
-      // Parse to numbers
-      const parsedMeasurements: Record<string, number | null> = {};
-      Object.keys(measurements).forEach(k => {
-        const val = measurements[k];
-        parsedMeasurements[k] = val && val.trim() !== "" ? Number(val) : null;
-      });
-
-      const res = await updateAvatarMeasurements({
-        gender,
-        height: height && height.trim() !== "" ? Number(height) : undefined,
-        weight: weight && weight.trim() !== "" ? Number(weight) : undefined,
-        measurements: parsedMeasurements
-      });
-
-      if (res.success) {
-        toast.success("Medidas actualizadas correctamente");
-        router.refresh();
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Error al guardar medidas");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (!hasMeasurements) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center relative z-10">
+        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+          <Loader2 className="w-10 h-10 text-primary opacity-50" />
+        </div>
+        <h3 className="text-2xl font-bold mb-2">Aún no tienes medidas</h3>
+        <p className="text-muted-foreground max-w-md mb-8">
+          Tus medidas corporales se generarán mágicamente cuando realices tu primer escaneo 3D inteligente.
+        </p>
+        <button
+          onClick={() => router.push("/portal/avatar/new")}
+          className="px-6 py-3 bg-primary text-primary-foreground font-medium rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all"
+        >
+          Ir al Escáner 3D
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
+    <div className="space-y-8 relative z-10">
+      
+      <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4 mb-6">
+        <p className="text-sm text-foreground/80 font-medium">
+          Estos datos fueron extraídos con precisión mediante la IA de Bodygram. Para actualizarlos, deberás realizar un nuevo escaneo inteligente en tu panel principal.
+        </p>
+      </div>
       
       {/* Datos Básicos */}
       <div className="space-y-4">
@@ -77,8 +66,8 @@ export function MeasurementsForm({ initialData }: MeasurementsFormProps) {
             <label className="text-sm font-medium text-foreground">Género Biológico</label>
             <select
               value={gender}
-              onChange={(e) => setGender(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+              disabled
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm opacity-70 cursor-not-allowed"
             >
               <option value="unisex">Prefiero no decirlo</option>
               <option value="male">Masculino</option>
@@ -88,21 +77,19 @@ export function MeasurementsForm({ initialData }: MeasurementsFormProps) {
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Altura (cm)</label>
             <input
-              type="number"
-              placeholder="Ej: 175"
-              value={height}
-              onChange={(e) => setHeight(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+              type="text"
+              readOnly
+              value={height ? `${height} cm` : "N/A"}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm opacity-70 cursor-not-allowed font-medium"
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Peso (kg)</label>
             <input
-              type="number"
-              placeholder="Ej: 70"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+              type="text"
+              readOnly
+              value={weight ? `${weight} kg` : "N/A"}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm opacity-70 cursor-not-allowed font-medium"
             />
           </div>
         </div>
@@ -115,67 +102,51 @@ export function MeasurementsForm({ initialData }: MeasurementsFormProps) {
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Contorno de Pecho</label>
             <input
-              type="number"
-              placeholder="Ej: 95"
-              value={measurements.chest}
-              onChange={(e) => handleMeasurementChange("chest", e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+              type="text"
+              readOnly
+              value={measurements.chest ? `${measurements.chest} mm` : "N/A"}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm opacity-70 cursor-not-allowed font-medium"
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Contorno de Cintura</label>
             <input
-              type="number"
-              placeholder="Ej: 80"
-              value={measurements.waist}
-              onChange={(e) => handleMeasurementChange("waist", e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+              type="text"
+              readOnly
+              value={measurements.waist ? `${measurements.waist} mm` : "N/A"}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm opacity-70 cursor-not-allowed font-medium"
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Contorno de Caderas</label>
             <input
-              type="number"
-              placeholder="Ej: 100"
-              value={measurements.hips}
-              onChange={(e) => handleMeasurementChange("hips", e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+              type="text"
+              readOnly
+              value={measurements.hips ? `${measurements.hips} mm` : "N/A"}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm opacity-70 cursor-not-allowed font-medium"
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Ancho de Hombros</label>
             <input
-              type="number"
-              placeholder="Ej: 45"
-              value={measurements.shoulders}
-              onChange={(e) => handleMeasurementChange("shoulders", e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+              type="text"
+              readOnly
+              value={measurements.shoulders ? `${measurements.shoulders} mm` : "N/A"}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm opacity-70 cursor-not-allowed font-medium"
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Largo de Entrepierna</label>
             <input
-              type="number"
-              placeholder="Ej: 82"
-              value={measurements.inseam}
-              onChange={(e) => handleMeasurementChange("inseam", e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+              type="text"
+              readOnly
+              value={measurements.inseam ? `${measurements.inseam} mm` : "N/A"}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm opacity-70 cursor-not-allowed font-medium"
             />
           </div>
         </div>
       </div>
 
-      <div className="flex justify-end pt-4">
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-purple-500 text-white font-medium rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-          Guardar Perfil
-        </button>
-      </div>
-
-    </form>
+    </div>
   );
 }

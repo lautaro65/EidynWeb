@@ -20,6 +20,26 @@ export default async function PortalPage() {
     age: ((activeAvatar?.measurements as Record<string, unknown>)?.age as number) || 0,
   };
 
+  // Logic to determine available scans for UI display
+  const now = new Date();
+  let availableScans = 0;
+  let resetDateStr = "";
+  
+  if (user) {
+    let currentCount = user.avatarMonthlyCount;
+    let resetAt = user.avatarCountResetAt;
+    
+    if (now > resetAt) {
+       currentCount = 0;
+       const nextReset = new Date();
+       nextReset.setMonth(nextReset.getMonth() + 2);
+       resetAt = nextReset;
+    }
+    
+    availableScans = Math.max(0, user.avatarMonthlyLimit - currentCount);
+    resetDateStr = resetAt.toLocaleDateString("es-ES", { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
   return (
     <div className="max-w-5xl space-y-12">
       
@@ -99,7 +119,34 @@ export default async function PortalPage() {
             </p>
           </div>
         ) : activeAvatar?.modelUrl ? (
-          <AvatarViewer modelUrl={activeAvatar.modelUrl} />
+          <>
+            <AvatarViewer modelUrl={activeAvatar.modelUrl} />
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-20">
+              {availableScans > 0 ? (
+                <Link 
+                  href="/portal/avatar/new"
+                  className="px-6 py-2.5 bg-background/80 backdrop-blur-md text-foreground border border-white/20 font-medium rounded-full shadow-xl hover:bg-white/10 transition-all flex items-center gap-2"
+                >
+                  <Wand2 className="w-4 h-4 text-primary" />
+                  Volver a Escanear
+                </Link>
+              ) : (
+                <button 
+                  disabled
+                  className="px-6 py-2.5 bg-background/50 backdrop-blur-md text-muted-foreground border border-white/10 font-medium rounded-full cursor-not-allowed flex items-center gap-2"
+                >
+                  <Wand2 className="w-4 h-4 opacity-50" />
+                  Límite Agotado
+                </button>
+              )}
+              <span className="text-xs text-muted-foreground/80 bg-background/40 px-3 py-1 rounded-full backdrop-blur-md">
+                {availableScans > 0 
+                  ? `Quedan ${availableScans} intentos (Se renuevan el ${resetDateStr})`
+                  : `Tus intentos se renuevan el ${resetDateStr}`
+                }
+              </span>
+            </div>
+          </>
         ) : (
           <>
             <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 via-transparent to-purple-500/20 opacity-50" />

@@ -45,6 +45,7 @@ model User {
   memberships   Membership[]
   addresses     Address[]
   avatars       Avatar[]
+  avatarScanLogs AvatarScanLog[]
   activeAvatar  Avatar?        @relation("UserActiveAvatar", fields: [activeAvatarId], references: [id])
   // Tiendas a las que el usuario les dio permiso de usar su avatar
   shopConsents  ShopConsent[]
@@ -176,6 +177,20 @@ model Avatar {
   tryonSessions TryOnSession[]
 
   @@map("avatars")
+}
+
+// ─────────────────────────────────────────
+// HISTORIAL DE ESCANEOS (CONTROL DE CUOTA)
+// ─────────────────────────────────────────
+
+model AvatarScanLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("avatar_scan_logs")
 }
 
 // ─────────────────────────────────────────

@@ -35,10 +35,13 @@ export default async function AvatarNewPage({
     redirect(`/${locale}/portal`);
   }
 
+  const measurements = (user.activeAvatar.measurements || {}) as Record<string, unknown>;
+  
   const initialData = {
     gender: user.activeAvatar.gender || "unisex",
     height: user.activeAvatar.height ? Number(user.activeAvatar.height) : 170,
     weight: user.activeAvatar.weight ? Number(user.activeAvatar.weight) : 70,
+    age: typeof measurements?.age === "number" ? measurements.age : 30,
   };
 
   return (
