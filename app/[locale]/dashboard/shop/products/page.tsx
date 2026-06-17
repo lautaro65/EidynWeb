@@ -36,11 +36,13 @@ export default async function ProductsPage({ params }: Props) {
   }
 
   // Check if tenant has any active connection (Integration or ApiKey)
-  const [integrationsCount, apiKeysCount] = await Promise.all([
+  const [integrationsCount, apiKeysCount, tenant] = await Promise.all([
     db.integration.count({ where: { tenantId, status: "connected" } }),
-    db.apiKey.count({ where: { tenantId, isActive: true } })
+    db.apiKey.count({ where: { tenantId, isActive: true } }),
+    db.tenant.findUnique({ where: { id: tenantId } })
   ]);
 
+  const tenantType = tenant?.type || "store";
   const hasConnections = integrationsCount > 0 || apiKeysCount > 0;
 
   if (!hasConnections) {
@@ -104,7 +106,7 @@ export default async function ProductsPage({ params }: Props) {
         </p>
       </div>
 
-      <ProductsClient initialProducts={formattedProducts} />
+      <ProductsClient initialProducts={formattedProducts} tenantType={tenantType} />
     </div>
   );
 }

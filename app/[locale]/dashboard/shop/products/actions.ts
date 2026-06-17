@@ -171,11 +171,11 @@ async function syncShopifyProducts(tenantId: string, integration: { storeUrl: st
 }
 
 export async function getGarmentsForMappingAction(params: {
-  tab: "own" | "community";
   search: string;
   page: number;
   limit: number;
   likedOnly: boolean;
+  ownBrandOnly?: boolean;
 }) {
   try {
     const { userId, sessionClaims } = await auth();
@@ -188,18 +188,20 @@ export async function getGarmentsForMappingAction(params: {
       tenantId = mem.tenantId;
     }
 
-    const { tab, search, page, limit, likedOnly } = params;
+    const { search, page, limit, likedOnly, ownBrandOnly } = params;
     const skip = (page - 1) * limit;
 
     const whereClause: Record<string, unknown> = {
       status: "complete"
     };
 
-    if (tab === "own") {
+    if (ownBrandOnly) {
       whereClause.ownerId = tenantId;
     } else {
-      whereClause.isPublic = true;
-      whereClause.ownerId = { not: tenantId };
+      whereClause.OR = [
+        { isPublic: true },
+        { ownerId: tenantId }
+      ];
       
       if (likedOnly) {
         // Find garment ids that this tenant liked

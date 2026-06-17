@@ -42,7 +42,7 @@ export function DashboardSidebar({ tenantType }: { tenantType?: string }) {
       key: "general",
       label: t("sectionGeneral"),
       items: [
-        { icon: LayoutDashboard, label: t("overview"), href: "/dashboard" },
+        { icon: LayoutDashboard, label: t("overview"), href: "/dashboard/shop" },
       ],
     },
     {
@@ -123,10 +123,10 @@ export function DashboardSidebar({ tenantType }: { tenantType?: string }) {
               <div className="space-y-1">
                 {section.items.map((item) => {
                   const isParentActive =
-                    item.href === "/dashboard"
-                      ? pathname === "/dashboard" ||
-                        pathname === "/es/dashboard" ||
-                        pathname === "/en/dashboard"
+                    item.href === "/dashboard/shop"
+                      ? pathname === "/dashboard/shop" ||
+                        pathname === "/es/dashboard/shop" ||
+                        pathname === "/en/dashboard/shop"
                       : item.href === "/dashboard/shop/account"
                       ? pathname.endsWith("/dashboard/shop/account")
                       : pathname.includes(item.href);

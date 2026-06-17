@@ -22,8 +22,6 @@ import {
   Search,
   CheckCircle2,
   AlertCircle,
-  Users,
-  User,
   Heart,
   Loader2,
   ChevronUp,
@@ -31,6 +29,7 @@ import {
   X
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -64,12 +63,12 @@ interface MockProduct {
 }
 
 
-
 interface Props {
   initialProducts: MockProduct[];
+  tenantType: string;
 }
 
-export function ProductsClient({ initialProducts }: Props) {
+export function ProductsClient({ initialProducts, tenantType }: Props) {
   const t = useTranslations("Products");
   const [searchTerm, setSearchTerm] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
@@ -95,7 +94,7 @@ export function ProductsClient({ initialProducts }: Props) {
   const [productToUnmap, setProductToUnmap] = useState<MockProduct | null>(null);
 
   // Mapping Explorer State
-  const [mappingTab, setMappingTab] = useState<"own" | "community">("own");
+  const [ownBrandOnly, setOwnBrandOnly] = useState(false);
   const [mappingSearch, setMappingSearch] = useState("");
   const [mappingPage, setMappingPage] = useState(1);
   const [mappingLikedOnly, setMappingLikedOnly] = useState(false);
@@ -113,7 +112,7 @@ export function ProductsClient({ initialProducts }: Props) {
       try {
         const { getGarmentsForMappingAction } = await import("./actions");
         const res = await getGarmentsForMappingAction({
-          tab: mappingTab,
+          ownBrandOnly,
           search: mappingSearch,
           page: mappingPage,
           limit: 10,
@@ -140,13 +139,13 @@ export function ProductsClient({ initialProducts }: Props) {
     
     const timeoutId = setTimeout(fetchGarments, 300); // debounce search
     return () => { isMounted = false; clearTimeout(timeoutId); };
-  }, [mappingModalOpen, mappingTab, mappingSearch, mappingPage, mappingLikedOnly]);
+  }, [mappingModalOpen, ownBrandOnly, mappingSearch, mappingPage, mappingLikedOnly]);
 
   // Reset page when filters change
   useEffect(() => {
     // eslint-disable-next-line
     setMappingPage(1);
-  }, [mappingTab, mappingSearch, mappingLikedOnly]);
+  }, [ownBrandOnly, mappingSearch, mappingLikedOnly]);
 
   const handleSync = async () => {
     setIsSyncing(true);
@@ -422,25 +421,9 @@ export function ProductsClient({ initialProducts }: Props) {
             </DialogHeader>
 
             <div className="mt-6 space-y-4">
-              {/* Tabs */}
-              <div className="flex bg-white/5 p-1 rounded-xl w-fit border border-white/10">
-                <button 
-                  onClick={() => setMappingTab("own")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${mappingTab === "own" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  <User className="w-4 h-4" /> Mis Modelos
-                </button>
-                <button 
-                  onClick={() => setMappingTab("community")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${mappingTab === "community" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  <Users className="w-4 h-4" /> Comunidad
-                </button>
-              </div>
-
-              {/* Filters */}
+              {/* Filters Header */}
               <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <div className="relative w-full max-w-sm">
+                <div className="relative w-full sm:max-w-xs">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input 
                     placeholder="Buscar por SKU o nombre..." 
@@ -450,16 +433,35 @@ export function ProductsClient({ initialProducts }: Props) {
                   />
                 </div>
                 
-                {mappingTab === "community" && (
-                  <Button 
-                    variant={mappingLikedOnly ? "default" : "outline"} 
-                    onClick={() => setMappingLikedOnly(!mappingLikedOnly)}
-                    className={`h-10 rounded-xl border-white/10 transition-colors ${mappingLikedOnly ? "bg-rose-500 text-white hover:bg-rose-600 border-transparent shadow-md shadow-rose-500/20" : "hover:bg-rose-500/10 hover:text-rose-500 hover:border-rose-500/20"}`}
-                  >
-                    <Heart className={`w-4 h-4 mr-2 ${mappingLikedOnly ? "fill-current" : ""}`} />
-                    Solo mis favoritos
-                  </Button>
-                )}
+                <div className="flex items-center gap-4">
+                  {tenantType === "brand" && (
+                    <div className="flex items-center space-x-2 bg-white/5 border border-white/10 px-3 py-2 rounded-xl">
+                      <Switch 
+                        id="own-brand" 
+                        checked={ownBrandOnly} 
+                        onCheckedChange={setOwnBrandOnly}
+                        className="data-[state=checked]:bg-primary"
+                      />
+                      <label 
+                        htmlFor="own-brand" 
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      >
+                        Solamente de mi marca
+                      </label>
+                    </div>
+                  )}
+
+                  {!ownBrandOnly && (
+                    <Button 
+                      variant={mappingLikedOnly ? "default" : "outline"} 
+                      onClick={() => setMappingLikedOnly(!mappingLikedOnly)}
+                      className={`h-10 rounded-xl border-white/10 transition-colors ${mappingLikedOnly ? "bg-rose-500 text-white hover:bg-rose-600 border-transparent shadow-md shadow-rose-500/20" : "hover:bg-rose-500/10 hover:text-rose-500 hover:border-rose-500/20"}`}
+                    >
+                      <Heart className={`w-4 h-4 mr-2 ${mappingLikedOnly ? "fill-current" : ""}`} />
+                      Solo mis favoritos
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
