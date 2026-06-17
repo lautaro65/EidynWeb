@@ -140,7 +140,7 @@ export function BillingClient({ currentPlan = "free" }: { currentPlan?: string }
         </p>
       </div>
 
-      <div className="flex gap-4 border-b border-white/10 pb-px">
+      <div className="flex gap-4 border-b border-border/50 pb-px">
         <button 
           onClick={() => setActiveTab("overview")}
           className={cn(
@@ -173,24 +173,24 @@ export function BillingClient({ currentPlan = "free" }: { currentPlan?: string }
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
               {/* Prendas */}
-              <div className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
+              <div className="bg-background/40 backdrop-blur-xl border border-border/50 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[40px] -mr-10 -mt-10 transition-all group-hover:bg-primary/20" />
                 <div className="flex justify-between items-start mb-4 relative">
                   <div className="p-3 bg-primary/10 rounded-xl">
                     <BarChart3 className="w-5 h-5 text-primary" />
                   </div>
-                  <span className="text-xs font-semibold bg-white/5 px-2 py-1 rounded-md text-muted-foreground border border-white/10">{t("starter")}</span>
+                  <span className="text-xs font-semibold bg-muted/50 px-2 py-1 rounded-md text-muted-foreground border border-border/50">{t("starter")}</span>
                 </div>
                 <h3 className="text-muted-foreground font-medium mb-1">{mockUsage.garments.label}</h3>
                 <div className="flex items-end gap-2 mb-4">
                   <span className="text-3xl font-bold text-foreground">{mockUsage.garments.current}</span>
                   <span className="text-muted-foreground mb-1">/ {mockUsage.garments.max}</span>
                 </div>
-                <Progress value={(mockUsage.garments.current / mockUsage.garments.max) * 100} className="h-2 bg-white/5" />
+                <Progress value={(mockUsage.garments.current / mockUsage.garments.max) * 100} className="h-2 bg-muted/50" />
               </div>
 
               {/* Almacenamiento */}
-              <div className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
+              <div className="bg-background/40 backdrop-blur-xl border border-border/50 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-[40px] -mr-10 -mt-10 transition-all group-hover:bg-blue-500/20" />
                 <div className="flex justify-between items-start mb-4 relative">
                   <div className="p-3 bg-blue-500/10 rounded-xl">
@@ -202,11 +202,11 @@ export function BillingClient({ currentPlan = "free" }: { currentPlan?: string }
                   <span className="text-3xl font-bold text-foreground">{mockUsage.storage.current}</span>
                   <span className="text-muted-foreground mb-1">/ {mockUsage.storage.max}</span>
                 </div>
-                <Progress value={(mockUsage.storage.current / mockUsage.storage.max) * 100} className="h-2 bg-white/5" />
+                <Progress value={(mockUsage.storage.current / mockUsage.storage.max) * 100} className="h-2 bg-muted/50" />
               </div>
 
               {/* API Calls */}
-              <div className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
+              <div className="bg-background/40 backdrop-blur-xl border border-border/50 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-[40px] -mr-10 -mt-10 transition-all group-hover:bg-emerald-500/20" />
                 <div className="flex justify-between items-start mb-4 relative">
                   <div className="p-3 bg-emerald-500/10 rounded-xl">
@@ -221,7 +221,7 @@ export function BillingClient({ currentPlan = "free" }: { currentPlan?: string }
                   <span className="text-3xl font-bold text-foreground">{(mockUsage.apiCalls.current / 1000).toFixed(1)}k</span>
                   <span className="text-muted-foreground mb-1">/ {(mockUsage.apiCalls.max / 1000).toFixed(0)}k</span>
                 </div>
-                <Progress value={(mockUsage.apiCalls.current / mockUsage.apiCalls.max) * 100} className="h-2 bg-white/5" />
+                <Progress value={(mockUsage.apiCalls.current / mockUsage.apiCalls.max) * 100} className="h-2 bg-muted/50" />
               </div>
 
             </div>
@@ -242,7 +242,7 @@ export function BillingClient({ currentPlan = "free" }: { currentPlan?: string }
                     "relative bg-background/50 backdrop-blur-xl border rounded-[2rem] p-8 flex flex-col transition-transform hover:scale-[1.02]",
                     plan.highlight 
                       ? "border-primary/50 shadow-[0_0_40px_-10px_rgba(var(--primary),0.3)]" 
-                      : "border-white/10 shadow-2xl"
+                      : "border-border/50 shadow-2xl"
                   )}
                 >
                   {plan.highlight && (
@@ -276,10 +276,10 @@ export function BillingClient({ currentPlan = "free" }: { currentPlan?: string }
                     className={cn(
                       "w-full py-4 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2",
                       plan.slug === currentPlan 
-                        ? (currentPlan === "free" ? "bg-white/5 text-muted-foreground border border-white/5 cursor-default" : "bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30") 
+                        ? (currentPlan === "free" ? "bg-muted/50 text-muted-foreground border border-border/50 cursor-default" : "bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30") 
                         : plan.highlight 
                           ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20" 
-                          : "bg-white/10 text-foreground hover:bg-white/20 border border-white/10"
+                          : "bg-muted/50 text-foreground hover:bg-muted border border-border/50"
                     )}
                   >
                     {loadingPlan === plan.slug ? (
@@ -298,7 +298,7 @@ export function BillingClient({ currentPlan = "free" }: { currentPlan?: string }
           </section>
 
           {/* SECCIÓN 2: Gestión Financiera */}
-          <section className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-xl mt-12">
+          <section className="bg-background/40 backdrop-blur-xl border border-border/50 rounded-3xl p-8 shadow-xl mt-12">
             <div className="flex flex-col md:flex-row gap-8 justify-between">
               <div className="flex-1">
                 <h2 className="text-2xl font-bold mb-2">Métodos de Pago</h2>
@@ -306,9 +306,9 @@ export function BillingClient({ currentPlan = "free" }: { currentPlan?: string }
                 
                 <div className="space-y-4">
                   {mockPaymentMethods.map((method) => (
-                    <div key={method.id} className="flex items-center justify-between p-4 rounded-2xl border border-white/10 bg-white/5">
+                    <div key={method.id} className="flex items-center justify-between p-4 rounded-2xl border border-border/50 bg-muted/50">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-8 bg-white/10 rounded flex items-center justify-center font-bold italic text-xs">
+                        <div className="w-12 h-8 bg-muted/50 rounded flex items-center justify-center font-bold italic text-xs">
                           {method.type}
                         </div>
                         <div>
@@ -325,15 +325,15 @@ export function BillingClient({ currentPlan = "free" }: { currentPlan?: string }
                     </div>
                   ))}
                   
-                  <button className="w-full py-4 border-2 border-dashed border-white/20 rounded-2xl text-muted-foreground font-semibold flex items-center justify-center gap-2 hover:bg-white/5 hover:text-foreground transition-all">
+                  <button className="w-full py-4 border-2 border-dashed border-white/20 rounded-2xl text-muted-foreground font-semibold flex items-center justify-center gap-2 hover:bg-muted/50 hover:text-foreground transition-all">
                     <Plus className="w-5 h-5" /> Agregar Nuevo Método de Pago
                   </button>
                 </div>
               </div>
               
-              <div className="w-full md:w-80 bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col justify-between">
+              <div className="w-full md:w-80 bg-muted/50 border border-border/50 rounded-2xl p-6 flex flex-col justify-between">
                 <div>
-                  <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center mb-4">
+                  <div className="w-10 h-10 bg-muted/50 rounded-xl flex items-center justify-center mb-4">
                     <ShieldCheck className="w-5 h-5 text-foreground" />
                   </div>
                   <h3 className="font-bold text-lg mb-2">{t("securityTitle")}</h3>
@@ -342,8 +342,8 @@ export function BillingClient({ currentPlan = "free" }: { currentPlan?: string }
                 <div className="mt-6 flex justify-between items-center text-xs text-muted-foreground">
                   <span>Powered by Stripe</span>
                   <div className="flex gap-1">
-                    <div className="w-6 h-4 bg-white/20 rounded-sm"></div>
-                    <div className="w-6 h-4 bg-white/20 rounded-sm"></div>
+                    <div className="w-6 h-4 bg-muted rounded-sm"></div>
+                    <div className="w-6 h-4 bg-muted rounded-sm"></div>
                   </div>
                 </div>
               </div>
@@ -365,9 +365,9 @@ export function BillingClient({ currentPlan = "free" }: { currentPlan?: string }
             </button>
           </div>
 
-          <div className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-xl">
+          <div className="bg-background/40 backdrop-blur-xl border border-border/50 rounded-2xl overflow-hidden shadow-xl">
             <table className="w-full text-left">
-              <thead className="bg-white/5 border-b border-white/10">
+              <thead className="bg-muted/50 border-b border-border/50">
                 <tr>
                   <th className="p-4 font-semibold text-muted-foreground text-sm">{t("table.invoice")}</th>
                   <th className="p-4 font-semibold text-muted-foreground text-sm">{t("table.date")}</th>
@@ -380,7 +380,7 @@ export function BillingClient({ currentPlan = "free" }: { currentPlan?: string }
               <tbody>
                 {mockTransactions.length > 0 ? (
                   mockTransactions.map((tx) => (
-                    <tr key={tx.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <tr key={tx.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
                       <td className="p-4 font-medium text-foreground">{tx.id}</td>
                       <td className="p-4 text-muted-foreground text-sm">{tx.date}</td>
                       <td className="p-4 text-muted-foreground text-sm">{tx.plan}</td>
@@ -391,7 +391,7 @@ export function BillingClient({ currentPlan = "free" }: { currentPlan?: string }
                         </span>
                       </td>
                       <td className="p-4 text-right">
-                        <button aria-label={`Descargar factura ${tx.id}`} className="p-2 text-muted-foreground hover:text-primary transition-colors bg-white/5 rounded-lg hover:bg-primary/10">
+                        <button aria-label={`Descargar factura ${tx.id}`} className="p-2 text-muted-foreground hover:text-primary transition-colors bg-muted/50 rounded-lg hover:bg-primary/10">
                           <Download className="w-4 h-4" aria-hidden="true" />
                         </button>
                       </td>

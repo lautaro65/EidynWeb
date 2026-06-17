@@ -270,14 +270,14 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
     <div className="space-y-6">
       
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-background/50 border border-white/10 p-4 rounded-2xl backdrop-blur-xl">
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-background/50 border border-border/50 p-4 rounded-2xl backdrop-blur-xl">
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input 
             placeholder={t("searchPlaceholder", { fallback: "Buscar por SKU o nombre..." })} 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 h-12 rounded-xl bg-background/50 border-white/10 focus-visible:ring-primary/30"
+            className="pl-10 h-12 rounded-xl bg-background/50 border-border/50 focus-visible:ring-primary/30"
             aria-label="Buscar productos"
           />
         </div>
@@ -311,10 +311,10 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
       )}
 
       {/* Data Table */}
-      <div className="rounded-[2rem] border border-white/10 bg-background/40 backdrop-blur-2xl overflow-hidden shadow-2xl">
+      <div className="rounded-[2rem] border border-border/50 bg-background/40 backdrop-blur-2xl overflow-hidden shadow-2xl">
         <Table>
           <TableHeader className="bg-muted/30">
-            <TableRow className="border-white/10 hover:bg-transparent">
+            <TableRow className="border-border/50 hover:bg-transparent">
               <TableHead className="w-[80px] text-center">{t("table.img", { fallback: "Img" })}</TableHead>
               <TableHead>{t("table.product", { fallback: "Producto" })}</TableHead>
               <TableHead>Categoría</TableHead>
@@ -324,9 +324,9 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
           </TableHeader>
           <TableBody>
             {filteredProducts.map((product) => (
-              <TableRow key={product.id} className="border-white/5 hover:bg-white/5 transition-colors">
+              <TableRow key={product.id} className="border-border/50 hover:bg-muted/50 transition-colors">
                 <TableCell className="p-4">
-                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted border border-white/10 relative">
+                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted border border-border/50 relative">
                     <Image src={product.image} alt={product.name} fill className="object-cover" unoptimized />
                   </div>
                 </TableCell>
@@ -337,7 +337,7 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline" className="bg-background/50 border-white/10 text-xs">
+                  <Badge variant="outline" className="bg-background/50 border-border/50 text-xs">
                     {product.category}
                   </Badge>
                 </TableCell>
@@ -405,8 +405,8 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
 
       {/* MODAL: MAPEO INTELIGENTE */}
       <Dialog open={mappingModalOpen} onOpenChange={setMappingModalOpen}>
-        <DialogContent className="sm:max-w-3xl bg-background/95 backdrop-blur-3xl border-white/10 rounded-[2rem] shadow-2xl p-0 overflow-hidden flex flex-col h-[80vh]">
-          <div className="p-8 pb-4 shrink-0 border-b border-white/5">
+        <DialogContent className="sm:max-w-3xl bg-background/95 backdrop-blur-3xl border-border/50 rounded-[2rem] shadow-2xl p-0 overflow-hidden flex flex-col h-[80vh]">
+          <div className="p-8 pb-4 shrink-0 border-b border-border/50">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold flex items-center gap-2">
                 <Link2 className="w-6 h-6 text-primary" />
@@ -426,13 +426,13 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
                     placeholder="Buscar por SKU o nombre..." 
                     value={mappingSearch}
                     onChange={(e) => setMappingSearch(e.target.value)}
-                    className="pl-9 h-10 rounded-xl bg-background/50 border-white/10"
+                    className="pl-9 h-10 rounded-xl bg-background/50 border-border/50"
                   />
                 </div>
                 
                 <div className="flex items-center gap-4">
                   {tenantType === "brand" && (
-                    <div className="flex items-center space-x-2 bg-white/5 border border-white/10 px-3 py-2 rounded-xl">
+                    <div className="flex items-center space-x-2 bg-muted/50 border border-border/50 px-3 py-2 rounded-xl">
                       <Switch 
                         id="own-brand" 
                         checked={ownBrandOnly} 
@@ -465,9 +465,9 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
                     <div 
                       key={garment.id}
                       onClick={() => handleMapGarment(garment.id as string)}
-                      className="group cursor-pointer rounded-2xl border border-white/10 bg-background/50 p-4 hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center gap-4 shadow-sm"
+                      className="group cursor-pointer rounded-2xl border border-border/50 bg-background/50 p-4 hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center gap-4 shadow-sm"
                     >
-                      <div className="w-16 h-16 rounded-xl bg-muted border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform overflow-hidden relative">
+                      <div className="w-16 h-16 rounded-xl bg-muted border border-border/50 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform overflow-hidden relative">
                         {garment.baseModelUrl ? (
                           <Box className="w-8 h-8 text-primary" />
                         ) : (
@@ -483,7 +483,7 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
                 </div>
                 
                 {mappingGarments.length === 0 && !mappingLoading && (
-                  <div className="text-center p-8 text-muted-foreground bg-white/5 rounded-2xl border border-dashed border-white/10 mt-4">
+                  <div className="text-center p-8 text-muted-foreground bg-muted/50 rounded-2xl border border-dashed border-border/50 mt-4">
                     <Box className="w-12 h-12 mx-auto mb-4 opacity-50" />
                     No se encontraron modelos 3D que coincidan con la búsqueda.
                   </div>
@@ -495,7 +495,7 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
                       variant="outline" 
                       onClick={() => setMappingPage(p => p + 1)}
                       disabled={mappingLoading}
-                      className="rounded-xl border-white/10"
+                      className="rounded-xl border-border/50"
                     >
                       {mappingLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                       Cargar más
@@ -511,7 +511,7 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
       {/* MODAL: PREVISUALIZACION PARAMETRICA */}
       <Dialog open={previewModalOpen} onOpenChange={setPreviewModalOpen}>
         <DialogContent className="max-w-[95vw] w-[1400px] h-[90vh] bg-background border-border/50 rounded-[2rem] shadow-2xl p-0 overflow-hidden flex flex-col">
-          <div className="flex justify-between items-center p-4 border-b border-white/5 bg-background/80 backdrop-blur-xl shrink-0 absolute top-0 left-0 w-full z-10">
+          <div className="flex justify-between items-center p-4 border-b border-border/50 bg-background/80 backdrop-blur-xl shrink-0 absolute top-0 left-0 w-full z-10">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <Eye className="w-5 h-5 text-primary" />
               Previsualización Paramétrica 3D
@@ -548,8 +548,8 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
                     isVariationsMenuOpen ? "translate-y-0 opacity-100 scale-100" : "translate-y-[120%] opacity-0 scale-95 pointer-events-none"
                   )}
                 >
-                  <div className="bg-background/80 backdrop-blur-3xl border border-white/10 rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
-                    <div className="p-5 flex items-center justify-between border-b border-white/5 bg-white/5">
+                  <div className="bg-background/80 backdrop-blur-3xl border border-border/50 rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+                    <div className="p-5 flex items-center justify-between border-b border-border/50 bg-muted/50">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30 shadow-[0_0_15px_rgba(var(--primary),0.3)]">
                           <Eye className="w-5 h-5 text-primary" />
@@ -562,7 +562,7 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="rounded-full hover:bg-white/10 h-8 w-8 transition-colors"
+                        className="rounded-full hover:bg-muted/50 h-8 w-8 transition-colors"
                         onClick={() => setIsVariationsMenuOpen(false)}
                         aria-label="Cerrar menú de variaciones"
                       >
@@ -575,7 +575,7 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
                       <div className="space-y-3">
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Variante</span>
-                          <span className="text-xs font-medium text-foreground bg-white/5 px-2 py-1 rounded-md border border-white/5">
+                          <span className="text-xs font-medium text-foreground bg-muted/50 px-2 py-1 rounded-md border border-border/50">
                             {(previewGarmentData.variants as {id: string, name: string}[])?.find(v => v.id === selectedVariantId)?.name || 'Ninguna'}
                           </span>
                         </div>
@@ -587,7 +587,7 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
                                 "relative w-14 h-14 rounded-2xl flex-shrink-0 transition-all duration-300 snap-center overflow-hidden group outline-none",
                                 selectedVariantId === v.id 
                                   ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 shadow-[0_0_20px_rgba(var(--primary),0.4)]" 
-                                  : "hover:scale-105 border border-white/10 opacity-70 hover:opacity-100"
+                                  : "hover:scale-105 border border-border/50 opacity-70 hover:opacity-100"
                               )}
                               onClick={() => setSelectedVariantId(v.id)}
                             >
@@ -613,7 +613,7 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
                       <div className="space-y-3">
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Talle</span>
-                          <span className="text-xs font-medium text-foreground bg-white/5 px-2 py-1 rounded-md border border-white/5">
+                          <span className="text-xs font-medium text-foreground bg-muted/50 px-2 py-1 rounded-md border border-border/50">
                             {(previewGarmentData.sizes as {id: string, label: string}[])?.find(s => s.id === selectedSizeId)?.label || 'Ninguno'}
                           </span>
                         </div>
@@ -625,7 +625,7 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
                                 "h-10 px-4 rounded-xl text-sm font-bold transition-all duration-300 outline-none",
                                 selectedSizeId === s.id 
                                   ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary),0.4)] scale-105" 
-                                  : "bg-white/5 text-muted-foreground border border-white/10 hover:bg-white/10 hover:text-foreground"
+                                  : "bg-muted/50 text-muted-foreground border border-border/50 hover:bg-muted/50 hover:text-foreground"
                               )}
                               onClick={() => setSelectedSizeId(s.id)}
                             >
@@ -643,7 +643,7 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="absolute bottom-6 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full bg-background/80 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:bg-white/10 hover:scale-110 transition-all duration-300 group z-10"
+                    className="absolute bottom-6 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full bg-background/80 backdrop-blur-2xl border border-border/50 shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:bg-muted/50 hover:scale-110 transition-all duration-300 group z-10"
                     onClick={() => setIsVariationsMenuOpen(true)}
                   >
                     <ChevronUp className="w-6 h-6 text-foreground group-hover:-translate-y-1 transition-transform" />
@@ -657,7 +657,7 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
 
       {/* MODAL: CONFIRMACION DE DESVINCULACION */}
       <AlertDialog open={unmapModalOpen} onOpenChange={setUnmapModalOpen}>
-        <AlertDialogContent className="bg-background/95 backdrop-blur-3xl border-white/10 rounded-[2rem] shadow-2xl">
+        <AlertDialogContent className="bg-background/95 backdrop-blur-3xl border-border/50 rounded-[2rem] shadow-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold flex items-center gap-2 text-foreground">
               <Link2 className="w-5 h-5 text-destructive" />
@@ -668,7 +668,7 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-6 gap-3 sm:gap-0">
-            <AlertDialogCancel className="rounded-xl h-12 bg-white/5 border-white/10 hover:bg-white/10 transition-colors">
+            <AlertDialogCancel className="rounded-xl h-12 bg-muted/50 border-border/50 hover:bg-muted/50 transition-colors">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction 

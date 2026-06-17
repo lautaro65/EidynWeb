@@ -586,7 +586,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
   };
 
   const renderColorwaysList = () => (
-    <div className="mb-6 space-y-3 p-4 bg-black/10 rounded-2xl border border-white/5">
+    <div className="mb-6 space-y-3 p-4 bg-black/10 rounded-2xl border border-border/50">
       <div className="flex justify-between items-center">
         <label className="text-sm font-medium text-foreground">{t("colorways")}</label>
         <span className="text-xs text-muted-foreground">{variants.length} / 5</span>
@@ -598,7 +598,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
             role="tab"
             aria-selected={activeVariantId === v.id}
             onClick={() => setActiveVariantId(v.id)}
-            className={`relative w-10 h-10 rounded-full shrink-0 border-2 transition-all ${activeVariantId === v.id ? 'border-primary scale-110 shadow-[0_0_15px_rgba(var(--primary),0.5)]' : 'border-white/10 hover:border-white/30 hover:scale-105'}`}
+            className={`relative w-10 h-10 rounded-full shrink-0 border-2 transition-all ${activeVariantId === v.id ? 'border-primary scale-110 shadow-[0_0_15px_rgba(var(--primary),0.5)]' : 'border-border/50 hover:border-white/30 hover:scale-105'}`}
             style={{ backgroundColor: v.color }}
             title={v.name}
             aria-label={v.name}
@@ -617,7 +617,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
               setVariants(prev => [...prev, { id: newId, name: `${t("defaultVariantName")} ${prev.length + 1}`, color: "#ffffff", frontImage: "", backImage: "", generatedTexture: "", generatedBackTexture: "" }]);
               setActiveVariantId(newId);
             }}
-            className="w-10 h-10 shrink-0 rounded-full border border-dashed border-white/20 bg-white/5 flex items-center justify-center hover:bg-white/10 hover:border-white/40 transition-colors"
+            className="w-10 h-10 shrink-0 rounded-full border border-dashed border-white/20 bg-muted/50 flex items-center justify-center hover:bg-muted/50 hover:border-white/40 transition-colors"
             title={t("addVariant")}
           >
             <Plus className="w-4 h-4 text-muted-foreground" />
@@ -631,7 +631,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
     <div className="flex flex-col lg:flex-row gap-6 items-start min-h-[calc(100vh-8rem)] animate-in fade-in duration-500">
 
       {/* Left Panel: 3D Viewer */}
-      <div className="w-full lg:flex-1 lg:sticky lg:top-24 h-[500px] lg:h-[calc(100vh-8rem)] bg-background/50 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative">
+      <div className="w-full lg:flex-1 lg:sticky lg:top-24 h-[500px] lg:h-[calc(100vh-8rem)] bg-background/50 backdrop-blur-xl border border-border/50 rounded-3xl overflow-hidden shadow-2xl relative">
         <GarmentViewer
           url={currentModelUrl}
           colorHex={activeVariant.color}
@@ -641,10 +641,10 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
       </div>
 
       {/* Right Panel: Editor Controls */}
-      <div className="w-full lg:w-[450px] flex flex-col bg-background/60 backdrop-blur-3xl border border-white/10 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] relative">
+      <div className="w-full lg:w-[450px] flex flex-col bg-background/60 backdrop-blur-3xl border border-border/50 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] relative">
 
         {/* Steps Header (Progress Bar) */}
-        <div className="p-6 pb-4 border-b border-white/5 bg-black/20">
+        <div className="p-6 pb-4 border-b border-border/50 bg-black/20">
           <div className="flex justify-between items-end mb-3">
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-1">
@@ -658,7 +658,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
               {Math.round((step / 6) * 100)}%
             </span>
           </div>
-          <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+          <div className="h-2 w-full bg-muted/50 rounded-full overflow-hidden">
             <div
               className="h-full bg-primary transition-all duration-500 ease-out"
               style={{ width: `${(step / 6) * 100}%` }}
@@ -690,7 +690,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
                     onClick={() => setCategory(model.id)}
                     className={`flex flex-col items-center justify-center p-6 rounded-2xl border transition-all duration-300 ${category === model.id
                       ? "bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(var(--primary),0.2)]"
-                      : "bg-white/5 border-white/10 hover:bg-white/10 text-muted-foreground hover:text-foreground"
+                      : "bg-muted/50 border-border/50 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
                       }`}
                   >
                     <model.icon className={`w-8 h-8 mb-3 ${category === model.id ? "scale-110" : ""}`} />
@@ -725,19 +725,19 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
                       min="0" max="100"
                       value={measurements[key]}
                       onChange={(e) => handleMeasurementChange(key, parseInt(e.target.value))}
-                      className="w-full accent-primary h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                      className="w-full accent-primary h-2 bg-muted/50 rounded-lg appearance-none cursor-pointer"
                     />
                   </div>
                 ))}
               </div>
 
-              <div className="pt-6 border-t border-white/10">
+              <div className="pt-6 border-t border-border/50">
                 <h3 className="text-lg font-medium">{t("componentsTitle")}</h3>
                 <p className="text-muted-foreground text-sm mt-1 mb-4">{t("componentsDesc")}</p>
 
                 <div className="mb-4">
                   <Select value={activeComponentTab} onValueChange={(val) => setActiveComponentTab(val as keyof typeof COMPONENT_OPTIONS)}>
-                    <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
+                    <SelectTrigger className="w-full bg-muted/50 border-border/50 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
                       <SelectValue>
                         {t(COMPONENT_CATEGORIES.find(c => c.id === activeComponentTab)?.labelKey as Parameters<typeof t>[0] || "collarType")}
                       </SelectValue>
@@ -759,9 +759,9 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
                       <button
                         key={option.id}
                         onClick={() => setComponents(prev => ({ ...prev, [activeComponentTab]: option.id }))}
-                        className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 ${isSelected ? 'border-primary bg-primary/10 shadow-[0_0_15px_rgba(var(--primary),0.2)]' : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'}`}
+                        className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 ${isSelected ? 'border-primary bg-primary/10 shadow-[0_0_15px_rgba(var(--primary),0.2)]' : 'border-border/50 bg-muted/50 hover:bg-muted/50 hover:border-white/20'}`}
                       >
-                        <div className={`w-12 h-12 rounded-full mb-3 flex items-center justify-center transition-colors ${isSelected ? 'bg-primary/20 text-primary' : 'bg-white/5 text-muted-foreground'}`}>
+                        <div className={`w-12 h-12 rounded-full mb-3 flex items-center justify-center transition-colors ${isSelected ? 'bg-primary/20 text-primary' : 'bg-muted/50 text-muted-foreground'}`}>
                           <Shirt className={`w-6 h-6 ${isSelected ? 'opacity-100' : 'opacity-50'}`} /> 
                         </div>
                         <span className={`text-sm text-center ${isSelected ? 'font-semibold text-primary' : 'font-medium text-foreground'}`}>
@@ -786,7 +786,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
               <div className="space-y-4">
                 <label className="text-sm font-medium block mb-1.5">{t("baseSizeName")}</label>
                 <Select value={baseSizeName} onValueChange={handleBaseSizeChange}>
-                  <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
+                  <SelectTrigger className="w-full bg-muted/50 border-border/50 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
                     <SelectValue placeholder={t("sizeNamePlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -797,7 +797,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
                 </Select>
               </div>
 
-              <div className="pt-6 border-t border-white/10">
+              <div className="pt-6 border-t border-border/50">
                 <div className="flex justify-between items-center mb-1">
                   <h3 className="text-lg font-medium">{t("sizeChart")}</h3>
                   <button
@@ -843,7 +843,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
                       {sizingSystem === "alphanumeric" && (
                         <button
                           onClick={() => handleApplyPreset("alphanumeric")}
-                          className="px-3 py-1.5 text-xs font-medium bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors"
+                          className="px-3 py-1.5 text-xs font-medium bg-muted/50 border border-border/50 rounded-lg hover:bg-muted/50 transition-colors"
                         >
                           Auto: XS - 2XL
                         </button>
@@ -851,7 +851,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
                       {sizingSystem === "numeric" && (
                         <button
                           onClick={() => handleApplyPreset("numeric")}
-                          className="px-3 py-1.5 text-xs font-medium bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors"
+                          className="px-3 py-1.5 text-xs font-medium bg-muted/50 border border-border/50 rounded-lg hover:bg-muted/50 transition-colors"
                         >
                           Auto: 38 - 48
                         </button>
@@ -862,7 +862,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
                   {/* Size Input Area */}
                   <div className="flex items-center gap-2">
                     <Select value={newSizeInput} onValueChange={(val) => val && setNewSizeInput(val)}>
-                      <SelectTrigger className="flex-1 max-w-[150px] bg-white/5 border-white/10 rounded-xl px-3 h-[38px] text-sm focus:ring-primary/50">
+                      <SelectTrigger className="flex-1 max-w-[150px] bg-muted/50 border-border/50 rounded-xl px-3 h-[38px] text-sm focus:ring-primary/50">
                         <SelectValue placeholder={t("sizeNamePlaceholder")} />
                       </SelectTrigger>
                       <SelectContent>
@@ -874,14 +874,14 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
                     <button
                       onClick={handleAddSmallerSize}
                       disabled={!newSizeInput.trim() || orderedSizes.includes(newSizeInput.trim().toUpperCase())}
-                      className="px-3 py-2 text-sm bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors disabled:opacity-50 h-[38px]"
+                      className="px-3 py-2 text-sm bg-muted/50 hover:bg-muted text-white rounded-xl font-medium transition-colors disabled:opacity-50 h-[38px]"
                     >
                       {t("addSmallerSize")}
                     </button>
                     <button
                       onClick={handleAddLargerSize}
                       disabled={!newSizeInput.trim() || orderedSizes.includes(newSizeInput.trim().toUpperCase())}
-                      className="px-3 py-2 text-sm bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors disabled:opacity-50 h-[38px]"
+                      className="px-3 py-2 text-sm bg-muted/50 hover:bg-muted text-white rounded-xl font-medium transition-colors disabled:opacity-50 h-[38px]"
                     >
                       {t("addLargerSize")}
                     </button>
@@ -908,7 +908,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
                               ? 'bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary),0.4)] border-primary/50 cursor-grab active:cursor-grabbing font-bold' 
                               : isActive 
                                 ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(var(--primary),0.2)] cursor-grab active:cursor-grabbing' 
-                                : 'bg-white/5 border-white/10 text-muted-foreground hover:bg-white/10 hover:text-foreground cursor-grab active:cursor-grabbing'
+                                : 'bg-muted/50 border-border/50 text-muted-foreground hover:bg-muted/50 hover:text-foreground cursor-grab active:cursor-grabbing'
                             }
                           `}
                         >
@@ -933,10 +933,10 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
                   <table className="w-full text-sm text-left border-collapse">
                     <thead>
                       <tr>
-                        <th className="px-4 py-2 font-medium text-muted-foreground border-b border-white/10 w-1/3">{t("measureHeader")}</th>
-                        <th className="px-4 py-2 font-medium text-primary border-b border-white/10 text-center bg-primary/5 rounded-tl-lg">{baseSizeName} (Base)</th>
+                        <th className="px-4 py-2 font-medium text-muted-foreground border-b border-border/50 w-1/3">{t("measureHeader")}</th>
+                        <th className="px-4 py-2 font-medium text-primary border-b border-border/50 text-center bg-primary/5 rounded-tl-lg">{baseSizeName} (Base)</th>
                         {activeSizeTab && (
-                          <th className="px-4 py-2 font-medium text-primary border-b border-white/10 text-center bg-primary/10 rounded-tr-lg">
+                          <th className="px-4 py-2 font-medium text-primary border-b border-border/50 text-center bg-primary/10 rounded-tr-lg">
                             {activeSizeTab}
                           </th>
                         )}
@@ -944,7 +944,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
                     </thead>
                     <tbody>
                       {(Object.keys(measurements) as Array<keyof typeof measurements>).map(key => (
-                        <tr key={key} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                        <tr key={key} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
                           <td className="px-4 py-3 text-muted-foreground">{t(key as Parameters<typeof t>[0])}</td>
                           <td className="px-4 py-3 text-center font-mono text-primary bg-primary/5">{measurements[key]}</td>
                           {activeSizeTab && (
@@ -962,7 +962,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
                     </tbody>
                   </table>
                   {!activeSizeTab && (smallerSizes.length > 0 || largerSizes.length > 0) && (
-                    <div className="text-center py-6 text-sm text-muted-foreground bg-white/5 rounded-b-lg border border-t-0 border-white/5">
+                    <div className="text-center py-6 text-sm text-muted-foreground bg-muted/50 rounded-b-lg border border-t-0 border-border/50">
                       Select a size tab above to edit measurements.
                     </div>
                   )}
@@ -989,7 +989,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
                   value={activeVariant.name}
                   onChange={(e) => updateActiveVariant({ name: e.target.value })}
                   placeholder={t("variantName")}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full bg-muted/50 border border-border/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
               </div>
 
@@ -1010,7 +1010,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
 
               <div className="space-y-4">
                 <label htmlFor="frontImage" className="text-sm font-medium">{t("frontImage")}</label>
-                <div className="border-2 border-dashed border-white/10 rounded-2xl p-6 text-center hover:bg-white/5 transition-colors relative" aria-live="polite">
+                <div className="border-2 border-dashed border-border/50 rounded-2xl p-6 text-center hover:bg-muted/50 transition-colors relative" aria-live="polite">
                   <input
                     id="frontImage"
                     type="file"
@@ -1042,7 +1042,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
 
               <div className="space-y-4">
                 <label htmlFor="backImage" className="text-sm font-medium">{t("backImage")}</label>
-                <div className="border-2 border-dashed border-white/10 rounded-2xl p-6 text-center hover:bg-white/5 transition-colors relative" aria-live="polite">
+                <div className="border-2 border-dashed border-border/50 rounded-2xl p-6 text-center hover:bg-muted/50 transition-colors relative" aria-live="polite">
                   <input
                     id="backImage"
                     type="file"
@@ -1085,7 +1085,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
 
             <div className="w-full relative aspect-[4/5]">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
-                <TabsList className="w-full max-w-md grid grid-cols-2 bg-white/5 border border-white/10 mb-4 shrink-0">
+                <TabsList className="w-full max-w-md grid grid-cols-2 bg-muted/50 border border-border/50 mb-4 shrink-0">
                   <TabsTrigger value="front" className="data-[state=active]:bg-primary">{t("tabFront")}</TabsTrigger>
                   <TabsTrigger value="back" className="data-[state=active]:bg-primary">{t("tabBack")}</TabsTrigger>
                 </TabsList>
@@ -1128,7 +1128,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder={t("garmentNamePlaceholder")}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    className="w-full bg-muted/50 border border-border/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
                 </div>
                 <div>
@@ -1142,7 +1142,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
                       aria-invalid={!!skuError}
                       aria-describedby={skuError ? "sku-error" : undefined}
                       placeholder={t("skuPlaceholder")}
-                      className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/50 uppercase transition-colors ${skuError ? "border-red-500/50 focus:ring-red-500/50" : "border-white/10"
+                      className={`w-full bg-muted/50 border rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/50 uppercase transition-colors ${skuError ? "border-red-500/50 focus:ring-red-500/50" : "border-border/50"
                         }`}
                     />
                     {isCheckingSku && (
@@ -1159,7 +1159,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
                 <div>
                   <label className="text-sm font-medium block mb-1.5">{t("gender")}</label>
                   <Select value={gender} onValueChange={(val) => setGender(val || "unisex")}>
-                    <SelectTrigger className="w-full bg-white/5 border-white/10 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
+                    <SelectTrigger className="w-full bg-muted/50 border-border/50 rounded-xl px-4 py-3 h-auto text-sm focus:ring-primary/50">
                       <SelectValue placeholder={t("genderUnisex")} />
                     </SelectTrigger>
                     <SelectContent>
@@ -1176,7 +1176,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={3}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                    className="w-full bg-muted/50 border border-border/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                   />
                 </div>
               </div>
@@ -1185,11 +1185,11 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
         </div>
 
         {/* Footer Controls */}
-        <div className="p-4 border-t border-white/5 bg-black/20 flex items-center justify-between">
+        <div className="p-4 border-t border-border/50 bg-black/20 flex items-center justify-between">
           {step > 1 ? (
             <button
               onClick={() => setStep((s) => s - 1 as 1 | 2 | 3 | 4 | 5 | 6)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
               {t("back")}
@@ -1211,7 +1211,7 @@ export function GarmentEditor({ initialData, isEditMode = false }: { initialData
                 }
                 setStep((s) => s + 1 as 1 | 2 | 3 | 4 | 5 | 6);
               }}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium bg-white/10 text-foreground hover:bg-white/20 transition-all"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium bg-muted/50 text-foreground hover:bg-muted transition-all"
             >
               {t("next")}
               <ChevronRight className="w-4 h-4" />

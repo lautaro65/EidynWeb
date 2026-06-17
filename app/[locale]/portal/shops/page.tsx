@@ -135,13 +135,13 @@ export default async function PortalShopsPage(props: {
       </div>
 
       {/* Controles de Vista */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-md relative z-10">
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-muted/50 p-4 rounded-2xl border border-border/50 backdrop-blur-md relative z-10">
         <ShopsTabs />
         <ShopsSearch />
       </div>
 
       {/* Lista de Conexiones */}
-      <div className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden min-h-[400px] flex flex-col">
+      <div className="bg-background/40 backdrop-blur-xl border border-border/50 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden min-h-[400px] flex flex-col">
         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none" />
         
         <div className="relative z-10 flex-1">
@@ -150,7 +150,7 @@ export default async function PortalShopsPage(props: {
 
         {/* Paginación */}
         {totalPages > 1 && (
-          <div className="mt-8 relative z-10 border-t border-white/10 pt-6">
+          <div className="mt-8 relative z-10 border-t border-border/50 pt-6">
             <Pagination totalPages={totalPages} />
           </div>
         )}

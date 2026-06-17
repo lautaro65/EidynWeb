@@ -76,7 +76,7 @@ export default async function NewGarmentPage({
         <Link 
           href="/dashboard/brand/garments"
           aria-label="Back to Garments"
-          className="p-2 rounded-full hover:bg-white/5 text-muted-foreground hover:text-foreground transition-colors"
+          className="p-2 rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>

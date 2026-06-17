@@ -162,7 +162,7 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
   };
 
   return (
-    <div className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-[2rem] p-8 md:p-12 shadow-2xl relative overflow-hidden">
+    <div className="bg-background/40 backdrop-blur-xl border border-border/50 rounded-[2rem] p-8 md:p-12 shadow-2xl relative overflow-hidden">
       {/* Background Glow */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] pointer-events-none -mt-40 -mr-40" />
 
@@ -313,7 +313,7 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
               </div>
             </div>
 
-            <div className="flex justify-end pt-6 border-t border-white/10">
+            <div className="flex justify-end pt-6 border-t border-border/50">
               <button
                 onClick={handleNext}
                 className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-primary/20"
@@ -341,7 +341,7 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="absolute inset-0 z-50 bg-background/95 backdrop-blur-3xl rounded-[2rem] border border-white/10 p-6 md:p-8 flex flex-col shadow-2xl overflow-hidden"
+                  className="absolute inset-0 z-50 bg-background/95 backdrop-blur-3xl rounded-[2rem] border border-border/50 p-6 md:p-8 flex flex-col shadow-2xl overflow-hidden"
                 >
                   <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                     <h2 className="text-2xl font-serif font-bold text-foreground mb-4">{t("instructionsTitle")}</h2>
@@ -376,12 +376,12 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src="/model3dpose/front.jpg" alt="Ejemplo Frontal" className="w-full rounded-xl border border-white/10 object-cover aspect-[1/2]" />
+                            <img src="/model3dpose/front.jpg" alt="Ejemplo Frontal" className="w-full rounded-xl border border-border/50 object-cover aspect-[1/2]" />
                             <p className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("exampleFront")}</p>
                           </div>
                           <div className="space-y-2">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src="/model3dpose/right.jpg" alt="Ejemplo Perfil" className="w-full rounded-xl border border-white/10 object-cover aspect-[1/2]" />
+                            <img src="/model3dpose/right.jpg" alt="Ejemplo Perfil" className="w-full rounded-xl border border-border/50 object-cover aspect-[1/2]" />
                             <p className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("exampleSide")}</p>
                           </div>
                         </div>
@@ -389,7 +389,7 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
                     </div>
                   </div>
 
-                  <div className="pt-6 mt-4 border-t border-white/10 flex justify-end">
+                  <div className="pt-6 mt-4 border-t border-border/50 flex justify-end">
                     <button 
                       onClick={() => setShowInstructions(false)}
                       className="px-8 py-3 bg-primary text-primary-foreground font-medium rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-primary/20"
@@ -415,7 +415,7 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
                   onClick={() => frontInputRef.current?.click()}
                   className={`
                     w-full aspect-[3/4] rounded-3xl border-2 border-dashed flex flex-col items-center justify-center p-6 cursor-pointer transition-all overflow-hidden relative
-                    ${frontPreview ? 'border-primary/50 bg-primary/5' : 'border-border/60 bg-card hover:border-primary/40 hover:bg-white/5'}
+                    ${frontPreview ? 'border-primary/50 bg-primary/5' : 'border-border/60 bg-card hover:border-primary/40 hover:bg-muted/50'}
                   `}
                 >
                   <input 
@@ -464,7 +464,7 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
                   onClick={() => sideInputRef.current?.click()}
                   className={`
                     w-full aspect-[3/4] rounded-3xl border-2 border-dashed flex flex-col items-center justify-center p-6 cursor-pointer transition-all overflow-hidden relative
-                    ${sidePreview ? 'border-primary/50 bg-primary/5' : 'border-border/60 bg-card hover:border-primary/40 hover:bg-white/5'}
+                    ${sidePreview ? 'border-primary/50 bg-primary/5' : 'border-border/60 bg-card hover:border-primary/40 hover:bg-muted/50'}
                   `}
                 >
                   <input 
@@ -503,7 +503,7 @@ export function AvatarWizard({ initialData }: AvatarWizardProps) {
 
             </div>
 
-            <div className="flex justify-between pt-6 border-t border-white/10">
+            <div className="flex justify-between pt-6 border-t border-border/50">
               <button
                 onClick={() => setStep(1)}
                 disabled={isSubmitting}

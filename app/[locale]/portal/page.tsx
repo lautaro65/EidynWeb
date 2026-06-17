@@ -62,7 +62,7 @@ export default async function PortalPage() {
         
         {/* Card: Avatar */}
         <Link href="/portal" className="group">
-          <div className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 h-full transition-all duration-300 hover:border-primary/50 hover:bg-white/5 relative overflow-hidden">
+          <div className="bg-background/40 backdrop-blur-xl border border-border/50 rounded-2xl p-6 h-full transition-all duration-300 hover:border-primary/50 hover:bg-muted/50 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-[40px] -mr-10 -mt-10 transition-all group-hover:bg-primary/20" />
             <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-6 border border-primary/20">
               <User className="w-6 h-6" />
@@ -81,7 +81,7 @@ export default async function PortalPage() {
 
         {/* Card: Tiendas */}
         <Link href="/portal/shops" className="group">
-          <div className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 h-full transition-all duration-300 hover:border-emerald-500/50 hover:bg-white/5 relative overflow-hidden">
+          <div className="bg-background/40 backdrop-blur-xl border border-border/50 rounded-2xl p-6 h-full transition-all duration-300 hover:border-emerald-500/50 hover:bg-muted/50 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] -mr-10 -mt-10 transition-all group-hover:bg-emerald-500/20" />
             <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-6 border border-emerald-500/20">
               <Store className="w-6 h-6" />
@@ -103,7 +103,7 @@ export default async function PortalPage() {
       </div>
 
       {/* Hero Visual: 3D Viewer or CTA */}
-      <div className="mt-12 w-full h-[500px] rounded-[2rem] border border-white/10 overflow-hidden relative group bg-background/50 backdrop-blur-sm">
+      <div className="mt-12 w-full h-[500px] rounded-[2rem] border border-border/50 overflow-hidden relative group bg-background/50 backdrop-blur-sm">
         {activeAvatar?.status === "processing" ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 z-10 bg-gradient-to-tr from-primary/10 via-transparent to-purple-500/10">
             <div className="relative w-32 h-32 mb-8">
@@ -125,7 +125,7 @@ export default async function PortalPage() {
               {availableScans > 0 ? (
                 <Link 
                   href="/portal/avatar/new"
-                  className="px-6 py-2.5 bg-background/80 backdrop-blur-md text-foreground border border-white/20 font-medium rounded-full shadow-xl hover:bg-white/10 transition-all flex items-center gap-2"
+                  className="px-6 py-2.5 bg-background/80 backdrop-blur-md text-foreground border border-white/20 font-medium rounded-full shadow-xl hover:bg-muted/50 transition-all flex items-center gap-2"
                 >
                   <Wand2 className="w-4 h-4 text-primary" />
                   Volver a Escanear
@@ -133,7 +133,7 @@ export default async function PortalPage() {
               ) : (
                 <button 
                   disabled
-                  className="px-6 py-2.5 bg-background/50 backdrop-blur-md text-muted-foreground border border-white/10 font-medium rounded-full cursor-not-allowed flex items-center gap-2"
+                  className="px-6 py-2.5 bg-background/50 backdrop-blur-md text-muted-foreground border border-border/50 font-medium rounded-full cursor-not-allowed flex items-center gap-2"
                 >
                   <Wand2 className="w-4 h-4 opacity-50" />
                   Límite Agotado
@@ -151,7 +151,7 @@ export default async function PortalPage() {
           <>
             <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 via-transparent to-purple-500/20 opacity-50" />
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 z-10">
-              <div className="w-24 h-24 mb-6 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl backdrop-blur-md">
+              <div className="w-24 h-24 mb-6 rounded-3xl bg-muted/50 border border-border/50 flex items-center justify-center shadow-2xl backdrop-blur-md">
                 <User className="w-12 h-12 text-primary" />
               </div>
               <h2 className="text-3xl font-bold mb-3 tracking-tight">Crea tu Identidad 3D</h2>

@@ -133,13 +133,13 @@ export default function TextureEditor({
     <div className="flex flex-col h-full gap-4">
       
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2 p-2 bg-white/5 border border-white/10 rounded-2xl shadow-lg backdrop-blur-md">
+      <div className="flex flex-wrap items-center gap-2 p-2 bg-muted/50 border border-border/50 rounded-2xl shadow-lg backdrop-blur-md">
         
         {/* Core Tools */}
-        <div className="flex items-center gap-1 bg-black/20 p-1 rounded-xl border border-white/5">
+        <div className="flex items-center gap-1 bg-black/20 p-1 rounded-xl border border-border/50">
           <button 
             onClick={() => setTool("move")} 
-            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg transition-all ${tool === "move" ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-white/10 text-muted-foreground hover:text-white"}`}
+            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg transition-all ${tool === "move" ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-muted/50 text-muted-foreground hover:text-white"}`}
             title={t("titleMove")}
           >
             <MousePointer2 className="w-4 h-4" />
@@ -147,7 +147,7 @@ export default function TextureEditor({
           </button>
           <button 
             onClick={() => setTool("eraser")} 
-            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg transition-all ${tool === "eraser" ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-white/10 text-muted-foreground hover:text-white"}`}
+            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg transition-all ${tool === "eraser" ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-muted/50 text-muted-foreground hover:text-white"}`}
             title={t("titleEraser")}
           >
             <Eraser className="w-4 h-4" />
@@ -156,8 +156,8 @@ export default function TextureEditor({
         </div>
         
         {/* Brush Size (only if eraser selected) */}
-        <div className={`flex items-center gap-3 px-4 py-2 bg-black/20 rounded-xl border border-white/5 transition-opacity ${tool === 'eraser' ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
-          <div className="w-2 h-2 rounded-full bg-white/50" />
+        <div className={`flex items-center gap-3 px-4 py-2 bg-black/20 rounded-xl border border-border/50 transition-opacity ${tool === 'eraser' ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+          <div className="w-2 h-2 rounded-full bg-muted/500" />
           <input 
             type="range" 
             min="1" 
@@ -171,13 +171,13 @@ export default function TextureEditor({
 
         {/* Image Actions */}
         {img && showImage && (
-          <div className="flex items-center gap-1 bg-black/20 p-1 rounded-xl border border-white/5 ml-auto">
+          <div className="flex items-center gap-1 bg-black/20 p-1 rounded-xl border border-border/50 ml-auto">
             <button 
               onClick={() => {
                 setImageNode({ x: 176, y: 176, width: 160, height: 160, rotation: 0, scaleX: 1, scaleY: 1 });
                 setLines([...lines]);
               }}
-              className="flex items-center gap-2 px-3 py-2 text-xs font-medium bg-transparent hover:bg-white/10 rounded-lg transition-all text-white/80 hover:text-white"
+              className="flex items-center gap-2 px-3 py-2 text-xs font-medium bg-transparent hover:bg-muted/50 rounded-lg transition-all text-white/80 hover:text-white"
               title={t("titleCenter")}
             >
               <AlignCenter className="w-4 h-4" />
@@ -188,13 +188,13 @@ export default function TextureEditor({
                 setImageNode({ x: 0, y: 0, width: 512, height: 512, rotation: 0, scaleX: 1, scaleY: 1 });
                 setLines([...lines]);
               }}
-              className="flex items-center gap-2 px-3 py-2 text-xs font-medium bg-transparent hover:bg-white/10 rounded-lg transition-all text-white/80 hover:text-white"
+              className="flex items-center gap-2 px-3 py-2 text-xs font-medium bg-transparent hover:bg-muted/50 rounded-lg transition-all text-white/80 hover:text-white"
               title={t("titleCover")}
             >
               <Maximize className="w-4 h-4" />
               <span className="hidden sm:inline">{t("toolCover")}</span>
             </button>
-            <div className="w-px h-6 bg-white/10 mx-1" />
+            <div className="w-px h-6 bg-muted/50 mx-1" />
             <button 
               onClick={() => { setShowImage(false); setSelectedId(null); setLines([...lines]); }}
               className="flex items-center gap-2 px-3 py-2 text-xs font-medium bg-transparent hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-all"
@@ -218,7 +218,7 @@ export default function TextureEditor({
       </div>
 
       {/* Canvas Area */}
-      <div className="flex-1 bg-black/40 rounded-2xl overflow-hidden border border-white/10 flex items-center justify-center relative">
+      <div className="flex-1 bg-black/40 rounded-2xl overflow-hidden border border-border/50 flex items-center justify-center relative">
         <Stage
           width={512}
           height={512}

@@ -427,7 +427,7 @@ function ModelLoader({ loadingText }: { loadingText: string }) {
   const { progress } = useProgress();
   return (
     <Html center>
-      <div className="flex flex-col items-center justify-center p-6 bg-background/80 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl">
+      <div className="flex flex-col items-center justify-center p-6 bg-background/80 backdrop-blur-md rounded-2xl border border-border/50 shadow-2xl">
         <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
         <p className="text-foreground font-bold text-lg whitespace-nowrap">{loadingText}</p>
         <p className="text-muted-foreground text-sm font-medium mt-1">{progress.toFixed(0)}%</p>
@@ -455,7 +455,7 @@ export function GarmentViewer({
 }) {
   const t = useTranslations("GarmentsNew");
 
-  if (!url) return <div className={`h-full w-full flex items-center justify-center bg-white/5 rounded-3xl border border-dashed border-white/10 text-muted-foreground ${className || 'min-h-[500px]'}`}>{t("modelNotAvailable")}</div>;
+  if (!url) return <div className={`h-full w-full flex items-center justify-center bg-muted/50 rounded-3xl border border-dashed border-border/50 text-muted-foreground ${className || 'min-h-[500px]'}`}>{t("modelNotAvailable")}</div>;
 
   return (
     <ErrorBoundary translations={{
@@ -463,7 +463,7 @@ export function GarmentViewer({
       errorUnknown: t("errorUnknown"),
       retry: t("retry")
     }}>
-      <div className={`w-full h-full bg-gradient-to-b from-background/80 to-background/20 rounded-3xl overflow-hidden border border-white/10 relative shadow-2xl ${className || 'min-h-[500px]'}`}>
+      <div className={`w-full h-full bg-gradient-to-b from-background/80 to-background/20 rounded-3xl overflow-hidden border border-border/50 relative shadow-2xl ${className || 'min-h-[500px]'}`}>
         <Canvas 
           shadows={{ type: THREE.PCFShadowMap }} 
           camera={{ position: [0, 0, 15], fov: 45 }}
@@ -487,7 +487,7 @@ export function GarmentViewer({
           </Suspense>
           <OrbitControls makeDefault enableDamping={false} />
         </Canvas>
-        <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center px-6 py-3 bg-background/80 backdrop-blur-xl rounded-full border border-white/10 text-xs font-medium text-muted-foreground shadow-lg">
+        <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center px-6 py-3 bg-background/80 backdrop-blur-xl rounded-full border border-border/50 text-xs font-medium text-muted-foreground shadow-lg">
           <span className="flex items-center gap-2"><MousePointer2 className="w-4 h-4" /> {t("dragToRotate")}</span>
           <span className="flex items-center gap-2"><ZoomIn className="w-4 h-4" /> {t("scrollToZoom")}</span>
         </div>

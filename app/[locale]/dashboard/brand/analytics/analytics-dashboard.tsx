@@ -26,7 +26,7 @@ export function AnalyticsDashboard({ kpis, mockData }: AnalyticsDashboardProps) 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Modelos Card */}
-        <div className="p-6 bg-white/5 border border-white/10 rounded-2xl relative overflow-hidden group">
+        <div className="p-6 bg-muted/50 border border-border/50 rounded-2xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-[40px] pointer-events-none group-hover:bg-primary/20 transition-colors duration-500" />
           <div className="flex items-center justify-between mb-4 relative z-10">
             <h3 className="text-sm font-medium text-muted-foreground">Modelos Creados</h3>
@@ -44,7 +44,7 @@ export function AnalyticsDashboard({ kpis, mockData }: AnalyticsDashboardProps) 
         </div>
 
         {/* Tiendas Card */}
-        <div className="p-6 bg-white/5 border border-white/10 rounded-2xl relative overflow-hidden group">
+        <div className="p-6 bg-muted/50 border border-border/50 rounded-2xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-[40px] pointer-events-none group-hover:bg-purple-500/20 transition-colors duration-500" />
           <div className="flex items-center justify-between mb-4 relative z-10">
             <h3 className="text-sm font-medium text-muted-foreground">Tiendas Conectadas</h3>
@@ -62,7 +62,7 @@ export function AnalyticsDashboard({ kpis, mockData }: AnalyticsDashboardProps) 
         </div>
 
         {/* Productos Vinculados Card */}
-        <div className="p-6 bg-white/5 border border-white/10 rounded-2xl relative overflow-hidden group">
+        <div className="p-6 bg-muted/50 border border-border/50 rounded-2xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/10 rounded-full blur-[40px] pointer-events-none group-hover:bg-pink-500/20 transition-colors duration-500" />
           <div className="flex items-center justify-between mb-4 relative z-10">
             <h3 className="text-sm font-medium text-muted-foreground">Productos Vinculados</h3>
@@ -84,7 +84,7 @@ export function AnalyticsDashboard({ kpis, mockData }: AnalyticsDashboardProps) 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Line Chart: Try-Ons over time */}
-        <div className="lg:col-span-2 p-6 bg-white/5 border border-white/10 rounded-2xl flex flex-col">
+        <div className="lg:col-span-2 p-6 bg-muted/50 border border-border/50 rounded-2xl flex flex-col">
           <div className="mb-6">
             <h3 className="text-lg font-medium">Sesiones de Probador Virtual</h3>
             <p className="text-sm text-muted-foreground">Interacciones de usuarios finales a lo largo del tiempo</p>
@@ -112,7 +112,7 @@ export function AnalyticsDashboard({ kpis, mockData }: AnalyticsDashboardProps) 
         </div>
 
         {/* Pie Chart: Top Sizes */}
-        <div className="p-6 bg-white/5 border border-white/10 rounded-2xl flex flex-col">
+        <div className="p-6 bg-muted/50 border border-border/50 rounded-2xl flex flex-col">
           <div className="mb-2">
             <h3 className="text-lg font-medium">Tallas más probadas</h3>
             <p className="text-sm text-muted-foreground">Distribución de fisonomías</p>
@@ -160,8 +160,8 @@ export function AnalyticsDashboard({ kpis, mockData }: AnalyticsDashboardProps) 
       </div>
 
       {/* Top Garments Table */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-        <div className="p-6 border-b border-white/5 flex items-center justify-between">
+      <div className="bg-muted/50 border border-border/50 rounded-2xl overflow-hidden">
+        <div className="p-6 border-b border-border/50 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-medium">Modelos con Mayor Tracción</h3>
             <p className="text-sm text-muted-foreground">Prendas 3D con mayor interacción en tiendas conectadas</p>
@@ -172,7 +172,7 @@ export function AnalyticsDashboard({ kpis, mockData }: AnalyticsDashboardProps) 
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-white/5 text-muted-foreground">
+            <thead className="bg-muted/50 text-muted-foreground">
               <tr>
                 <th className="px-6 py-4 font-medium">Prenda</th>
                 <th className="px-6 py-4 font-medium">SKU</th>
@@ -182,10 +182,10 @@ export function AnalyticsDashboard({ kpis, mockData }: AnalyticsDashboardProps) 
             </thead>
             <tbody className="divide-y divide-white/5">
               {mockData.topGarments.map((garment) => (
-                <tr key={garment.id} className="hover:bg-white/5 transition-colors group">
+                <tr key={garment.id} className="hover:bg-muted/50 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-black/20 flex items-center justify-center border border-white/5">
+                      <div className="w-10 h-10 rounded-xl bg-black/20 flex items-center justify-center border border-border/50">
                         <Shirt className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                       </div>
                       <span className="font-medium text-foreground">{garment.name}</span>

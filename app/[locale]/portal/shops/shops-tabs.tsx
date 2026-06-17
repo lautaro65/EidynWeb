@@ -24,7 +24,7 @@ export function ShopsTabs() {
 
   return (
     <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full sm:w-[400px]">
-      <TabsList className="grid w-full grid-cols-2 bg-white/5 border border-white/10">
+      <TabsList className="grid w-full grid-cols-2 bg-muted/50 border border-border/50">
         <TabsTrigger value="connected" disabled={isPending} className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
           Conectadas
         </TabsTrigger>

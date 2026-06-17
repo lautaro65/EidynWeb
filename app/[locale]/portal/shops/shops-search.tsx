@@ -48,7 +48,7 @@ export function ShopsSearch() {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Buscar tiendas..."
-        className="pl-9 bg-white/5 border-white/10"
+        className="pl-9 bg-muted/50 border-border/50"
         disabled={isPending}
       />
     </div>

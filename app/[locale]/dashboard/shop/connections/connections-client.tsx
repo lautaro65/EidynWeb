@@ -133,7 +133,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
   return (
     <div className="w-full">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-8 w-full max-w-md grid grid-cols-2 bg-background/50 border border-white/10 p-1.5 rounded-2xl h-14">
+        <TabsList className="mb-8 w-full max-w-md grid grid-cols-2 bg-background/50 border border-border/50 p-1.5 rounded-2xl h-14">
           <TabsTrigger value="native" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-sm font-semibold h-full transition-all flex items-center justify-center">
             <ShoppingBag className="w-4 h-4 mr-2" />
             Integraciones Nativas
@@ -153,7 +153,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
               const ProviderIcon = provider.icon;
 
               return (
-                <Card key={provider.id} className={`bg-background/40 backdrop-blur-xl border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 rounded-[2rem] overflow-hidden ${isConnected ? 'ring-1 ring-primary/30' : ''}`}>
+                <Card key={provider.id} className={`bg-background/40 backdrop-blur-xl border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 rounded-[2rem] overflow-hidden ${isConnected ? 'ring-1 ring-primary/30' : ''}`}>
                   <CardHeader>
                     <div className="flex items-start justify-between mb-2">
                       <div className={`p-4 rounded-2xl ${provider.bg} ${provider.color} ${provider.border} border`}>
@@ -176,7 +176,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
                       {isConnected ? `Sincronizado con: ${existing.storeUrl}` : `Conecta tu tienda de ${provider.name} para sincronizar modelos.`}
                     </CardDescription>
                   </CardHeader>
-                  <CardFooter className="pt-4 border-t border-white/5 bg-muted/20">
+                  <CardFooter className="pt-4 border-t border-border/50 bg-muted/20">
                     {isConnected ? (
                       <div className="w-full flex items-center justify-between">
                         <span className="text-xs text-muted-foreground font-medium">Último sync: {existing.lastSyncAt ? new Date(existing.lastSyncAt).toLocaleDateString() : 'Nunca'}</span>
@@ -205,8 +205,8 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
 
         {/* API KEYS */}
         <TabsContent value="api" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <Card className="bg-background/40 backdrop-blur-xl border-white/10 shadow-lg rounded-[2rem] overflow-hidden">
-            <CardHeader className="border-b border-white/5 pb-8 flex flex-row items-center justify-between">
+          <Card className="bg-background/40 backdrop-blur-xl border-border/50 shadow-lg rounded-[2rem] overflow-hidden">
+            <CardHeader className="border-b border-border/50 pb-8 flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-2xl">Claves de API</CardTitle>
                 <CardDescription>{t("apiDesc")}</CardDescription>
@@ -230,7 +230,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
               ) : (
                 <div className="divide-y divide-white/5">
                   {apiKeys.map(key => (
-                    <div key={key.id} className="p-6 flex items-center justify-between hover:bg-white/5 transition-colors">
+                    <div key={key.id} className="p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                           <Key className="w-5 h-5" />
@@ -257,7 +257,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
 
       {/* SETUP WIZARD MODAL */}
       <Dialog open={isIntegrationModalOpen} onOpenChange={setIsIntegrationModalOpen}>
-        <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-3xl border-white/10 rounded-[2rem] shadow-2xl p-8">
+        <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-3xl border-border/50 rounded-[2rem] shadow-2xl p-8">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold flex items-center gap-2">
               <ShoppingBag className="w-6 h-6 text-primary" />
@@ -277,7 +277,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
                 onChange={e => setStoreUrl(e.target.value)}
                 placeholder="ej: mi-tienda.myshopify.com"
                 required
-                className="h-12 bg-background/50 rounded-xl border-white/10"
+                className="h-12 bg-background/50 rounded-xl border-border/50"
               />
             </div>
             {selectedProvider !== "shopify" && (
@@ -290,7 +290,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
                   onChange={e => setAccessToken(e.target.value)}
                   placeholder="shpat_xxxxxxxxxxxxxxxx"
                   required
-                  className="h-12 bg-background/50 rounded-xl border-white/10"
+                  className="h-12 bg-background/50 rounded-xl border-border/50"
                 />
               </div>
             )}
@@ -311,7 +311,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
 
       {/* GENERATE API KEY MODAL */}
       <Dialog open={isApiKeyModalOpen} onOpenChange={setIsApiKeyModalOpen}>
-        <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-3xl border-white/10 rounded-[2rem] shadow-2xl p-8">
+        <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-3xl border-border/50 rounded-[2rem] shadow-2xl p-8">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold flex items-center gap-2">
               <Key className="w-6 h-6 text-primary" />
@@ -332,7 +332,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
                   onChange={e => setKeyName(e.target.value)}
                   placeholder="ej: Wordpress Producción"
                   required
-                  className="h-12 bg-background/50 rounded-xl border-white/10"
+                  className="h-12 bg-background/50 rounded-xl border-border/50"
                   autoComplete="off"
                 />
               </div>
@@ -378,7 +378,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
 
       {/* DISCONNECT CONFIRMATION MODAL */}
       <Dialog open={isDisconnectModalOpen} onOpenChange={setIsDisconnectModalOpen}>
-        <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-3xl border-white/10 rounded-[2rem] shadow-2xl p-8">
+        <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-3xl border-border/50 rounded-[2rem] shadow-2xl p-8">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold flex items-center gap-2 text-destructive">
               <AlertCircle className="w-6 h-6" />
@@ -396,7 +396,7 @@ export function ConnectionsClient({ integrations, apiKeys }: Props) {
               type="button"
               variant="outline"
               onClick={() => setIsDisconnectModalOpen(false)}
-              className="flex-1 h-12 rounded-xl border-white/10 hover:bg-white/5"
+              className="flex-1 h-12 rounded-xl border-border/50 hover:bg-muted/50"
             >
               Cancelar
             </Button>

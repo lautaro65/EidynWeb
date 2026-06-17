@@ -32,7 +32,7 @@ export default async function PortalMeasurementsPage() {
       </div>
 
       {/* Formulario Interactivo */}
-      <div className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+      <div className="bg-background/40 backdrop-blur-xl border border-border/50 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/5 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none" />
         
         <MeasurementsForm 

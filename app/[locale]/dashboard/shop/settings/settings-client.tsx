@@ -66,7 +66,7 @@ export function SettingsClient({ initialTimezone = "UTC" }: { initialTimezone?: 
         "flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300",
         activeTab === id 
           ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105" 
-          : "bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-foreground"
+          : "bg-muted/50 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
       )}
     >
       <Icon className="w-5 h-5" />
@@ -89,7 +89,7 @@ export function SettingsClient({ initialTimezone = "UTC" }: { initialTimezone?: 
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-4 border-b border-white/10 pb-6">
+      <div className="flex flex-wrap gap-4 border-b border-border/50 pb-6">
         {renderTabButton("preferences", "Preferencias Globales", Globe)}
         {renderTabButton("security", "Seguridad y Sesiones", ShieldCheck)}
         {renderTabButton("privacy", "Auditoría y Privacidad", DatabaseBackup)}
@@ -99,26 +99,26 @@ export function SettingsClient({ initialTimezone = "UTC" }: { initialTimezone?: 
       {activeTab === "preferences" && (
         <section className="space-y-8 animate-in fade-in duration-500">
           
-          <div className="bg-background/40 backdrop-blur-xl border border-white/10 p-8 rounded-[2rem] shadow-xl">
+          <div className="bg-background/40 backdrop-blur-xl border border-border/50 p-8 rounded-[2rem] shadow-xl">
             <h2 className="text-2xl font-bold mb-6">Apariencia de la Interfaz</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <button 
                 onClick={() => setTheme("light")}
-                className={cn("p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-4", theme === "light" ? "border-primary bg-primary/5" : "border-white/10 hover:border-white/20 hover:bg-white/5")}
+                className={cn("p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-4", theme === "light" ? "border-primary bg-primary/5" : "border-border/50 hover:border-white/20 hover:bg-muted/50")}
               >
                 <div className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center shadow-lg"><Sun className="w-6 h-6" /></div>
                 <span className="font-semibold">Modo Claro</span>
               </button>
               <button 
                 onClick={() => setTheme("dark")}
-                className={cn("p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-4", theme === "dark" ? "border-primary bg-primary/5" : "border-white/10 hover:border-white/20 hover:bg-white/5")}
+                className={cn("p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-4", theme === "dark" ? "border-primary bg-primary/5" : "border-border/50 hover:border-white/20 hover:bg-muted/50")}
               >
-                <div className="w-12 h-12 rounded-full bg-[#0F0E0C] text-white border border-white/10 flex items-center justify-center shadow-lg"><Moon className="w-6 h-6" /></div>
+                <div className="w-12 h-12 rounded-full bg-[#0F0E0C] text-white border border-border/50 flex items-center justify-center shadow-lg"><Moon className="w-6 h-6" /></div>
                 <span className="font-semibold">Modo Oscuro</span>
               </button>
               <button 
                 onClick={() => setTheme("system")}
-                className={cn("p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-4", theme === "system" ? "border-primary bg-primary/5" : "border-white/10 hover:border-white/20 hover:bg-white/5")}
+                className={cn("p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-4", theme === "system" ? "border-primary bg-primary/5" : "border-border/50 hover:border-white/20 hover:bg-muted/50")}
               >
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-white to-[#0F0E0C] text-white flex items-center justify-center shadow-lg"><Monitor className="w-6 h-6 text-gray-400 mix-blend-difference" /></div>
                 <span className="font-semibold">Sistema</span>
@@ -127,7 +127,7 @@ export function SettingsClient({ initialTimezone = "UTC" }: { initialTimezone?: 
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-background/40 backdrop-blur-xl border border-white/10 p-8 rounded-[2rem] shadow-xl space-y-6">
+            <div className="bg-background/40 backdrop-blur-xl border border-border/50 p-8 rounded-[2rem] shadow-xl space-y-6">
               <div>
                 <h2 className="text-xl font-bold mb-2">Regionalización</h2>
                 <p className="text-sm text-muted-foreground mb-6">Ajustes de idioma y formato de fechas.</p>
@@ -140,7 +140,7 @@ export function SettingsClient({ initialTimezone = "UTC" }: { initialTimezone?: 
                     id="dashboardLanguage" 
                     value={currentLocale}
                     onChange={handleLanguageChange}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
+                    className="w-full bg-muted/50 border border-border/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
                   >
                     <option value="es">Español (Argentina)</option>
                     <option value="en">English (US)</option>
@@ -152,7 +152,7 @@ export function SettingsClient({ initialTimezone = "UTC" }: { initialTimezone?: 
                     id="dashboardTimezone" 
                     value={timezone}
                     onChange={handleTimezoneChange}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
+                    className="w-full bg-muted/50 border border-border/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
                   >
                     <option value="ART">Buenos Aires (GMT-3)</option>
                     <option value="UTC">UTC Universal</option>
@@ -161,7 +161,7 @@ export function SettingsClient({ initialTimezone = "UTC" }: { initialTimezone?: 
               </div>
             </div>
 
-            <div className="bg-background/40 backdrop-blur-xl border border-white/10 p-8 rounded-[2rem] shadow-xl space-y-6">
+            <div className="bg-background/40 backdrop-blur-xl border border-border/50 p-8 rounded-[2rem] shadow-xl space-y-6">
               <div>
                 <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
                   <Bell className="w-5 h-5 text-primary" /> Notificaciones
@@ -216,7 +216,7 @@ export function SettingsClient({ initialTimezone = "UTC" }: { initialTimezone?: 
             </button>
           </div>
 
-          <div className="bg-background/40 backdrop-blur-xl border border-white/10 p-8 rounded-[2rem] shadow-xl">
+          <div className="bg-background/40 backdrop-blur-xl border border-border/50 p-8 rounded-[2rem] shadow-xl">
             <div className="mb-6">
               <h2 className="text-2xl font-bold mb-2">Dispositivos y Sesiones Activas</h2>
               <p className="text-muted-foreground">Estas son las sesiones que actualmente tienen acceso a tu cuenta de Eidyn.</p>
@@ -224,7 +224,7 @@ export function SettingsClient({ initialTimezone = "UTC" }: { initialTimezone?: 
 
             <div className="space-y-4">
               {/* Current Session */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 bg-white/5 border border-primary/30 rounded-2xl gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 bg-muted/50 border border-primary/30 rounded-2xl gap-4">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
                     <Laptop className="w-6 h-6" />
@@ -237,9 +237,9 @@ export function SettingsClient({ initialTimezone = "UTC" }: { initialTimezone?: 
               </div>
 
               {/* Other Session */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 bg-white/5 border border-white/5 hover:border-white/10 transition-colors rounded-2xl gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 bg-muted/50 border border-border/50 hover:border-border/50 transition-colors rounded-2xl gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-muted-foreground">
+                  <div className="w-12 h-12 bg-muted/50 rounded-xl flex items-center justify-center text-muted-foreground">
                     <Smartphone className="w-6 h-6" />
                   </div>
                   <div>
@@ -253,21 +253,21 @@ export function SettingsClient({ initialTimezone = "UTC" }: { initialTimezone?: 
               </div>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-white/10">
+            <div className="mt-8 pt-6 border-t border-border/50">
               <button className="flex items-center gap-2 text-sm text-foreground hover:text-white font-semibold hover:underline">
                 Cerrar todas las demás sesiones
               </button>
             </div>
           </div>
 
-          <div className="bg-background/40 backdrop-blur-xl border border-white/10 p-8 rounded-[2rem] shadow-xl flex items-center justify-between">
+          <div className="bg-background/40 backdrop-blur-xl border border-border/50 p-8 rounded-[2rem] shadow-xl flex items-center justify-between">
             <div>
               <h3 className="font-bold text-lg mb-1 flex items-center gap-2">
                 <Key className="w-5 h-5 text-muted-foreground" /> Claves de Acceso (Passkeys)
               </h3>
               <p className="text-sm text-muted-foreground">Inicia sesión de forma segura y rápida con Face ID, Touch ID o Windows Hello.</p>
             </div>
-            <button className="bg-white/10 text-foreground font-semibold py-2 px-6 rounded-xl hover:bg-white/20 border border-white/5 transition-colors">
+            <button className="bg-muted/50 text-foreground font-semibold py-2 px-6 rounded-xl hover:bg-muted border border-border/50 transition-colors">
               Añadir
             </button>
           </div>
@@ -279,7 +279,7 @@ export function SettingsClient({ initialTimezone = "UTC" }: { initialTimezone?: 
       {activeTab === "privacy" && (
         <section className="space-y-8 animate-in fade-in duration-500">
           
-          <div className="bg-background/40 backdrop-blur-xl border border-white/10 p-8 rounded-[2rem] shadow-xl">
+          <div className="bg-background/40 backdrop-blur-xl border border-border/50 p-8 rounded-[2rem] shadow-xl">
             <div className="flex justify-between items-end mb-6">
               <div>
                 <h2 className="text-2xl font-bold mb-2">Logs de Actividad (Auditoría)</h2>
@@ -292,7 +292,7 @@ export function SettingsClient({ initialTimezone = "UTC" }: { initialTimezone?: 
 
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="bg-white/5 border-b border-white/10">
+                <thead className="bg-muted/50 border-b border-border/50">
                   <tr>
                     <th className="p-4 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Evento</th>
                     <th className="p-4 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Fecha</th>
@@ -302,7 +302,7 @@ export function SettingsClient({ initialTimezone = "UTC" }: { initialTimezone?: 
                 </thead>
                 <tbody className="text-sm">
                   {mockAuditLogs.map((log, i) => (
-                    <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <tr key={i} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
                       <td className="p-4 flex items-center gap-3">
                         <FileTerminal className="w-4 h-4 text-muted-foreground" />
                         <span className="font-medium text-foreground">{log.event}</span>

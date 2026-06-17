@@ -26,7 +26,7 @@ export default async function AccountPage() {
         </p>
       </div>
 
-      <div className="bg-background/50 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 shadow-2xl relative overflow-hidden">
+      <div className="bg-background/50 backdrop-blur-2xl border border-border/50 rounded-[2rem] p-8 shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] pointer-events-none -mt-40 -mr-40" />
         <div className="relative flex justify-center">
           <UserProfile

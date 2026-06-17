@@ -51,9 +51,9 @@ export default async function ProductsPage({ params }: Props) {
         <div className="max-w-md w-full flex flex-col items-center text-center space-y-6">
           <div className="relative">
             <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
-            <div className="relative bg-background/50 backdrop-blur-xl border border-white/10 p-6 rounded-[2rem] shadow-2xl">
+            <div className="relative bg-background/50 backdrop-blur-xl border border-border/50 p-6 rounded-[2rem] shadow-2xl">
               <Store className="w-16 h-16 text-muted-foreground mb-4" />
-              <PlugZap className="w-8 h-8 text-destructive absolute -bottom-2 -right-2 bg-background rounded-full p-1 border border-white/10" />
+              <PlugZap className="w-8 h-8 text-destructive absolute -bottom-2 -right-2 bg-background rounded-full p-1 border border-border/50" />
             </div>
           </div>
           

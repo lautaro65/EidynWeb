@@ -51,7 +51,7 @@ export function PreferencesForm({ initialTheme, initialLocale }: PreferencesForm
           <select
             value={preferredTheme}
             onChange={(e) => setPreferredTheme(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="w-full bg-muted/50 border border-border/50 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
           >
             <option value="system">Sincronizar con el Sistema</option>
             <option value="light">Modo Claro</option>
@@ -67,7 +67,7 @@ export function PreferencesForm({ initialTheme, initialLocale }: PreferencesForm
           <select
             value={preferredLocale}
             onChange={(e) => setPreferredLocale(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="w-full bg-muted/50 border border-border/50 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
           >
             <option value="en">English (US)</option>
             <option value="es">Español (ES)</option>

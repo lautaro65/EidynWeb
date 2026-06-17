@@ -75,7 +75,7 @@ export function AnalyticsClient() {
         "flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300",
         activeTab === id 
           ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105" 
-          : "bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-foreground"
+          : "bg-muted/50 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
       )}
     >
       <Icon className="w-5 h-5" />
@@ -98,7 +98,7 @@ export function AnalyticsClient() {
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-4 border-b border-white/10 pb-6">
+      <div className="flex flex-wrap gap-4 border-b border-border/50 pb-6">
         {renderTabButton("conversion", "Métricas de Conversión", TrendingUp)}
         {renderTabButton("ecosystem", t("tabs.ecosystem"), Users)}
         {renderTabButton("health", t("tabs.health"), Activity)}
@@ -108,7 +108,7 @@ export function AnalyticsClient() {
       {activeTab === "conversion" && (
         <section className="space-y-8 animate-in fade-in duration-500">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-background/40 backdrop-blur-xl border border-white/10 p-6 rounded-2xl shadow-xl flex flex-col justify-between">
+            <div className="bg-background/40 backdrop-blur-xl border border-border/50 p-6 rounded-2xl shadow-xl flex flex-col justify-between">
               <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center mb-4">
                 <Eye className="w-5 h-5 text-blue-500" />
               </div>
@@ -119,7 +119,7 @@ export function AnalyticsClient() {
               </div>
             </div>
             
-            <div className="bg-background/40 backdrop-blur-xl border border-white/10 p-6 rounded-2xl shadow-xl flex flex-col justify-between relative overflow-hidden group">
+            <div className="bg-background/40 backdrop-blur-xl border border-border/50 p-6 rounded-2xl shadow-xl flex flex-col justify-between relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[40px] -mr-10 -mt-10 transition-all group-hover:bg-primary/20" />
               <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
                 <Shirt className="w-5 h-5 text-primary" />
@@ -131,7 +131,7 @@ export function AnalyticsClient() {
               </div>
             </div>
 
-            <div className="bg-background/40 backdrop-blur-xl border border-white/10 p-6 rounded-2xl shadow-xl flex flex-col justify-between">
+            <div className="bg-background/40 backdrop-blur-xl border border-border/50 p-6 rounded-2xl shadow-xl flex flex-col justify-between">
               <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center mb-4">
                 <ShoppingCart className="w-5 h-5 text-amber-500" />
               </div>
@@ -154,7 +154,7 @@ export function AnalyticsClient() {
             </div>
           </div>
 
-          <div className="bg-background/40 backdrop-blur-xl border border-white/10 p-8 rounded-[2rem] shadow-xl">
+          <div className="bg-background/40 backdrop-blur-xl border border-border/50 p-8 rounded-[2rem] shadow-xl">
             <div className="mb-8">
               <h2 className="text-2xl font-bold mb-2">Embudo de Conversión (Funnel)</h2>
               <p className="text-muted-foreground">Análisis de abandono desde la visualización del widget 3D hasta la compra final.</p>
@@ -185,7 +185,7 @@ export function AnalyticsClient() {
       {/* SECCIÓN 2: ECOSISTEMA Y COMUNIDAD */}
       {activeTab === "ecosystem" && (
         <section className="space-y-8 animate-in fade-in duration-500">
-          <div className="bg-background/40 backdrop-blur-xl border border-white/10 p-8 rounded-[2rem] shadow-xl">
+          <div className="bg-background/40 backdrop-blur-xl border border-border/50 p-8 rounded-[2rem] shadow-xl">
             <div className="flex justify-between items-end mb-8">
               <div>
                 <h2 className="text-2xl font-bold mb-2">Adopción y Usuarios Activos</h2>
@@ -219,14 +219,14 @@ export function AnalyticsClient() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-background/40 backdrop-blur-xl border border-white/10 p-6 rounded-2xl shadow-xl">
+            <div className="bg-background/40 backdrop-blur-xl border border-border/50 p-6 rounded-2xl shadow-xl">
               <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
                 <Shirt className="w-5 h-5 text-primary" /> Modelos con más Engagement
               </h3>
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center gap-4 p-3 bg-white/5 rounded-xl border border-white/5">
-                    <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center font-bold text-muted-foreground">
+                  <div key={i} className="flex items-center gap-4 p-3 bg-muted/50 rounded-xl border border-border/50">
+                    <div className="w-12 h-12 bg-muted/50 rounded-lg flex items-center justify-center font-bold text-muted-foreground">
                       #{i}
                     </div>
                     <div className="flex-1">
@@ -242,7 +242,7 @@ export function AnalyticsClient() {
               </div>
             </div>
 
-            <div className="bg-background/40 backdrop-blur-xl border border-white/10 p-6 rounded-2xl shadow-xl">
+            <div className="bg-background/40 backdrop-blur-xl border border-border/50 p-6 rounded-2xl shadow-xl">
               <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
                 <Users className="w-5 h-5 text-primary" /> Demografía y Dispositivos
               </h3>
@@ -252,16 +252,16 @@ export function AnalyticsClient() {
                     <span className="font-medium text-muted-foreground">Dispositivos Móviles (iOS/Android)</span>
                     <span className="font-bold">78%</span>
                   </div>
-                  <Progress value={78} className="h-2 bg-white/5" />
+                  <Progress value={78} className="h-2 bg-muted/50" />
                 </div>
                 <div>
                   <div className="flex justify-between mb-2 text-sm">
                     <span className="font-medium text-muted-foreground">{t("ecosystem.desktop")}</span>
                     <span className="font-bold">22%</span>
                   </div>
-                  <Progress value={22} className="h-2 bg-white/5" />
+                  <Progress value={22} className="h-2 bg-muted/50" />
                 </div>
-                <div className="pt-4 border-t border-white/5">
+                <div className="pt-4 border-t border-border/50">
                   <p className="text-sm text-muted-foreground italic">
                     El rendimiento de WebGL en móviles se mantiene estable en un promedio de 45 FPS, garantizando una excelente experiencia para la mayoría de tus compradores.
                   </p>
@@ -286,7 +286,7 @@ export function AnalyticsClient() {
               <p className="text-xs text-emerald-500 mt-2 flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> Operación Normal</p>
             </div>
             
-            <div className="bg-background/40 backdrop-blur-xl border border-white/10 p-6 rounded-2xl flex flex-col">
+            <div className="bg-background/40 backdrop-blur-xl border border-border/50 p-6 rounded-2xl flex flex-col">
               <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
                 <Clock className="w-5 h-5 text-primary" />
               </div>
@@ -295,7 +295,7 @@ export function AnalyticsClient() {
               <p className="text-xs text-muted-foreground mt-2">{t("health.latencyDesc")}</p>
             </div>
 
-            <div className="bg-background/40 backdrop-blur-xl border border-white/10 p-6 rounded-2xl flex flex-col">
+            <div className="bg-background/40 backdrop-blur-xl border border-border/50 p-6 rounded-2xl flex flex-col">
               <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center mb-4">
                 <Cpu className="w-5 h-5 text-blue-500" />
               </div>
@@ -305,7 +305,7 @@ export function AnalyticsClient() {
             </div>
           </div>
 
-          <div className="bg-background/40 backdrop-blur-xl border border-white/10 p-8 rounded-[2rem] shadow-xl">
+          <div className="bg-background/40 backdrop-blur-xl border border-border/50 p-8 rounded-[2rem] shadow-xl">
             <div className="mb-8 flex justify-between items-end">
               <div>
                 <h2 className="text-2xl font-bold mb-2">Latencia de Procesamiento (Últimas 24h)</h2>

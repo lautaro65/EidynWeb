@@ -84,7 +84,7 @@ export default async function BrandDashboardPage({ params }: { params: Promise<{
         {stats.map((stat, i) => (
           <div
             key={i}
-            className="p-6 rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-xl shadow-sm hover:bg-white/10 transition-all duration-300 relative overflow-hidden group"
+            className="p-6 rounded-[2rem] border border-border/50 bg-muted/50 backdrop-blur-xl shadow-sm hover:bg-muted/50 transition-all duration-300 relative overflow-hidden group"
           >
             <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-[30px] pointer-events-none group-hover:bg-primary/20 transition-colors duration-500" />
             <div className="flex items-center justify-between mb-4">
@@ -109,7 +109,7 @@ export default async function BrandDashboardPage({ params }: { params: Promise<{
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Recent Garments Section */}
-        <div className="p-8 rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-xl shadow-sm flex flex-col">
+        <div className="p-8 rounded-[2rem] border border-border/50 bg-muted/50 backdrop-blur-xl shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-medium">{t("recentGarments") || "Prendas Recientes"}</h3>
             <Link href="/dashboard/brand/garments" className="text-sm text-primary hover:text-primary/80 flex items-center gap-1">
@@ -135,8 +135,8 @@ export default async function BrandDashboardPage({ params }: { params: Promise<{
           ) : (
             <div className="space-y-4">
               {recentGarments.map((garment) => (
-                <Link key={garment.id} href={`/dashboard/brand/garments/new?id=${garment.id}`} className="group flex items-center gap-4 p-4 rounded-2xl bg-black/20 border border-white/5 hover:border-primary/50 transition-colors">
-                  <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center">
+                <Link key={garment.id} href={`/dashboard/brand/garments/new?id=${garment.id}`} className="group flex items-center gap-4 p-4 rounded-2xl bg-black/20 border border-border/50 hover:border-primary/50 transition-colors">
+                  <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center">
                     <Shirt className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -144,7 +144,7 @@ export default async function BrandDashboardPage({ params }: { params: Promise<{
                     <p className="text-xs text-muted-foreground font-mono truncate">{garment.sku}</p>
                   </div>
                   <div className="text-right">
-                    <span className="inline-block px-2 py-1 bg-white/10 rounded-md text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                    <span className="inline-block px-2 py-1 bg-muted/50 rounded-md text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
                       {garment.status === "draft" ? "Borrador" : "Terminada"}
                     </span>
                   </div>
@@ -155,7 +155,7 @@ export default async function BrandDashboardPage({ params }: { params: Promise<{
         </div>
 
         {/* Action Required / Alerts Section */}
-        <div className="p-8 rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-xl shadow-sm">
+        <div className="p-8 rounded-[2rem] border border-border/50 bg-muted/50 backdrop-blur-xl shadow-sm">
           <h3 className="text-xl font-medium mb-6">Alertas y Sugerencias</h3>
           <div className="space-y-4">
             <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex gap-4 items-start">

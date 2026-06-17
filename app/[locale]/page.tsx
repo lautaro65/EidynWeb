@@ -56,7 +56,7 @@ export default function Home() {
               href="/contact"
               className={cn(
                 buttonVariants({ variant: "outline", size: "lg" }),
-                "text-lg px-8 py-7 rounded-full border-white/10 bg-background/50 backdrop-blur-md hover:bg-muted/50 font-medium transition-colors"
+                "text-lg px-8 py-7 rounded-full border-border/50 bg-background/50 backdrop-blur-md hover:bg-muted/50 font-medium transition-colors"
               )}
             >
               {t("ctaDemo")}
@@ -66,7 +66,7 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="relative w-full py-32 border-y border-white/5 bg-background/50 backdrop-blur-3xl">
+      <section className="relative w-full py-32 border-y border-border/50 bg-background/50 backdrop-blur-3xl">
         <div className="container px-4 sm:px-6 mx-auto">
           <div className="text-center mb-20">
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-foreground to-foreground/70">
@@ -76,7 +76,7 @@ export default function Home() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {/* Feature 1 */}
-            <div className="group flex flex-col p-8 rounded-[2rem] bg-gradient-to-b from-white/5 to-transparent border border-white/5 hover:border-primary/20 transition-colors">
+            <div className="group flex flex-col p-8 rounded-[2rem] bg-gradient-to-b from-white/5 to-transparent border border-border/50 hover:border-primary/20 transition-colors">
               <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-8 group-hover:scale-110 transition-transform duration-300">
                 <Shirt aria-hidden="true" className="h-7 w-7" />
               </div>
@@ -87,7 +87,7 @@ export default function Home() {
             </div>
             
             {/* Feature 2 */}
-            <div className="group flex flex-col p-8 rounded-[2rem] bg-gradient-to-b from-white/5 to-transparent border border-white/5 hover:border-primary/20 transition-colors">
+            <div className="group flex flex-col p-8 rounded-[2rem] bg-gradient-to-b from-white/5 to-transparent border border-border/50 hover:border-primary/20 transition-colors">
               <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-8 group-hover:scale-110 transition-transform duration-300">
                 <Plug aria-hidden="true" className="h-7 w-7" />
               </div>
@@ -98,7 +98,7 @@ export default function Home() {
             </div>
             
             {/* Feature 3 */}
-            <div className="group flex flex-col p-8 rounded-[2rem] bg-gradient-to-b from-white/5 to-transparent border border-white/5 hover:border-primary/20 transition-colors">
+            <div className="group flex flex-col p-8 rounded-[2rem] bg-gradient-to-b from-white/5 to-transparent border border-border/50 hover:border-primary/20 transition-colors">
               <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-8 group-hover:scale-110 transition-transform duration-300">
                 <ShieldCheck aria-hidden="true" className="h-7 w-7" />
               </div>
@@ -116,7 +116,7 @@ export default function Home() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-primary/10 blur-[100px] rounded-full -z-10"></div>
         
         <div className="container px-4 sm:px-6 mx-auto relative z-10 text-center flex flex-col items-center max-w-3xl">
-          <div className="h-24 w-24 rounded-full bg-background/50 backdrop-blur-xl flex items-center justify-center shadow-2xl mb-10 border border-white/10">
+          <div className="h-24 w-24 rounded-full bg-background/50 backdrop-blur-xl flex items-center justify-center shadow-2xl mb-10 border border-border/50">
             <ShoppingCart aria-hidden="true" className="h-10 w-10 text-primary" />
           </div>
           <h2 className="text-5xl md:text-6xl font-black tracking-tighter mb-8 text-transparent bg-clip-text bg-gradient-to-b from-foreground to-foreground/70">

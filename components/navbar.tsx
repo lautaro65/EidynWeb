@@ -64,7 +64,7 @@ export function Navbar() {
       <header className={cn(
         "pointer-events-auto flex items-center justify-center transition-all duration-500",
         isScrolled 
-          ? "h-14 sm:h-14 w-full max-w-4xl rounded-full border border-white/10 bg-background/40 px-3 sm:px-6 backdrop-blur-xl shadow-[0_8px_32px_-8px_rgba(0,0,0,0.1)] hover:bg-background/50" 
+          ? "h-14 sm:h-14 w-full max-w-4xl rounded-full border border-border/50 bg-background/40 px-3 sm:px-6 backdrop-blur-xl shadow-[0_8px_32px_-8px_rgba(0,0,0,0.1)] hover:bg-background/50" 
           : "h-16 sm:h-20 w-full max-w-none rounded-none border-b border-transparent bg-transparent px-3 sm:px-6 backdrop-blur-sm"
       )}>
         <div className={cn(
@@ -180,7 +180,7 @@ export function Navbar() {
                     appearance={{
                       elements: {
                         userButtonAvatarBox: "w-8 h-8 relative z-10 border-2 border-background shadow-sm hover:scale-105 transition-transform",
-                        userButtonPopoverCard: "bg-background/90 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl",
+                        userButtonPopoverCard: "bg-background/90 backdrop-blur-xl border border-border/50 shadow-2xl rounded-2xl",
                         userButtonPopoverActionButton: "hover:bg-muted/50 text-foreground transition-colors",
                         userButtonPopoverActionButtonText: "text-foreground font-medium",
                         userButtonPopoverFooter: "hidden"

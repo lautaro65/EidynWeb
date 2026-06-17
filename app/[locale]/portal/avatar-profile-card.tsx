@@ -75,7 +75,7 @@ export function AvatarProfileCard({ initialData }: AvatarProfileCardProps) {
   };
 
   return (
-    <div className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 relative overflow-hidden h-full">
+    <div className="bg-background/40 backdrop-blur-xl border border-border/50 rounded-2xl p-6 relative overflow-hidden h-full">
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none" />
       
       <div className="flex items-center justify-between mb-6 relative z-10">
@@ -86,7 +86,7 @@ export function AvatarProfileCard({ initialData }: AvatarProfileCardProps) {
         {!isEditing && (
           <button 
             onClick={() => setIsEditing(true)}
-            className="p-2 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-lg transition-colors"
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
           >
             <Edit2 className="w-4 h-4" />
           </button>
@@ -104,7 +104,7 @@ export function AvatarProfileCard({ initialData }: AvatarProfileCardProps) {
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full h-10 px-3 rounded-xl border border-white/10 bg-white/5 text-sm outline-none focus:border-primary transition-colors"
+              className="w-full h-10 px-3 rounded-xl border border-border/50 bg-muted/50 text-sm outline-none focus:border-primary transition-colors"
             />
           ) : (
             <p className="font-medium text-foreground">{renderValue(initialData.name)}</p>
@@ -121,7 +121,7 @@ export function AvatarProfileCard({ initialData }: AvatarProfileCardProps) {
               <select
                 value={formData.gender}
                 onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                className="w-full h-10 px-3 rounded-xl border border-white/10 bg-white/5 text-sm outline-none focus:border-primary transition-colors"
+                className="w-full h-10 px-3 rounded-xl border border-border/50 bg-muted/50 text-sm outline-none focus:border-primary transition-colors"
               >
                 <option value="unisex">Prefiero no decirlo</option>
                 <option value="female">Femenino</option>
@@ -142,7 +142,7 @@ export function AvatarProfileCard({ initialData }: AvatarProfileCardProps) {
                 type="number"
                 value={formData.age}
                 onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                className="w-full h-10 px-3 rounded-xl border border-white/10 bg-white/5 text-sm outline-none focus:border-primary transition-colors"
+                className="w-full h-10 px-3 rounded-xl border border-border/50 bg-muted/50 text-sm outline-none focus:border-primary transition-colors"
               />
             ) : (
               <p className="font-medium text-foreground">{initialData.age ? `${initialData.age} años` : "No especificada"}</p>
@@ -161,7 +161,7 @@ export function AvatarProfileCard({ initialData }: AvatarProfileCardProps) {
               type="number"
               value={formData.height}
               onChange={(e) => setFormData({ ...formData, height: e.target.value })}
-              className="w-full h-10 px-3 rounded-xl border border-white/10 bg-white/5 text-sm outline-none focus:border-primary transition-colors"
+              className="w-full h-10 px-3 rounded-xl border border-border/50 bg-muted/50 text-sm outline-none focus:border-primary transition-colors"
             />
           ) : (
             <p className="font-medium text-foreground">{initialData.height ? `${initialData.height} cm` : "No especificada"}</p>
@@ -171,11 +171,11 @@ export function AvatarProfileCard({ initialData }: AvatarProfileCardProps) {
 
       {/* Edit Actions */}
       {isEditing && (
-        <div className="mt-6 flex items-center gap-2 relative z-10 pt-4 border-t border-white/10">
+        <div className="mt-6 flex items-center gap-2 relative z-10 pt-4 border-t border-border/50">
           <button
             onClick={handleCancel}
             disabled={isLoading}
-            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-foreground font-medium rounded-xl transition-all text-sm"
+            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-muted/50 hover:bg-muted/50 text-foreground font-medium rounded-xl transition-all text-sm"
           >
             <X className="w-4 h-4" /> Cancelar
           </button>

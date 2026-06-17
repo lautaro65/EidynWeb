@@ -126,7 +126,7 @@ export function OrganizationClient({ initialData }: { initialData: ConfigData })
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         
         {/* Estilos */}
-        <div className="bg-background/40 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 shadow-xl relative overflow-hidden group">
+        <div className="bg-background/40 backdrop-blur-2xl border border-border/50 rounded-[2rem] p-8 shadow-xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-[40px] pointer-events-none -mt-10 -mr-10" />
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
@@ -143,7 +143,7 @@ export function OrganizationClient({ initialData }: { initialData: ConfigData })
                 name="theme"
                 value={formData.widgetConfig.theme}
                 onChange={handleWidgetConfigChange}
-                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground appearance-none"
+                className="w-full bg-black/20 border border-border/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground appearance-none"
               >
                 <option value="system">{t("systemAuto", { fallback: "System (Auto)" })}</option>
                 <option value="light">{t("lightMode", { fallback: "Light Mode" })}</option>
@@ -169,7 +169,7 @@ export function OrganizationClient({ initialData }: { initialData: ConfigData })
                   value={formData.brandColor}
                   onChange={handleChange}
                   placeholder="#FFFFFF"
-                  className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground uppercase"
+                  className="flex-1 bg-black/20 border border-border/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground uppercase"
                 />
               </div>
               <p className="text-[11px] text-muted-foreground mt-1">Used for the &quot;Try-On&quot; button and interactive highlights to match your brand.</p>
@@ -178,7 +178,7 @@ export function OrganizationClient({ initialData }: { initialData: ConfigData })
         </div>
 
         {/* Comportamiento */}
-        <div className="bg-background/40 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 shadow-xl relative overflow-hidden group">
+        <div className="bg-background/40 backdrop-blur-2xl border border-border/50 rounded-[2rem] p-8 shadow-xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-[40px] pointer-events-none -mt-10 -mr-10" />
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
@@ -188,18 +188,18 @@ export function OrganizationClient({ initialData }: { initialData: ConfigData })
           </div>
           
           <div className="space-y-6">
-            <div className="flex items-start justify-between gap-4 p-4 rounded-xl border border-white/5 bg-white/5">
+            <div className="flex items-start justify-between gap-4 p-4 rounded-xl border border-border/50 bg-muted/50">
               <div>
                 <label htmlFor="allowZoom" className="text-sm font-medium text-foreground block mb-1">{t("zoom", { fallback: "Enable 3D Zoom" })}</label>
                 <p className="text-[11px] text-muted-foreground">{t("zoomDesc", { fallback: "Allow users to zoom in/out of the 3D model using scroll/pinch." })}</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
                 <input id="allowZoom" type="checkbox" name="allowZoom" checked={formData.widgetConfig.allowZoom} onChange={handleWidgetConfigChange} className="sr-only peer" aria-label={t("zoom", { fallback: "Enable 3D Zoom" })} />
-                <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                <div className="w-11 h-6 bg-muted/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
               </label>
             </div>
 
-            <div className="flex items-start justify-between gap-4 p-4 rounded-xl border border-white/5 bg-white/5 relative overflow-hidden">
+            <div className="flex items-start justify-between gap-4 p-4 rounded-xl border border-border/50 bg-muted/50 relative overflow-hidden">
               <div className="relative z-10">
                 <label htmlFor="watermark" className="text-sm font-medium text-foreground flex items-center gap-2 mb-1">
                   Eidyn Watermark
@@ -218,7 +218,7 @@ export function OrganizationClient({ initialData }: { initialData: ConfigData })
                   disabled={isFreePlan}
                   className="sr-only peer" 
                 />
-                <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                <div className="w-11 h-6 bg-muted/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
               </label>
               {isFreePlan && (
                 <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] z-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
@@ -230,7 +230,7 @@ export function OrganizationClient({ initialData }: { initialData: ConfigData })
         </div>
 
         {/* Seguridad */}
-        <div className="xl:col-span-2 bg-background/40 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 shadow-xl relative overflow-hidden group">
+        <div className="xl:col-span-2 bg-background/40 backdrop-blur-2xl border border-border/50 rounded-[2rem] p-8 shadow-xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-[40px] pointer-events-none -mt-10 -mr-10" />
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center border border-green-500/20">
@@ -245,14 +245,14 @@ export function OrganizationClient({ initialData }: { initialData: ConfigData })
                 <label className="text-sm font-medium text-foreground">{t("rateLimit", { fallback: "Rate Limiting Monitor" })}</label>
                 <span className="text-[10px] font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded uppercase tracking-wider">{t("optimal", { fallback: "Optimal" })}</span>
               </div>
-              <div className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center justify-between">
+              <div className="bg-muted/50 border border-border/50 p-4 rounded-xl flex items-center justify-between">
                 <div>
                   <p className="text-2xl font-bold text-foreground">12 <span className="text-xs text-muted-foreground font-normal">req / min</span></p>
                   <p className="text-[10px] text-muted-foreground mt-1">{t("rateDesc1", { fallback: "Last 60 minutes average" })}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-medium text-muted-foreground">{t("rateDesc2", { fallback: "Max 100 rpm" })}</p>
-                  <div className="w-24 h-1.5 bg-white/10 rounded-full mt-2 overflow-hidden">
+                  <div className="w-24 h-1.5 bg-muted/50 rounded-full mt-2 overflow-hidden">
                     <div className="bg-green-500 w-[12%] h-full rounded-full" />
                   </div>
                 </div>
@@ -269,7 +269,7 @@ export function OrganizationClient({ initialData }: { initialData: ConfigData })
                 max="120"
                 value={formData.widgetConfig.sessionTtlMinutes}
                 onChange={handleWidgetConfigChange}
-                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground"
+                className="w-full bg-black/20 border border-border/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground"
               />
               <p className="text-[11px] text-muted-foreground mt-1">{t("assetDesc", { fallback: "Time until temporary 3D asset URLs expire to protect your models." })}</p>
             </div>
@@ -282,12 +282,12 @@ export function OrganizationClient({ initialData }: { initialData: ConfigData })
                 rows={3}
                 value={formData.widgetConfig.consentText}
                 onChange={handleWidgetConfigChange}
-                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground resize-none"
+                className="w-full bg-black/20 border border-border/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground resize-none"
               />
               <p className="text-[11px] text-muted-foreground mt-1">{t("gdprDesc2", { fallback: "Text shown to users in the needs_consent state before generating their avatar." })}</p>
             </div>
 
-            <div className="space-y-4 pt-6 border-t border-white/10">
+            <div className="space-y-4 pt-6 border-t border-border/50">
               <div>
                 <h3 className="font-bold text-lg text-foreground flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-green-500" />
@@ -304,7 +304,7 @@ export function OrganizationClient({ initialData }: { initialData: ConfigData })
                   value={newDomain}
                   onChange={(e) => setNewDomain(e.target.value)}
                   placeholder="ejemplo.com"
-                  className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/50 transition-all text-foreground"
+                  className="flex-1 bg-black/20 border border-border/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/50 transition-all text-foreground"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
@@ -328,7 +328,7 @@ export function OrganizationClient({ initialData }: { initialData: ConfigData })
                   </div>
                 ) : (
                   (formData.widgetConfig.authorizedDomains || []).map((domain) => (
-                    <div key={domain} className="flex items-center justify-between bg-white/5 border border-white/10 p-3 rounded-xl">
+                    <div key={domain} className="flex items-center justify-between bg-muted/50 border border-border/50 p-3 rounded-xl">
                       <span className="text-sm font-medium">{domain}</span>
                       <button
                         type="button"

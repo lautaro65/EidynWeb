@@ -123,14 +123,14 @@ export function WidgetViewerClient({
     )}>
       {/* 3D Viewer Area */}
       <div className="flex-1 h-[60vh] md:h-full relative p-2 md:p-6">
-        <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl relative border border-white/10 bg-gradient-to-br from-background/50 to-background/5 backdrop-blur-3xl">
+        <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl relative border border-border/50 bg-gradient-to-br from-background/50 to-background/5 backdrop-blur-3xl">
            
            {/* Si el usuario NO está logueado o le falta dar consentimiento, bloqueamos interacciones 3D con un overlay */}
            {authState !== "authorized" && authState !== "checking" && (
              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/40 backdrop-blur-md p-6 text-center">
                
                {authState === "unauthenticated" && (
-                 <div className="bg-background/90 p-8 rounded-3xl shadow-2xl border border-white/10 max-w-sm animate-in fade-in zoom-in duration-300">
+                 <div className="bg-background/90 p-8 rounded-3xl shadow-2xl border border-border/50 max-w-sm animate-in fade-in zoom-in duration-300">
                     <h3 className="text-xl font-bold mb-2">Pruébatelo en tu cuerpo</h3>
                     <p className="text-muted-foreground text-sm mb-6">
                       Inicia sesión en Eidyn para cargar tu Avatar 3D y ver cómo te queda esta prenda.
@@ -146,7 +146,7 @@ export function WidgetViewerClient({
                )}
 
                {authState === "needs_consent" && (
-                 <div className="bg-background/90 p-8 rounded-3xl shadow-2xl border border-white/10 max-w-md animate-in fade-in zoom-in duration-300">
+                 <div className="bg-background/90 p-8 rounded-3xl shadow-2xl border border-border/50 max-w-md animate-in fade-in zoom-in duration-300">
                     <h3 className="text-xl font-bold mb-2">Permiso requerido</h3>
                     <p className="text-muted-foreground text-sm mb-6">
                       ¿Autorizas a <strong>{tenantName}</strong> a acceder a las medidas de tu Avatar para el probador virtual?

@@ -58,7 +58,7 @@ export function Pagination({ totalPages }: PaginationProps) {
       <button
         onClick={() => handlePageChange(currentPage - 1)}
         disabled={currentPage <= 1}
-        className="p-2 rounded-xl border border-white/10 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        className="p-2 rounded-xl border border-border/50 hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         aria-label={t("previous")}
       >
         <ChevronLeft className="w-5 h-5" />
@@ -73,7 +73,7 @@ export function Pagination({ totalPages }: PaginationProps) {
             w-10 h-10 rounded-xl font-medium transition-all
             ${page === currentPage 
               ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary),0.3)]" 
-              : "hover:bg-white/5 border border-transparent"}
+              : "hover:bg-muted/50 border border-transparent"}
             ${page === "..." ? "cursor-default hover:bg-transparent" : ""}
           `}
         >
@@ -84,7 +84,7 @@ export function Pagination({ totalPages }: PaginationProps) {
       <button
         onClick={() => handlePageChange(currentPage + 1)}
         disabled={currentPage >= totalPages}
-        className="p-2 rounded-xl border border-white/10 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        className="p-2 rounded-xl border border-border/50 hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         aria-label={t("next")}
       >
         <ChevronRight className="w-5 h-5" />

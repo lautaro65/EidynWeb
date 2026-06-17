@@ -51,7 +51,7 @@ export function PortalSidebar() {
 
   return (
     <aside className="w-72 hidden lg:flex flex-col h-fit sticky top-24 pr-6">
-      <div className="bg-background/50 backdrop-blur-2xl border border-white/10 rounded-[2rem] flex flex-col overflow-hidden shadow-2xl relative">
+      <div className="bg-background/80 backdrop-blur-2xl border border-border/50 rounded-[2rem] flex flex-col overflow-hidden shadow-2xl relative">
         
         {/* Glow effect */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full blur-[50px] -mr-10 -mt-10 pointer-events-none" />
@@ -71,7 +71,7 @@ export function PortalSidebar() {
           {navSections.map((section, sectionIndex) => (
             <div key={section.key}>
               {sectionIndex > 0 && (
-                <div className="my-3 border-t border-white/5" />
+                <div className="my-3 border-t border-border/50" />
               )}
 
               <div aria-hidden="true" className="text-[10px] font-semibold text-muted-foreground/40 uppercase tracking-widest px-4 mb-2 mt-1">
@@ -90,8 +90,8 @@ export function PortalSidebar() {
                   const itemClasses = cn(
                     "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 font-medium text-sm group",
                     isParentActive
-                      ? "bg-white/10 text-foreground shadow-sm border border-white/5"
-                      : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
+                      ? "bg-muted text-foreground shadow-sm border border-border"
+                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
                     item.disabled &&
                       "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-muted-foreground"
                   );
@@ -125,10 +125,10 @@ export function PortalSidebar() {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-border/40 bg-muted/40 dark:border-white/5 dark:bg-black/10">
+        <div className="p-4 border-t border-border/40 bg-muted/40 dark:border-border/50 dark:bg-black/10">
           <Link
             href="/portal/account"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium text-sm text-muted-foreground hover:bg-white/5 hover:text-foreground group mb-1"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium text-sm text-muted-foreground hover:bg-muted/50 hover:text-foreground group mb-1"
           >
             <User className="h-5 w-5 transition-transform duration-300" />
             Información de cuenta
@@ -136,7 +136,7 @@ export function PortalSidebar() {
 
           <Link
             href="/portal/settings"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium text-sm text-muted-foreground hover:bg-white/5 hover:text-foreground group mb-1"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium text-sm text-muted-foreground hover:bg-muted/50 hover:text-foreground group mb-1"
           >
             <Settings className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
             Ajustes

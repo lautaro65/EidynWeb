@@ -66,10 +66,10 @@ export function ShopsList({ shops, isDiscover }: { shops: NormalizedShop[], isDi
       {shops.map((shop) => (
         <div 
           key={shop.tenantId}
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-colors"
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 bg-muted/50 border border-border/50 rounded-2xl hover:bg-muted/50 transition-colors"
         >
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center overflow-hidden shrink-0">
+            <div className="w-12 h-12 rounded-full bg-muted/50 border border-white/20 flex items-center justify-center overflow-hidden shrink-0">
               {shop.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={shop.logoUrl} alt={shop.name || "Tienda"} className="w-full h-full object-cover" />

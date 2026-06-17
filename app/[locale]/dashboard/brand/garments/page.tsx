@@ -103,7 +103,7 @@ export default async function BrandGarmentsPage({
       </div>
 
       {/* Main Content Area */}
-      <div className="bg-background/50 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-6 sm:p-8 shadow-2xl relative overflow-hidden min-h-[60vh] flex flex-col">
+      <div className="bg-background/50 backdrop-blur-2xl border border-border/50 rounded-[2rem] p-6 sm:p-8 shadow-2xl relative overflow-hidden min-h-[60vh] flex flex-col">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] pointer-events-none -mt-40 -mr-40" />
 
         <GarmentsToolbar />
@@ -122,7 +122,7 @@ export default async function BrandGarmentsPage({
               </p>
               <Link
                 href="/dashboard/brand/garments/new"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 border border-white/10 hover:bg-white/10 text-foreground font-medium rounded-xl transition-all duration-300"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-muted/50 border border-border/50 hover:bg-muted/50 text-foreground font-medium rounded-xl transition-all duration-300"
               >
                 <Plus className="w-5 h-5" />
                 {t("uploadFirstBtn")}
@@ -131,7 +131,7 @@ export default async function BrandGarmentsPage({
           ) : garments.length === 0 && searchQuery ? (
             // Empty Search Results
             <div className="flex-1 flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
                 <Search className="w-8 h-8 text-muted-foreground" />
               </div>
               <h3 className="text-xl font-medium mb-2">{t("noResultsFound")}</h3>
@@ -150,7 +150,7 @@ export default async function BrandGarmentsPage({
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
                 {garments.map((garment) => (
-                  <div key={garment.id} className="p-4 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center justify-center gap-4 text-muted-foreground aspect-square group hover:bg-white/10 transition-all duration-300 relative overflow-hidden">
+                  <div key={garment.id} className="p-4 bg-muted/50 border border-border/50 rounded-2xl flex flex-col items-center justify-center gap-4 text-muted-foreground aspect-square group hover:bg-muted/50 transition-all duration-300 relative overflow-hidden">
                     {garment.status === "draft" && (
                       <div className="absolute top-3 left-3 bg-yellow-500/10 text-yellow-500 text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded-md border border-yellow-500/20">
                         Borrador

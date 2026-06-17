@@ -78,7 +78,7 @@ export function BrandSidebar() {
 
   return (
     <aside className="w-72 hidden lg:flex flex-col h-fit sticky top-24 pr-6">
-      <div className="bg-background/50 backdrop-blur-2xl border border-white/10 rounded-[2rem] flex flex-col overflow-hidden shadow-2xl relative">
+      <div className="bg-background/80 backdrop-blur-2xl border border-border/50 rounded-[2rem] flex flex-col overflow-hidden shadow-2xl relative">
         
         {/* Glow effect */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-[50px] -mr-10 -mt-10 pointer-events-none" />
@@ -133,7 +133,7 @@ export function BrandSidebar() {
             <div key={section.key}>
               {/* Divider between sections */}
               {sectionIndex > 0 && (
-                <div className="my-3 border-t border-white/5" />
+                <div className="my-3 border-t border-border/50" />
               )}
 
               {/* Section label */}
@@ -155,8 +155,8 @@ export function BrandSidebar() {
                   const itemClasses = cn(
                     "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 font-medium text-sm group",
                     isParentActive
-                      ? "bg-white/10 text-foreground shadow-sm border border-white/5"
-                      : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
+                      ? "bg-muted text-foreground shadow-sm border border-border"
+                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
                     item.disabled &&
                       "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-muted-foreground"
                   );
@@ -173,7 +173,7 @@ export function BrandSidebar() {
                       />
                       {item.label}
                       {item.disabled && (
-                        <span className="ml-auto text-[9px] uppercase tracking-wider font-bold bg-white/5 px-2 py-0.5 rounded-md">
+                        <span className="ml-auto text-[9px] uppercase tracking-wider font-bold bg-muted/50 px-2 py-0.5 rounded-md">
                           {t("soon")}
                         </span>
                       )}
@@ -201,7 +201,7 @@ export function BrandSidebar() {
                       {/* Sub Items */}
                       {item.subItems && isParentActive && (
                         <div className="pl-11 pr-4 py-1 space-y-1 relative animate-in slide-in-from-top-2 duration-200">
-                          <div className="absolute left-6 top-0 bottom-4 w-px bg-white/10" />
+                          <div className="absolute left-6 top-0 bottom-4 w-px bg-border/50" />
                           {item.subItems.map((subItem) => {
                             const isSubActive = pathname.endsWith(subItem.href);
                             return (
@@ -213,18 +213,18 @@ export function BrandSidebar() {
                                   "block py-2.5 text-xs font-medium rounded-lg transition-colors relative",
                                   isSubActive
                                     ? "text-primary"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-white/5 pl-2 -ml-2"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50 pl-2 -ml-2"
                                 )}
                               >
                                 <div
                                   className={cn(
-                                    "absolute -left-5 top-1/2 w-3 h-px bg-white/10",
+                                    "absolute -left-5 top-1/2 w-3 h-px bg-border/50",
                                     isSubActive && "bg-primary/50"
                                   )}
                                 />
                                 <div
                                   className={cn(
-                                    "absolute -left-5 top-1/2 -translate-y-1/2 -translate-x-0.5 w-1.5 h-1.5 rounded-full bg-background border border-white/10 transition-colors",
+                                    "absolute -left-5 top-1/2 -translate-y-1/2 -translate-x-0.5 w-1.5 h-1.5 rounded-full bg-background border border-border/50 transition-colors",
                                     isSubActive &&
                                       "border-primary bg-primary shadow-[0_0_8px_rgba(var(--primary),0.8)] z-10"
                                   )}
@@ -244,10 +244,10 @@ export function BrandSidebar() {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-border/40 bg-muted/40 dark:border-white/5 dark:bg-black/10">
+        <div className="p-4 border-t border-border/40 bg-muted/40 dark:border-border/50 dark:bg-black/10">
           <Link
             href="/dashboard/brand/settings"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium text-sm text-muted-foreground hover:bg-white/5 hover:text-foreground group mb-1"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium text-sm text-muted-foreground hover:bg-muted/50 hover:text-foreground group mb-1"
           >
             <Settings className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
             {t("settings")}
