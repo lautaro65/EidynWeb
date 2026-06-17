@@ -22,7 +22,6 @@ import {
   Search,
   CheckCircle2,
   AlertCircle,
-  Heart,
   Loader2,
   ChevronUp,
   ChevronDown,
@@ -97,7 +96,6 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
   const [ownBrandOnly, setOwnBrandOnly] = useState(false);
   const [mappingSearch, setMappingSearch] = useState("");
   const [mappingPage, setMappingPage] = useState(1);
-  const [mappingLikedOnly, setMappingLikedOnly] = useState(false);
   const [mappingGarments, setMappingGarments] = useState<{ id: string, name: string | null, sku: string, baseModelUrl: string | null }[]>([]);
   const [mappingLoading, setMappingLoading] = useState(false);
   const [mappingHasMore, setMappingHasMore] = useState(false);
@@ -115,8 +113,7 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
           ownBrandOnly,
           search: mappingSearch,
           page: mappingPage,
-          limit: 10,
-          likedOnly: mappingLikedOnly
+          limit: 10
         });
         if (res.success && isMounted) {
           if (mappingPage === 1) {
@@ -139,13 +136,13 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
     
     const timeoutId = setTimeout(fetchGarments, 300); // debounce search
     return () => { isMounted = false; clearTimeout(timeoutId); };
-  }, [mappingModalOpen, ownBrandOnly, mappingSearch, mappingPage, mappingLikedOnly]);
+  }, [mappingModalOpen, ownBrandOnly, mappingSearch, mappingPage]);
 
   // Reset page when filters change
   useEffect(() => {
     // eslint-disable-next-line
     setMappingPage(1);
-  }, [ownBrandOnly, mappingSearch, mappingLikedOnly]);
+  }, [ownBrandOnly, mappingSearch]);
 
   const handleSync = async () => {
     setIsSyncing(true);
@@ -449,17 +446,6 @@ export function ProductsClient({ initialProducts, tenantType }: Props) {
                         Solamente de mi marca
                       </label>
                     </div>
-                  )}
-
-                  {!ownBrandOnly && (
-                    <Button 
-                      variant={mappingLikedOnly ? "default" : "outline"} 
-                      onClick={() => setMappingLikedOnly(!mappingLikedOnly)}
-                      className={`h-10 rounded-xl border-white/10 transition-colors ${mappingLikedOnly ? "bg-rose-500 text-white hover:bg-rose-600 border-transparent shadow-md shadow-rose-500/20" : "hover:bg-rose-500/10 hover:text-rose-500 hover:border-rose-500/20"}`}
-                    >
-                      <Heart className={`w-4 h-4 mr-2 ${mappingLikedOnly ? "fill-current" : ""}`} />
-                      Solo mis favoritos
-                    </Button>
                   )}
                 </div>
               </div>

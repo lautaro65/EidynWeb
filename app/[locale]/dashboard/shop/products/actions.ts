@@ -174,7 +174,6 @@ export async function getGarmentsForMappingAction(params: {
   search: string;
   page: number;
   limit: number;
-  likedOnly: boolean;
   ownBrandOnly?: boolean;
 }) {
   try {
@@ -188,7 +187,7 @@ export async function getGarmentsForMappingAction(params: {
       tenantId = mem.tenantId;
     }
 
-    const { search, page, limit, likedOnly, ownBrandOnly } = params;
+    const { search, page, limit, ownBrandOnly } = params;
     const skip = (page - 1) * limit;
 
     const whereClause: Record<string, unknown> = {
@@ -197,21 +196,6 @@ export async function getGarmentsForMappingAction(params: {
 
     if (ownBrandOnly) {
       whereClause.ownerId = tenantId;
-    } else {
-      whereClause.OR = [
-        { isPublic: true },
-        { ownerId: tenantId }
-      ];
-      
-      if (likedOnly) {
-        // Find garment ids that this tenant liked
-        const likes = await db.garmentLike.findMany({
-          where: { tenantId },
-          select: { garmentId: true }
-        });
-        const likedGarmentIds = likes.map(l => l.garmentId);
-        whereClause.id = { in: likedGarmentIds };
-      }
     }
 
     if (search && search.trim() !== "") {
